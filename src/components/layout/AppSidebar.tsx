@@ -12,6 +12,7 @@ import {
   Building2
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -25,23 +26,28 @@ import {
 } from "@/components/ui/sidebar";
 
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Employees", url: "/employees", icon: Users },
-  { title: "Attendance", url: "/attendance", icon: Clock },
-  { title: "Salary", url: "/salary", icon: DollarSign },
-  { title: "Leave Requests", url: "/leave-requests", icon: Calendar },
-  { title: "Reports", url: "/reports", icon: BarChart3 },
-  { title: "Salary Slips", url: "/salary-slips", icon: Receipt },
-  { title: "Form 16", url: "/form-16", icon: FileText },
-  { title: "Documents", url: "/documents", icon: FolderOpen },
-  { title: "Notifications", url: "/notifications", icon: Bell },
+  { title: "Dashboard", url: "/", icon: Home, roles: ['admin', 'employee'] },
+  { title: "Employees", url: "/employees", icon: Users, roles: ['admin'] },
+  { title: "Attendance", url: "/attendance", icon: Clock, roles: ['admin', 'employee'] },
+  { title: "Salary", url: "/salary", icon: DollarSign, roles: ['admin'] },
+  { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
+  { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
+  { title: "Salary Slips", url: "/salary-slips", icon: Receipt, roles: ['admin', 'employee'] },
+  { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] },
+  { title: "Documents", url: "/documents", icon: FolderOpen, roles: ['admin', 'employee'] },
+  { title: "Notifications", url: "/notifications", icon: Bell, roles: ['admin', 'employee'] },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
+  const { employee } = useAuth();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const filteredNavItems = navigationItems.filter(item => 
+    item.roles.includes(employee?.role || 'employee')
+  );
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
@@ -82,7 +88,7 @@ export function AppSidebar() {
           
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {navigationItems.map((item) => (
+              {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild size="lg">
                     <NavLink 
