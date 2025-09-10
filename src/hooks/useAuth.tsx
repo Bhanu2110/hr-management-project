@@ -3,10 +3,9 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface Employee {
+interface UserProfile {
   id: string;
   user_id: string;
-  employee_id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -18,15 +17,17 @@ interface Employee {
   status: 'active' | 'inactive' | 'terminated';
   created_at?: string;
   updated_at?: string;
+  admin_id?: string;
+  employee_id?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  employee: Employee | null;
+  employee: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, employeeData: Partial<Employee>) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, employeeData: Partial<UserProfile>) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isEmployee: boolean;
@@ -37,25 +38,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [employee, setEmployee] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchEmployeeData = async (userId: string) => {
+  const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // First check if user is an admin
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (adminData) {
+        return { ...adminData, role: 'admin' as const };
+      }
+
+      // If not admin, check if user is an employee
+      const { data: employeeData, error: employeeError } = await supabase
         .from('employees')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching employee data:', error);
-        return null;
+      if (employeeData) {
+        return { ...employeeData, role: 'employee' as const };
       }
-      return data;
+
+      if (adminError && employeeError) {
+        console.error('Error fetching user data:', { adminError, employeeError });
+      }
+      
+      return null;
     } catch (error) {
-      console.error('Error fetching employee data:', error);
+      console.error('Error fetching user data:', error);
       return null;
     }
   };
@@ -68,10 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch employee data
+          // Fetch user profile data
           setTimeout(async () => {
-            const employeeData = await fetchEmployeeData(session.user.id);
-            setEmployee(employeeData as Employee);
+            const userProfile = await fetchUserProfile(session.user.id);
+            setEmployee(userProfile as UserProfile);
             setLoading(false);
           }, 0);
         } else {
@@ -87,8 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchEmployeeData(session.user.id).then((employeeData) => {
-          setEmployee(employeeData as Employee);
+        fetchUserProfile(session.user.id).then((userProfile) => {
+          setEmployee(userProfile as UserProfile);
           setLoading(false);
         });
       } else {
@@ -118,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, employeeData: Partial<Employee>) => {
+  const signUp = async (email: string, password: string, employeeData: Partial<UserProfile>) => {
     setLoading(true);
     const redirectUrl = `${window.location.origin}/`;
     
@@ -140,26 +157,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // If signup successful and user is created, create employee record
+    // If signup successful and user is created, create record in appropriate table
     if (data.user) {
-      const { error: employeeError } = await supabase
-        .from('employees')
-        .insert([{
-          user_id: data.user.id,
-          employee_id: employeeData.employee_id || `EMP${Date.now()}`,
-          first_name: employeeData.first_name || '',
-          last_name: employeeData.last_name || '',
-          email: email,
-          role: employeeData.role || 'employee',
-          department: employeeData.department,
-          position: employeeData.position,
-        }]);
+      const role = employeeData.role || 'employee';
+      let insertError: any = null;
 
-      if (employeeError) {
-        console.error('Error creating employee record:', employeeError);
+      if (role === 'admin') {
+        const { error } = await supabase
+          .from('admins')
+          .insert([{
+            user_id: data.user.id,
+            admin_id: employeeData.admin_id || `ADM${Date.now()}`,
+            first_name: employeeData.first_name || '',
+            last_name: employeeData.last_name || '',
+            email: email,
+            department: employeeData.department,
+            position: employeeData.position,
+          }]);
+        insertError = error;
+      } else {
+        const { error } = await supabase
+          .from('employees')
+          .insert([{
+            user_id: data.user.id,
+            employee_id: employeeData.employee_id || `EMP${Date.now()}`,
+            first_name: employeeData.first_name || '',
+            last_name: employeeData.last_name || '',
+            email: email,
+            department: employeeData.department,
+            position: employeeData.position,
+          }]);
+        insertError = error;
+      }
+
+      if (insertError) {
+        console.error('Error creating user record:', insertError);
         toast({
           title: "Registration Warning",
-          description: "Account created but employee profile setup failed. Please contact admin.",
+          description: "Account created but profile setup failed. Please contact admin.",
           variant: "destructive",
         });
       } else {
