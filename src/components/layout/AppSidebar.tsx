@@ -58,8 +58,9 @@ export function AppSidebar() {
     const active = isActive(path);
     return `${
       active 
-        ? "bg-nav-active text-primary-foreground font-medium shadow-sm" 
-        : "text-foreground hover:bg-nav-hover hover:text-foreground"
+      ? "bg-red-500 text-white font-medium shadow-sm" 
+      : "text-foreground hover:bg-red-100 hover:text-foreground"
+    
     } transition-all duration-200`;
   };
 

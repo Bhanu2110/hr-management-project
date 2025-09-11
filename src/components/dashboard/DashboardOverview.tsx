@@ -7,9 +7,14 @@ export function DashboardOverview() {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-primary rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome to HR Management System</h1>
-        <p className="text-blue-100">Manage your workforce efficiently with our comprehensive HR tools</p>
-      </div>
+  <h1 className="text-2xl font-bold mb-2 text-red-500">
+    Welcome to HR Management System
+  </h1>
+  <p className="text-red-400">
+    Manage your workforce efficiently with our comprehensive HR tools
+  </p>
+</div>
+
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">

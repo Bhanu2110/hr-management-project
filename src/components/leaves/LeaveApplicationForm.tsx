@@ -110,7 +110,7 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[--gradient-primary] hover:opacity-90 text-primary-foreground">
+        <Button className="bg-[--gradient-primary] hover:opacity-90 text-black">
           <Plus className="h-4 w-4 mr-2" />
           Apply for Leave
         </Button>
