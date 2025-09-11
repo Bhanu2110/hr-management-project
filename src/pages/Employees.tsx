@@ -1,47 +1,115 @@
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Edit, Trash2, Mail, Phone } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2 } from "lucide-react";
+import { employeeService, type Employee } from "@/services/api";
 
-const employees = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@company.com",
-    phone: "+1 234 567 8900",
-    department: "Engineering",
-    position: "Senior Developer",
-    joinDate: "2022-01-15",
-    status: "Active",
-    avatar: "JD"
-  },
-  {
-    id: 2,
-    name: "Sarah Wilson",
-    email: "sarah.wilson@company.com",
-    phone: "+1 234 567 8901",
-    department: "Marketing",
-    position: "Marketing Manager",
-    joinDate: "2021-06-10",
-    status: "Active",
-    avatar: "SW"
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike.johnson@company.com",
-    phone: "+1 234 567 8902",
-    department: "HR",
-    position: "HR Specialist",
-    joinDate: "2023-03-20",
-    status: "On Leave",
-    avatar: "MJ"
-  }
-];
+type SortDirection = 'asc' | 'desc';
+type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
+
+const ITEMS_PER_PAGE = 10;
 
 const Employees = () => {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<SortField>('first_name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        setLoading(true);
+        const data = await employeeService.getAllEmployees();
+        setEmployees(data);
+      } catch (error) {
+        console.error('Failed to fetch employees:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEmployees();
+  }, []);
+
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredEmployees = employees.filter(employee => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      employee.first_name.toLowerCase().includes(searchLower) ||
+      employee.last_name.toLowerCase().includes(searchLower) ||
+      employee.email.toLowerCase().includes(searchLower) ||
+      employee.department.toLowerCase().includes(searchLower) ||
+      employee.position.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+    let comparison = 0;
+    const aValue = a[sortField]?.toString() || '';
+    const bValue = b[sortField]?.toString() || '';
+    
+    if (aValue < bValue) comparison = -1;
+    if (aValue > bValue) comparison = 1;
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedEmployees.length / ITEMS_PER_PAGE);
+  const paginatedEmployees = sortedEmployees.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'default';
+      case 'inactive':
+        return 'destructive';
+      case 'on_leave':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -49,9 +117,11 @@ const Employees = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Employees</h1>
-            <p className="text-muted-foreground">Manage your workforce and employee information</p>
+            <p className="text-muted-foreground">
+              {loading ? 'Loading...' : `Showing ${filteredEmployees.length} employees`}
+            </p>
           </div>
-          <Button className="bg-gradient-primary hover:opacity-90 text-white shadow-sm">
+          <Button className="bg-gradient-primary hover:opacity-90 text-black shadow-sm">
             <Plus className="h-4 w-4 mr-2" />
             Add Employee
           </Button>
@@ -64,74 +134,172 @@ const Employees = () => {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search employees..." 
+                  placeholder="Search employees by name, email, or department..." 
                   className="pl-10 bg-background"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filter
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                  <DropdownMenuItem>Active</DropdownMenuItem>
+                  <DropdownMenuItem>Inactive</DropdownMenuItem>
+                  <DropdownMenuItem>On Leave</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </CardContent>
         </Card>
 
-        {/* Employees Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {employees.map((employee) => (
-            <Card key={employee.id} className="shadow-card hover:shadow-elevated transition-all duration-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                      {employee.avatar}
+        {/* Employees Table */}
+        <Card className="shadow-card">
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('first_name')}
+                  >
+                    <div className="flex items-center">
+                      Name
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{employee.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{employee.position}</p>
+                  </TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('department')}
+                  >
+                    <div className="flex items-center">
+                      Department
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
-                  </div>
-                  <Badge variant={employee.status === "Active" ? "default" : "secondary"}>
-                    {employee.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{employee.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{employee.phone}</span>
-                  </div>
-                </div>
-                
-                <div className="pt-2 border-t border-border">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Department:</span>
-                    <Badge variant="outline">{employee.department}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center text-sm mt-2">
-                    <span className="text-muted-foreground">Joined:</span>
-                    <span className="font-medium">{employee.joinDate}</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-3">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('position')}
+                  >
+                    <div className="flex items-center">
+                      Position
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('hire_date')}
+                  >
+                    <div className="flex items-center">
+                      Hire Date
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[50px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      Loading employees...
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedEmployees.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No employees found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedEmployees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white text-sm font-semibold">
+                            {employee.first_name[0]}{employee.last_name[0]}
+                          </div>
+                          <div>
+                            <div>{`${employee.first_name} ${employee.last_name}`}</div>
+                            <div className="text-xs text-muted-foreground">{employee.email}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {employee.phone_number || 'N/A'}
+                        </div>
+                      </TableCell>
+                      <TableCell>{employee.department}</TableCell>
+                      <TableCell>{employee.position}</TableCell>
+                      <TableCell>{formatDate(employee.hire_date)}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(employee.status)} className="capitalize">
+                          {employee.status.replace('_', ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />
+                              <span>Edit</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Delete</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {/* Pagination */}
+          {!loading && totalPages > 1 && (
+            <CardFooter className="flex items-center justify-between px-6 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </CardFooter>
+          )}
+        </Card>
       </div>
     </AppLayout>
   );
