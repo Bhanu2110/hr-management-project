@@ -62,6 +62,50 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          notes: string | null
+          status: string
+          total_hours: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_hours?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_hours?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           created_at: string
@@ -113,11 +157,82 @@ export type Database = {
         }
         Relationships: []
       }
+      leave_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string
+          start_date: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          id?: string
+          leave_type: string
+          reason: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          days?: number
+          employee_id?: string
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "admins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_attendance_status: {
+        Args: { employee_uuid: string }
+        Returns: {
+          has_checked_in: boolean
+          last_check_in: string
+          last_check_out: string
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -125,6 +240,10 @@ export type Database = {
       get_user_role: {
         Args: { user_id: string }
         Returns: string
+      }
+      handle_attendance: {
+        Args: { employee_id: string }
+        Returns: Json
       }
       is_admin: {
         Args: { user_id: string }
