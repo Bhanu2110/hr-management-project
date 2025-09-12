@@ -1,23 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-// Log environment variables for debugging (remove in production)
-console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
-console.log('Supabase Key:', supabaseAnonKey ? 'Set' : 'Missing');
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Please check your .env file.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Employee {
   id: string;
@@ -30,7 +11,7 @@ export interface Employee {
   department: string;
   hire_date: string;
   phone_number?: string | null;
-  status: 'active' | 'inactive' | 'on_leave';
+  status: string;
   created_at: string;
   updated_at: string;
 }
