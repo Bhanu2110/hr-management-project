@@ -19,8 +19,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2 } from "lucide-react";
+import { Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2 } from "lucide-react";
 import { employeeService, type Employee } from "@/services/api";
+import { AddEmployeeDialog } from "@/components/employees/AddEmployeeDialog";
 
 type SortDirection = 'asc' | 'desc';
 type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
@@ -34,6 +35,7 @@ const Employees = () => {
   const [sortField, setSortField] = useState<SortField>('first_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0); // Add this line
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -49,7 +51,7 @@ const Employees = () => {
     };
 
     loadEmployees();
-  }, []);
+  }, [refreshKey]); // Add refreshKey to the dependency array
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -121,10 +123,7 @@ const Employees = () => {
               {loading ? 'Loading...' : `Showing ${filteredEmployees.length} employees`}
             </p>
           </div>
-          <Button className="bg-gradient-primary hover:opacity-90 text-black shadow-sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Employee
-          </Button>
+          <AddEmployeeDialog onEmployeeAdded={() => setRefreshKey(prev => prev + 1)} />
         </div>
 
         {/* Search and Filters */}
