@@ -74,13 +74,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
   const onSubmit = async (formValues: EmployeeFormValues) => {
     try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      // Create a complete employee object with all required fields
+      // Create employee record directly without user_id requirement
       const employeeData = {
         employee_id: formValues.employee_id,
         first_name: formValues.first_name,
@@ -88,40 +82,34 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         email: formValues.email,
         department: formValues.department,
         position: formValues.position,
-        hire_date: new Date(formValues.hire_date).toISOString(),
-        user_id: user.id
+        hire_date: formValues.hire_date,
       };
+
+      console.log('Creating employee with data:', employeeData);
       
-      console.log('Submitting employee data:', employeeData);
-      
-      console.log('Submitting employee data:', employeeData);
-      const result = await employeeService.createEmployee(employeeData);
-      
-      if (!result) {
-        throw new Error('No data returned from server');
+      // Insert directly into employees table
+      const { data, error } = await supabase
+        .from('employees')
+        .insert([employeeData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(error.message);
       }
-      
+
       toast({
         title: "Success",
-        description: "Employee added successfully!",
+        description: "Employee added successfully",
       });
       
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding employee:', error);
-      
-      let errorMessage = 'Failed to add employee. Please try again.';
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.error_description) {
-        errorMessage = error.error_description;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
       toast({
-        title: "Error",
-        description: errorMessage,
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Failed to add employee",
         variant: "destructive",
       });
     }
