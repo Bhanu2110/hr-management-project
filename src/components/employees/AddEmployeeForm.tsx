@@ -90,7 +90,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       // Insert directly into employees table
       const { data, error } = await supabase
         .from('employees')
-        .insert([{ ...employeeData, user_id: null }])
+        .insert([{ ...employeeData, user_id: null } as any])
         .select()
         .single();
 
