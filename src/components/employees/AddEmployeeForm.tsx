@@ -74,7 +74,32 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
   const onSubmit = async (formValues: EmployeeFormValues) => {
     try {
-      // Create employee record directly without user_id requirement
+      // Generate a temporary password for the employee
+      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
+      
+      // Create Supabase auth user for the employee
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: formValues.email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          first_name: formValues.first_name,
+          last_name: formValues.last_name,
+          role: 'employee'
+        }
+      });
+
+      if (authError) {
+        console.error('Auth user creation error:', authError);
+        throw new Error(`Failed to create login account: ${authError.message}`);
+      }
+
+      const userId = authData.user?.id;
+      if (!userId) {
+        throw new Error('Failed to get user ID from created account');
+      }
+
+      // Create employee record with the auth user ID
       const employeeData = {
         employee_id: formValues.employee_id,
         first_name: formValues.first_name,
@@ -83,25 +108,28 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         department: formValues.department,
         position: formValues.position,
         hire_date: formValues.hire_date,
+        user_id: userId,
       };
 
       console.log('Creating employee with data:', employeeData);
       
-      // Insert directly into employees table
       const { data, error } = await supabase
         .from('employees')
-        .insert([{ ...employeeData, user_id: null } as any])
+        .insert([employeeData])
         .select()
         .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Employee creation error:', error);
+        // If employee creation fails, clean up the auth user
+        await supabase.auth.admin.deleteUser(userId);
         throw new Error(error.message);
       }
 
       toast({
         title: "Success",
-        description: "Employee added successfully",
+        description: `Employee added successfully. Temporary password: ${tempPassword}`,
+        duration: 10000,
       });
       
       onSuccess();
