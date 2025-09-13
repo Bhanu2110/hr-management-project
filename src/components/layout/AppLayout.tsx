@@ -34,7 +34,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Header */}
           <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shadow-nav">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="lg:hidden" />
+              <SidebarTrigger className="hover:bg-muted rounded-md p-2 transition-colors" />
               <div className="hidden md:flex items-center gap-2 max-w-md">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input 
