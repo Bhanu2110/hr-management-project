@@ -477,7 +477,7 @@ export function filterReportsForUser(
   userDepartment?: string,
   userId?: string,
   searchTerm?: string,
-  reportType?: ReportType,
+  reportType?: ReportType | 'all',
   status?: string
 ): Report[] {
   return reports.filter(report => {

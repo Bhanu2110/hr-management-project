@@ -3,6 +3,7 @@ import {
   NotificationType, 
   NotificationPriority, 
   NotificationStatus,
+  NotificationChannel,
   NotificationCreateRequest,
   NotificationPreferences,
   NotificationStats,
@@ -97,7 +98,7 @@ export function validateNotificationRequest(request: NotificationCreateRequest):
 export function generateDefaultNotificationPreferences(userId: string): NotificationPreferences {
   const defaultTypePreferences = {
     enabled: true,
-    channels: ['in_app', 'email'] as const,
+    channels: ['in_app', 'email'] as NotificationChannel[],
     priority_threshold: 'low' as NotificationPriority,
   };
 
@@ -117,7 +118,7 @@ export function generateDefaultNotificationPreferences(userId: string): Notifica
       reminder: defaultTypePreferences,
       approval: { ...defaultTypePreferences, priority_threshold: 'high' },
       alert: { ...defaultTypePreferences, priority_threshold: 'high' },
-      birthday: { ...defaultTypePreferences, channels: ['in_app'] },
+      birthday: { ...defaultTypePreferences, channels: ['in_app'] as NotificationChannel[] },
       holiday: defaultTypePreferences,
       policy: { ...defaultTypePreferences, priority_threshold: 'medium' },
     },
