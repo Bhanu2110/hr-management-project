@@ -7,6 +7,7 @@ export interface Employee {
   email: string;
   first_name: string;
   last_name: string;
+  pan_number?: string | null;
   position: string;
   department: string;
   hire_date: string;
@@ -29,6 +30,24 @@ export const employeeService = {
     }
 
     return data || [];
+  },
+
+  async getEmployeeByPAN(panNumber: string): Promise<Employee | null> {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*')
+      .eq('pan_number', panNumber.toUpperCase())
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // No employee found
+      }
+      console.error(`Error fetching employee by PAN ${panNumber}:`, error);
+      throw error;
+    }
+
+    return data;
   },
 
   async getEmployeeById(id: string): Promise<Employee | null> {
@@ -91,6 +110,51 @@ export const employeeService = {
       return data as Employee;
     } catch (error) {
       console.error('Error in createEmployee:', error);
+      throw error;
+    }
+  },
+
+  async updateEmployee(id: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'user_id'>>): Promise<Employee | null> {
+    try {
+      const updateData = {
+        ...employeeData,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('employees')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating employee:', error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in updateEmployee:', error);
+      throw error;
+    }
+  },
+
+  async deleteEmployee(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting employee:', error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in deleteEmployee:', error);
       throw error;
     }
   },

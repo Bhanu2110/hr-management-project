@@ -22,6 +22,8 @@ import {
 import { Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2 } from "lucide-react";
 import { employeeService, type Employee } from "@/services/api";
 import { AddEmployeeDialog } from "@/components/employees/AddEmployeeDialog";
+import { EditEmployeeDialog } from "@/components/employees/EditEmployeeDialog";
+import { DeleteEmployeeDialog } from "@/components/employees/DeleteEmployeeDialog";
 
 type SortDirection = 'asc' | 'desc';
 type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
@@ -254,13 +256,29 @@ const Employees = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>Edit</span>
+                            <DropdownMenuItem asChild>
+                              <EditEmployeeDialog 
+                                employee={employee} 
+                                onEmployeeUpdated={() => setRefreshKey(prev => prev + 1)}
+                                trigger={
+                                  <div className="flex items-center w-full cursor-pointer">
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
+                                  </div>
+                                }
+                              />
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete</span>
+                            <DropdownMenuItem asChild>
+                              <DeleteEmployeeDialog 
+                                employee={employee} 
+                                onEmployeeDeleted={() => setRefreshKey(prev => prev + 1)}
+                                trigger={
+                                  <div className="flex items-center w-full cursor-pointer text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete</span>
+                                  </div>
+                                }
+                              />
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

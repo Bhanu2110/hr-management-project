@@ -1,8 +1,18 @@
+import { useAuth } from '@/hooks/useAuth';
 import { MetricCard } from "./MetricCard";
+import { EmployeeDashboard } from "./EmployeeDashboard";
 import { Users, Clock, Calendar, DollarSign, TrendingUp, UserCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function DashboardOverview() {
+  const { isEmployee, isAdmin } = useAuth();
+
+  // Show employee-specific dashboard for employees
+  if (isEmployee) {
+    return <EmployeeDashboard />;
+  }
+
+  // Show admin dashboard for admins
   return (
     <div className="space-y-6">
       {/* Welcome Section */}

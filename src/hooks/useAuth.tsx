@@ -26,7 +26,7 @@ interface AuthContextType {
   session: Session | null;
   employee: UserProfile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (userIdOrEmail: string, password: string, loginType?: 'employee' | 'admin') => Promise<{ error: any }>;
   signUp: (email: string, password: string, employeeData: Partial<UserProfile>) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
@@ -116,10 +116,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (userIdOrEmail: string, password: string = '', loginType: 'employee' | 'admin' = 'employee') => {
     setLoading(true);
+    
+    // Check if input looks like an email (contains @)
+    const isEmail = userIdOrEmail.includes('@');
+    
+    // For employees using PAN number (completely passwordless)
+    if (loginType === 'employee' && !isEmail) {
+      try {
+        const { data: employee, error: lookupError } = await supabase
+          .from('employees')
+          .select('user_id, email, first_name, last_name')
+          .eq('pan_number', userIdOrEmail.toUpperCase())
+          .single();
+          
+        if (lookupError || !employee) {
+          setLoading(false);
+          toast({
+            title: "Login Failed",
+            description: "Invalid PAN number or employee not found",
+            variant: "destructive",
+          });
+          return { error: lookupError || new Error('Employee not found') };
+        }
+        
+        // Create a passwordless session by signing in with a known password
+        // Since we can't bypass Supabase auth completely, we'll use PAN as password
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: employee.email,
+          password: userIdOrEmail.toUpperCase(), // Use PAN as password
+        });
+        
+        if (signInError) {
+          // If password doesn't work, try to update the user's password to their PAN
+          // This handles cases where the employee was created before this change
+          try {
+            // First, try to sign in with a temporary admin session to update password
+            // Since we can't do this client-side, we'll show a helpful error
+            setLoading(false);
+            toast({
+              title: "Account Setup Required",
+              description: "Your account needs to be updated. Please contact admin to reset your login credentials.",
+              variant: "destructive",
+            });
+            return { error: signInError };
+          } catch (updateError) {
+            setLoading(false);
+            toast({
+              title: "Login Failed",
+              description: "Unable to authenticate. Please contact admin.",
+              variant: "destructive",
+            });
+            return { error: signInError };
+          }
+        }
+        
+        setLoading(false);
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${employee.first_name}!`,
+        });
+        return { error: null };
+        
+      } catch (error) {
+        setLoading(false);
+        toast({
+          title: "Login Failed",
+          description: "Error looking up employee information",
+          variant: "destructive",
+        });
+        return { error };
+      }
+    }
+    
+    // For admins, require email format
+    if (loginType === 'admin' && !isEmail) {
+      setLoading(false);
+      toast({
+        title: "Login Failed",
+        description: "Admins must use email address to login",
+        variant: "destructive",
+      });
+      return { error: new Error('Admin must use email') };
+    }
+    
+    // For admin login
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: userIdOrEmail,
       password,
     });
 

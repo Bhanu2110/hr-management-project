@@ -14,8 +14,9 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Login form state
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [loginType, setLoginType] = useState<'employee' | 'admin'>('employee');
 
   // Signup form state
   const [signupEmail, setSignupEmail] = useState('');
@@ -44,7 +45,7 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error } = await signIn(loginUserId, loginPassword, loginType);
     
     if (!error) {
       // Redirect will happen automatically via AuthProvider
@@ -101,27 +102,49 @@ const Auth = () => {
               <form onSubmit={handleLogin}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="login-type">Login As</Label>
+                    <Select value={loginType} onValueChange={(value: 'employee' | 'admin') => setLoginType(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select login type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="employee">Employee</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-userid">
+                      {loginType === 'employee' ? 'PAN Number' : 'Email Address'}
+                    </Label>
                     <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      id="login-userid"
+                      type="text"
+                      placeholder={loginType === 'employee' ? 'Enter your PAN number' : 'Enter your email address'}
+                      value={loginUserId}
+                      onChange={(e) => setLoginUserId(e.target.value)}
                       required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {loginType === 'employee' 
+                        ? 'Employees only need their PAN number to login' 
+                        : 'Admins must provide both email and password'
+                      }
+                    </p>
                   </div>
+                  {loginType === 'admin' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required={loginType === 'admin'}
+                      />
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button 
