@@ -76,26 +76,23 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
   const onSubmit = async (formValues: EmployeeFormValues) => {
     try {
-      // Create Supabase auth user for the employee with provided password
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formValues.email,
-        password: formValues.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            first_name: formValues.first_name,
-            last_name: formValues.last_name,
-            role: 'employee'
-          }
-        }
+      // Create auth user through Edge Function (keeps current admin session intact)
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('create-employee-user', {
+        body: {
+          email: formValues.email,
+          password: formValues.password,
+          first_name: formValues.first_name,
+          last_name: formValues.last_name,
+          role: 'employee',
+        },
       });
 
-      if (authError) {
-        console.error('Auth user creation error:', authError);
-        throw new Error(`Failed to create login account: ${authError.message}`);
+      if (fnError) {
+        console.error('Edge function error:', fnError);
+        throw new Error(`Failed to create login account: ${fnError.message ?? fnError}`);
       }
 
-      const userId = authData.user?.id;
+      const userId = (fnData as any)?.user_id as string | undefined;
       if (!userId) {
         throw new Error('Failed to get user ID from created account');
       }
@@ -114,11 +111,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
       console.log('Creating employee with data:', employeeData);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('employees')
-        .insert([employeeData])
-        .select()
-        .single();
+        .insert([employeeData]);
 
       if (error) {
         console.error('Employee creation error:', error);
