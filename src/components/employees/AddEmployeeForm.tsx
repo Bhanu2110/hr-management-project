@@ -78,14 +78,16 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
       
       // Create Supabase auth user for the employee
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formValues.email,
         password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
-          first_name: formValues.first_name,
-          last_name: formValues.last_name,
-          role: 'employee'
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            first_name: formValues.first_name,
+            last_name: formValues.last_name,
+            role: 'employee'
+          }
         }
       });
 
@@ -121,14 +123,12 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
       if (error) {
         console.error('Employee creation error:', error);
-        // If employee creation fails, clean up the auth user
-        await supabase.auth.admin.deleteUser(userId);
         throw new Error(error.message);
       }
 
       toast({
         title: "Success",
-        description: `Employee added successfully. Temporary password: ${tempPassword}`,
+        description: `Employee added successfully. Login credentials sent to ${formValues.email}. Temporary password: ${tempPassword}`,
         duration: 10000,
       });
       
