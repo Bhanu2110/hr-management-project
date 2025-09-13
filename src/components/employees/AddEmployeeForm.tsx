@@ -39,6 +39,7 @@ const employeeFormSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   department: z.string().min(1, 'Department is required'),
   position: z.string().min(2, 'Position must be at least 2 characters'),
   hire_date: z.string().refine((val) => !isNaN(Date.parse(val)), {
@@ -63,6 +64,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       first_name: "",
       last_name: "",
       email: "",
+      password: "",
       department: "",
       position: "",
       hire_date: new Date().toISOString().split('T')[0], // Default to today
@@ -74,13 +76,10 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
   const onSubmit = async (formValues: EmployeeFormValues) => {
     try {
-      // Generate a temporary password for the employee
-      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
-      
-      // Create Supabase auth user for the employee
+      // Create Supabase auth user for the employee with provided password
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formValues.email,
-        password: tempPassword,
+        password: formValues.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
@@ -128,8 +127,8 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
       toast({
         title: "Success",
-        description: `Employee added successfully. Login credentials sent to ${formValues.email}. Temporary password: ${tempPassword}`,
-        duration: 10000,
+        description: `Employee added successfully. They can now login with their email and the password you set.`,
+        duration: 5000,
       });
       
       onSuccess();
@@ -200,6 +199,20 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input placeholder="john.doe@example.com" type="email" {...field} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter password for employee" type="password" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
