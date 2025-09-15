@@ -236,7 +236,7 @@ const Employees = () => {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-muted-foreground">
-                          {employee.phone_number || 'N/A'}
+                          {employee.phone || 'N/A'}
                         </div>
                       </TableCell>
                       <TableCell>{employee.department}</TableCell>

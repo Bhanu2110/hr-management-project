@@ -49,7 +49,7 @@ const editEmployeeFormSchema = z.object({
   hire_date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Please enter a valid date.",
   }),
-  phone_number: z.string().optional(),
+  phone: z.string().optional(),
   pan_number: z.string().optional(),
   status: z.string().min(1, 'Status is required'),
 });
@@ -73,7 +73,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       department: employee.department,
       position: employee.position,
       hire_date: employee.hire_date.split('T')[0], // Convert to date format
-      phone_number: employee.phone_number || '',
+      phone: employee.phone || '',
       pan_number: employee.pan_number || '',
       status: employee.status,
     },
@@ -166,7 +166,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
 
         <FormField
           control={form.control}
-          name="phone_number"
+          name="phone"
           render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Phone Number</FormLabel>

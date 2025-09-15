@@ -11,7 +11,7 @@ export interface Employee {
   position: string;
   department: string;
   hire_date: string;
-  phone_number?: string | null;
+  phone?: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -116,8 +116,16 @@ export const employeeService = {
 
   async updateEmployee(id: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'user_id'>>): Promise<Employee | null> {
     try {
+      // Map potential legacy field `phone_number` to `phone`
+      const anyData = employeeData as any;
+      const mappedData: Record<string, any> = { ...anyData };
+      if (mappedData.phone_number !== undefined) {
+        mappedData.phone = mappedData.phone_number;
+        delete mappedData.phone_number;
+      }
+
       const updateData = {
-        ...employeeData,
+        ...mappedData,
         updated_at: new Date().toISOString(),
       };
 
