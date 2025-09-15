@@ -18,7 +18,7 @@ export const form16Service = {
   async getEmployeeForm16Documents(employeeId: string): Promise<Form16Document[]> {
     const { data, error } = await supabase
       .from('form16_documents')
-      .select('*')
+      .select('*, updated_at')
       .eq('employee_id', employeeId)
       .order('financial_year', { ascending: false });
 
@@ -27,7 +27,10 @@ export const form16Service = {
       throw error;
     }
 
-    return data || [];
+    return (data || []).map(doc => ({
+      ...doc,
+      updated_at: doc.updated_at || doc.created_at
+    }));
   },
 
   // Get all Form 16 documents (admin only)
@@ -36,6 +39,7 @@ export const form16Service = {
       .from('form16_documents')
       .select(`
         *,
+        updated_at,
         employees!inner(
           id,
           first_name,
@@ -51,7 +55,10 @@ export const form16Service = {
       throw error;
     }
 
-    return data || [];
+    return (data || []).map(doc => ({
+      ...doc,
+      updated_at: doc.updated_at || doc.created_at
+    }));
   },
 
   // Upload Form 16 document
@@ -85,7 +92,7 @@ export const form16Service = {
         financial_year: financialYear,
         uploaded_by: uploadedBy,
       }])
-      .select()
+      .select('*, updated_at')
       .single();
 
     if (error) {
@@ -95,7 +102,10 @@ export const form16Service = {
       throw new Error(`Failed to create Form 16 record: ${error.message}`);
     }
 
-    return data;
+    return {
+      ...data,
+      updated_at: data.updated_at || data.created_at
+    };
   },
 
   // Delete Form 16 document (admin only)
@@ -180,7 +190,7 @@ export const form16Service = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', documentId)
-      .select()
+      .select('*, updated_at')
       .single();
 
     if (error) {
@@ -188,6 +198,9 @@ export const form16Service = {
       throw error;
     }
 
-    return data;
+    return {
+      ...data,
+      updated_at: data.updated_at || data.created_at
+    };
   },
 };
