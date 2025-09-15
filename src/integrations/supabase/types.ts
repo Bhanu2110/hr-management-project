@@ -160,6 +160,63 @@ export type Database = {
         }
         Relationships: []
       }
+      form16_documents: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          financial_year: string
+          id: string
+          quarter: string | null
+          updated_at: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          financial_year: string
+          id?: string
+          quarter?: string | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          financial_year?: string
+          id?: string
+          quarter?: string | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form16_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form16_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "admins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_requests: {
         Row: {
           admin_notes: string | null
@@ -221,62 +278,6 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      form16_documents: {
-        Row: {
-          created_at: string
-          employee_id: string
-          file_name: string
-          file_path: string
-          file_size: number | null
-          financial_year: string
-          id: string
-          quarter: string | null
-          uploaded_at: string
-          uploaded_by: string | null
-        }
-        Insert: {
-          created_at?: string
-          employee_id: string
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          financial_year: string
-          id?: string
-          quarter?: string | null
-          updated_at?: string
-          uploaded_at?: string
-          uploaded_by?: string | null
-        }
-        Update: {
-          created_at?: string
-          employee_id?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          financial_year?: string
-          id?: string
-          quarter?: string | null
-          updated_at?: string
-          uploaded_at?: string
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "form16_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "form16_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "admins"
-            referencedColumns: ["id"]
-          }
         ]
       }
     }
