@@ -18,7 +18,7 @@ export const form16Service = {
   async getEmployeeForm16Documents(employeeId: string): Promise<Form16Document[]> {
     const { data, error } = await supabase
       .from('form16_documents')
-      .select('*, updated_at')
+      .select('*')
       .eq('employee_id', employeeId)
       .order('financial_year', { ascending: false });
 
@@ -27,9 +27,9 @@ export const form16Service = {
       throw error;
     }
 
-    return (data || []).map(doc => ({
+    return (data || []).map((doc: any) => ({
       ...doc,
-      updated_at: doc.updated_at || doc.created_at
+      updated_at: doc?.updated_at || doc?.created_at
     }));
   },
 
@@ -39,7 +39,6 @@ export const form16Service = {
       .from('form16_documents')
       .select(`
         *,
-        updated_at,
         employees!inner(
           id,
           first_name,
@@ -55,9 +54,9 @@ export const form16Service = {
       throw error;
     }
 
-    return (data || []).map(doc => ({
+    return (data || []).map((doc: any) => ({
       ...doc,
-      updated_at: doc.updated_at || doc.created_at
+      updated_at: doc?.updated_at || doc?.created_at
     }));
   },
 
@@ -92,7 +91,7 @@ export const form16Service = {
         financial_year: financialYear,
         uploaded_by: uploadedBy,
       }])
-      .select('*, updated_at')
+      .select()
       .single();
 
     if (error) {
@@ -102,9 +101,10 @@ export const form16Service = {
       throw new Error(`Failed to create Form 16 record: ${error.message}`);
     }
 
+    const d = data as any;
     return {
-      ...data,
-      updated_at: data.updated_at || data.created_at
+      ...d,
+      updated_at: d?.updated_at || d?.created_at
     };
   },
 
@@ -190,7 +190,7 @@ export const form16Service = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', documentId)
-      .select('*, updated_at')
+      .select()
       .single();
 
     if (error) {
@@ -198,9 +198,10 @@ export const form16Service = {
       throw error;
     }
 
+    const d = data as any;
     return {
-      ...data,
-      updated_at: data.updated_at || data.created_at
+      ...d,
+      updated_at: d?.updated_at || d?.created_at
     };
   },
 };
