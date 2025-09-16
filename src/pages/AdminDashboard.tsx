@@ -14,16 +14,20 @@ const AdminDashboard = () => {
         {/* Welcome Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {employee?.first_name}!
-            </h1>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="default" className="bg-primary/10 text-primary">
-                Administrator
-              </Badge>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{employee?.department}</span>
-            </div>
+          <h1 className="text-3xl font-bold text-[#E15B55]">
+            Welcome back, {employee?.first_name}!
+          </h1>
+          <div className="flex items-center gap-2 mt-2">
+  <Badge 
+    variant="default" 
+    className="bg-[#E15B55]/10 text-[#E15B55]"
+  >
+    Administrator
+  </Badge>
+  <span className="text-[#E15B55]">•</span>
+  <span className="text-[#E15B55]">{employee?.department}</span>
+</div>
+
           </div>
         </div>
 

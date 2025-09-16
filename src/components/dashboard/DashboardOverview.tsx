@@ -17,10 +17,10 @@ export function DashboardOverview() {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-primary rounded-lg p-6 text-white">
-  <h1 className="text-2xl font-bold mb-2 text-red-500">
+  <h1 className="text-2xl font-bold mb-2 text-[#E15B55]">
     Welcome to HR Management System
   </h1>
-  <p className="text-red-400">
+  <p className="text-[#E15B55]/80">
     Manage your workforce efficiently with our comprehensive HR tools
   </p>
 </div>

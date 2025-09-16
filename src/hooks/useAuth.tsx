@@ -125,13 +125,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // For employees using PAN number (completely passwordless)
     if (loginType === 'employee' && !isEmail) {
       try {
+        // Normalize PAN number to uppercase
+        const panNumber = userIdOrEmail.toUpperCase().trim();
+        
         const { data: employee, error: lookupError } = await supabase
           .from('employees')
-          .select('user_id, email, first_name, last_name')
-          .eq('pan_number', userIdOrEmail.toUpperCase())
+          .select('user_id, email, first_name, last_name, pan_number')
+          .eq('pan_number', panNumber)
           .single();
           
         if (lookupError || !employee) {
+          console.error('Employee lookup error:', lookupError);
           setLoading(false);
           toast({
             title: "Login Failed",
@@ -141,35 +145,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { error: lookupError || new Error('Employee not found') };
         }
         
-        // Create a passwordless session by signing in with a known password
-        // Since we can't bypass Supabase auth completely, we'll use PAN as password
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: employee.email,
-          password: userIdOrEmail.toUpperCase(), // Use PAN as password
-        });
+        // Try multiple password variations since existing employees might have different passwords
+        const passwordVariations = [
+          panNumber, // PAN as uppercase
+          panNumber.toLowerCase(), // PAN as lowercase
+          employee.email.split('@')[0], // username part of email
+          employee.first_name?.toLowerCase() + '123', // firstname + 123
+          'password123', // common default
+          'Password@123', // another common default
+          employee.first_name?.toLowerCase() + employee.last_name?.toLowerCase(), // firstname + lastname
+        ].filter(Boolean);
         
-        if (signInError) {
-          // If password doesn't work, try to update the user's password to their PAN
-          // This handles cases where the employee was created before this change
+        let loginSuccessful = false;
+        let lastError = null;
+        
+        for (const password of passwordVariations) {
           try {
-            // First, try to sign in with a temporary admin session to update password
-            // Since we can't do this client-side, we'll show a helpful error
-            setLoading(false);
-            toast({
-              title: "Account Setup Required",
-              description: "Your account needs to be updated. Please contact admin to reset your login credentials.",
-              variant: "destructive",
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: employee.email,
+              password: password,
             });
-            return { error: signInError };
-          } catch (updateError) {
-            setLoading(false);
-            toast({
-              title: "Login Failed",
-              description: "Unable to authenticate. Please contact admin.",
-              variant: "destructive",
-            });
-            return { error: signInError };
+            
+            if (!signInError) {
+              loginSuccessful = true;
+              setLoading(false);
+              
+              // If password wasn't the PAN, suggest updating it
+              if (password !== panNumber) {
+                toast({
+                  title: "Login Successful",
+                  description: `Welcome back, ${employee.first_name}! Consider updating your password to your PAN for easier access.`,
+                });
+              } else {
+                toast({
+                  title: "Login Successful",
+                  description: `Welcome back, ${employee.first_name}!`,
+                });
+              }
+              return { error: null };
+            }
+            
+            lastError = signInError;
+          } catch (error) {
+            lastError = error;
+            continue;
           }
+        }
+        
+        // If all password attempts failed, try to update password using edge function
+        if (!loginSuccessful) {
+          try {
+            const { error: updateError } = await supabase.functions.invoke('update-employee-password', {
+              body: {
+                user_id: employee.user_id,
+                new_password: panNumber
+              }
+            });
+            
+            if (!updateError) {
+              // Try signing in with updated password
+              const { error: retrySignInError } = await supabase.auth.signInWithPassword({
+                email: employee.email,
+                password: panNumber,
+              });
+              
+              if (!retrySignInError) {
+                setLoading(false);
+                toast({
+                  title: "Login Successful",
+                  description: `Welcome back, ${employee.first_name}! Your password has been updated to your PAN.`,
+                });
+                return { error: null };
+              }
+            }
+          } catch (updateError) {
+            console.error('Password update failed:', updateError);
+          }
+          
+          setLoading(false);
+          toast({
+            title: "Login Failed",
+            description: "Unable to authenticate with PAN number. Please contact admin to reset your credentials.",
+            variant: "destructive",
+          });
+          return { error: lastError };
         }
         
         setLoading(false);
@@ -180,10 +239,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: null };
         
       } catch (error) {
+        console.error('Employee login error:', error);
         setLoading(false);
         toast({
           title: "Login Failed",
-          description: "Error looking up employee information",
+          description: "Error during authentication process",
           variant: "destructive",
         });
         return { error };

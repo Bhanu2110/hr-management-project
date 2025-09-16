@@ -52,13 +52,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(employee?.first_name, employee?.last_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+  <Avatar className="h-9 w-9">
+    <AvatarFallback className="bg-[#E15B55] text-white">
+      {getInitials(employee?.first_name, employee?.last_name)}
+    </AvatarFallback>
+  </Avatar>
+</Button>
+
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
