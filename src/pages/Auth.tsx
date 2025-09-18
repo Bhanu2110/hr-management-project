@@ -87,36 +87,31 @@ const Auth = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="login-userid">
-                  {loginType === 'employee' ? 'PAN Number' : 'Email Address'}
+                  Email Address
                 </Label>
                 <Input
                   id="login-userid"
-                  type="text"
-                  placeholder={loginType === 'employee' ? 'Enter your PAN number' : 'Enter your email address'}
+                  type="email"
+                  placeholder="Enter your email address"
                   value={loginUserId}
                   onChange={(e) => setLoginUserId(e.target.value)}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  {loginType === 'employee' 
-                    ? 'Employees only need their PAN number to login' 
-                    : 'Admins must provide both email and password'
-                  }
+                  Enter your registered email address to login.
                 </p>
               </div>
-              {loginType === 'admin' && (
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required={loginType === 'admin'}
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Password</Label>
+                <Input
+                  id="login-password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
+                />
+              </div>
             </CardContent>
             <CardFooter>
               <Button 

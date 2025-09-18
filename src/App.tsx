@@ -29,7 +29,7 @@ function DashboardRouter() {
     return <AdminDashboard />;
   } else if (isEmployee) {
     // Redirect employees directly to Form 16 page
-    return <Navigate to="/form-16" replace />;
+    return <EmployeeDashboard />;
   }
   
   return <Navigate to="/auth" replace />;

@@ -49,6 +49,7 @@ const employeeFormSchema = z.object({
   form16_file: z.any().optional(),
   financial_year: z.string().min(1, "Financial year is required"),
   quarter: z.string().optional(),
+  password: z.string().min(6, 'Password must be at least 6 characters'), // New password field
 });
 
 type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
@@ -88,7 +89,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         const { data: fnData, error: fnError } = await supabase.functions.invoke('create-employee-user', {
           body: {
             email: formValues.email,
-            password: formValues.pan_number.toUpperCase(), // Use PAN as password for employees
+            password: formValues.password, // Use the new password field
             first_name: formValues.first_name,
             last_name: formValues.last_name,
             role: 'employee',
@@ -106,7 +107,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         // Fallback: Direct signup (will require admin to re-login)
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formValues.email,
-          password: formValues.pan_number.toUpperCase(), // Use PAN as password for employees
+          password: formValues.password, // Use the new password field
           options: {
             data: {
               first_name: formValues.first_name,
@@ -145,6 +146,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         position: formValues.position,
         hire_date: formValues.hire_date,
         user_id: userId,
+        password_hash: '' // Placeholder to satisfy not-null constraint. Review database schema for password_hash column.
       };
 
       console.log('Creating employee with data:', employeeData);
@@ -201,7 +203,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
       toast({
         title: "Success",
-        description: `Employee added successfully. They can now login using only their PAN number: ${formValues.pan_number}`,
+        description: `Employee added successfully. They can now login using their email address and the password you set.`,
         duration: 5000,
       });
       
@@ -281,6 +283,20 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
         <FormField
           control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input placeholder="Set employee password" type="password" {...field} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="pan_number"
           render={({ field }) => (
             <FormItem className="md:col-span-2">
@@ -295,9 +311,6 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                 />
               </FormControl>
               <FormMessage />
-              <p className="text-xs text-muted-foreground">
-                This will be used as the employee's login ID
-              </p>
             </FormItem>
           )}
         />

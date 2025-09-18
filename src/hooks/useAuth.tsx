@@ -118,33 +118,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (userIdOrEmail: string, password: string = '', loginType: 'employee' | 'admin' = 'employee') => {
     setLoading(true);
-    
-    // Check if input looks like an email (contains @)
-    const isEmail = userIdOrEmail.includes('@');
-    
-    // For employees using PAN number (completely passwordless)
-    if (loginType === 'employee' && !isEmail) {
+
+    const isEmailFormat = userIdOrEmail.includes('@');
+
+    if (loginType === 'employee') {
+      if (!isEmailFormat) {
+        setLoading(false);
+        toast({
+          title: "Login Failed",
+          description: "Employees must use an email address to login.",
+          variant: "destructive",
+        });
+        return { error: new Error('Employee must use email') };
+      }
+
+      // Try to sign in directly with the provided email and password
+      const { error: directSignInError } = await supabase.auth.signInWithPassword({
+        email: userIdOrEmail,
+        password: password,
+      });
+
+      if (!directSignInError) {
+        setLoading(false);
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+        return { error: null };
+      }
+
+      // If direct sign-in fails, try to find employee by email and then try password variations
       try {
-        // Normalize PAN number to uppercase
-        const panNumber = userIdOrEmail.toUpperCase().trim();
-        
         const { data: employee, error: lookupError } = await supabase
           .from('employees')
           .select('user_id, email, first_name, last_name, pan_number')
-          .eq('pan_number', panNumber)
+          .eq('email', userIdOrEmail)
           .single();
-          
+
         if (lookupError || !employee) {
           console.error('Employee lookup error:', lookupError);
           setLoading(false);
           toast({
             title: "Login Failed",
-            description: "Invalid PAN number or employee not found",
+            description: "Invalid credentials or employee not found",
             variant: "destructive",
           });
           return { error: lookupError || new Error('Employee not found') };
         }
-        
+
+        const panNumber = employee.pan_number?.toUpperCase().trim() || '';
+
         // Try multiple password variations since existing employees might have different passwords
         const passwordVariations = [
           panNumber, // PAN as uppercase
@@ -155,26 +178,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Password@123', // another common default
           employee.first_name?.toLowerCase() + employee.last_name?.toLowerCase(), // firstname + lastname
         ].filter(Boolean);
-        
+
         let loginSuccessful = false;
         let lastError = null;
-        
-        for (const password of passwordVariations) {
+
+        for (const variation of passwordVariations) {
           try {
             const { error: signInError } = await supabase.auth.signInWithPassword({
               email: employee.email,
-              password: password,
+              password: variation,
             });
             
             if (!signInError) {
               loginSuccessful = true;
               setLoading(false);
               
-              // If password wasn't the PAN, suggest updating it
-              if (password !== panNumber) {
+              if (variation !== panNumber && panNumber) {
                 toast({
                   title: "Login Successful",
-                  description: `Welcome back, ${employee.first_name}! Consider updating your password to your PAN for easier access.`,
+                  description: `Welcome back, ${employee.first_name}! Consider updating your password for easier access.`,
                 });
               } else {
                 toast({
@@ -192,30 +214,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        // If all password attempts failed, try to update password using edge function
         if (!loginSuccessful) {
           try {
-            const { error: updateError } = await supabase.functions.invoke('update-employee-password', {
-              body: {
-                user_id: employee.user_id,
-                new_password: panNumber
-              }
-            });
-            
-            if (!updateError) {
-              // Try signing in with updated password
-              const { error: retrySignInError } = await supabase.auth.signInWithPassword({
-                email: employee.email,
-                password: panNumber,
+            if (panNumber) {
+              const { error: updateError } = await supabase.functions.invoke('update-employee-password', {
+                body: {
+                  user_id: employee.user_id,
+                  new_password: panNumber
+                }
               });
               
-              if (!retrySignInError) {
-                setLoading(false);
-                toast({
-                  title: "Login Successful",
-                  description: `Welcome back, ${employee.first_name}! Your password has been updated to your PAN.`,
+              if (!updateError) {
+                const { error: retrySignInError } = await supabase.auth.signInWithPassword({
+                  email: employee.email,
+                  password: panNumber,
                 });
-                return { error: null };
+                
+                if (!retrySignInError) {
+                  setLoading(false);
+                  toast({
+                    title: "Login Successful",
+                    description: `Welcome back, ${employee.first_name}! Your password has been updated to your PAN.`,
+                  });
+                  return { error: null };
+                }
               }
             }
           } catch (updateError) {
@@ -225,19 +247,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           toast({
             title: "Login Failed",
-            description: "Unable to authenticate with PAN number. Please contact admin to reset your credentials.",
+            description: "Unable to authenticate with provided credentials. Please contact admin to reset your credentials.",
             variant: "destructive",
           });
-          return { error: lastError };
+          return { error: lastError || new Error("Authentication failed after multiple attempts.") };
         }
-        
-        setLoading(false);
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${employee.first_name}!`,
-        });
-        return { error: null };
-        
       } catch (error) {
         console.error('Employee login error:', error);
         setLoading(false);
@@ -249,34 +263,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error };
       }
     }
-    
-    // For admins, require email format
-    if (loginType === 'admin' && !isEmail) {
-      setLoading(false);
-      toast({
-        title: "Login Failed",
-        description: "Admins must use email address to login",
-        variant: "destructive",
-      });
-      return { error: new Error('Admin must use email') };
-    }
-    
-    // For admin login
-    const { error } = await supabase.auth.signInWithPassword({
-      email: userIdOrEmail,
-      password,
-    });
 
-    if (error) {
-      setLoading(false);
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
+    if (loginType === 'admin') {
+      if (!isEmailFormat) {
+        setLoading(false);
+        toast({
+          title: "Login Failed",
+          description: "Admins must use an email address to login.",
+          variant: "destructive",
+        });
+        return { error: new Error('Admin must use email') };
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: userIdOrEmail,
+        password: password,
       });
+
+      if (error) {
+        setLoading(false);
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back, Admin!",
+        });
+      }
+      return { error };
     }
 
-    return { error };
+    setLoading(false);
+    return { error: new Error("Invalid login type.") };
   };
 
   const signUp = async (email: string, password: string, employeeData: Partial<UserProfile>) => {

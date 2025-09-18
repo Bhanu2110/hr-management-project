@@ -33,7 +33,7 @@ const navigationItems = [
   { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
   { title: "Salary Slips", url: "/salary-slips", icon: Receipt, roles: ['admin', 'employee'] },
-  { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] },
+  { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] }, 
   { title: "Documents", url: "/documents", icon: FolderOpen, roles: ['admin', 'employee'] },
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ['admin', 'employee'] },
 ];

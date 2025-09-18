@@ -36,8 +36,12 @@ const Form16 = () => {
     );
   }
 
-  // For employees, show only the Form 16 download component without sidebar
-  return <Form16Download />;
+  // For employees, show only the Form 16 download component with sidebar
+  return (
+    <AppLayout>
+      <Form16Download />
+    </AppLayout>
+  );
 };
 
 export default Form16;
