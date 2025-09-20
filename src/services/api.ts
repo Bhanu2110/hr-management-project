@@ -150,6 +150,7 @@ export const employeeService = {
 
   async deleteEmployee(id: string): Promise<boolean> {
     try {
+      // Delete the employee record - the database trigger will handle auth user deletion
       const { error } = await supabase
         .from('employees')
         .delete()

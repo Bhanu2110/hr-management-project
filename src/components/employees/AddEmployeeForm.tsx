@@ -40,16 +40,12 @@ const employeeFormSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  pan_number: z.string().min(10, 'PAN number must be 10 characters').max(10, 'PAN number must be 10 characters').regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format (e.g., ABCDE1234F)'),
   department: z.string().min(1, 'Department is required'),
   position: z.string().min(2, 'Position must be at least 2 characters'),
   hire_date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Please enter a valid date.",
   }),
-  form16_file: z.any().optional(),
-  financial_year: z.string().min(1, "Financial year is required"),
-  quarter: z.string().optional(),
-  password: z.string().min(6, 'Password must be at least 6 characters'), // New password field
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
@@ -68,13 +64,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       first_name: "",
       last_name: "",
       email: "",
-      pan_number: "",
       department: "",
       position: "",
       hire_date: new Date().toISOString().split('T')[0], // Default to today
-      form16_file: undefined,
-      financial_year: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
-      quarter: "",
     },
   });
 
@@ -141,7 +133,6 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         first_name: formValues.first_name,
         last_name: formValues.last_name,
         email: formValues.email,
-        pan_number: formValues.pan_number.toUpperCase(),
         department: formValues.department,
         position: formValues.position,
         hire_date: formValues.hire_date,
@@ -162,44 +153,6 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         throw new Error(error.message);
       }
 
-      // Handle Form 16 upload if file is provided
-      if (formValues.form16_file && formValues.form16_file.length > 0) {
-        const file = formValues.form16_file[0];
-        const fileName = `form16_${employeeRecord.id}_${formValues.financial_year}.pdf`;
-        const filePath = `form16/${fileName}`;
-
-        // Upload file to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('Form 16 upload error:', uploadError);
-          // Don't fail the entire process, just warn
-          toast({
-            title: "Warning",
-            description: "Employee created but Form 16 upload failed. You can upload it later.",
-            variant: "destructive",
-          });
-        } else {
-          // Save Form 16 record to database
-          const { error: form16Error } = await supabase
-            .from('form16_documents')
-            .insert([{
-              employee_id: employeeRecord.id,
-              file_name: fileName,
-              file_path: filePath,
-              file_size: file.size,
-              financial_year: formValues.financial_year,
-              quarter: formValues.quarter || null,
-              uploaded_by: employee?.id, // Current admin's ID
-            }]);
-
-          if (form16Error) {
-            console.error('Form 16 record creation error:', form16Error);
-          }
-        }
-      }
 
       toast({
         title: "Success",
@@ -295,25 +248,6 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="pan_number"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>PAN Number</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="ABCDE1234F" 
-                  {...field} 
-                  disabled={isLoading}
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                  maxLength={10}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -371,72 +305,6 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="financial_year"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Financial Year (for Form 16)</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="2023-2024" 
-                    {...field} 
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="form16_file"
-            render={({ field: { onChange, value, ...field } }) => (
-              <FormItem>
-                <FormLabel>Form 16 Document (Optional)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => onChange(e.target.files)}
-                    disabled={isLoading}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-                <p className="text-xs text-muted-foreground">
-                  Upload employee's Form 16 document (PDF, DOC, DOCX)
-                </p>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="quarter"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Quarter</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select quarter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Q1">Q1 (April - June)</SelectItem>
-                    <SelectItem value="Q2">Q2 (July - September)</SelectItem>
-                    <SelectItem value="Q3">Q3 (October - December)</SelectItem>
-                    <SelectItem value="Q4">Q4 (January - March)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <div className="flex justify-end space-x-3 pt-4">
           <Button

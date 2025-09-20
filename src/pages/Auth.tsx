@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Building2 } from 'lucide-react';
 
 const Auth = () => {
@@ -15,7 +14,6 @@ const Auth = () => {
   // Login form state
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [loginType, setLoginType] = useState<'employee' | 'admin'>('employee');
 
   // Redirect if already authenticated
   if (user) {
@@ -34,7 +32,7 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    const { error } = await signIn(loginUserId, loginPassword, loginType);
+    const { error } = await signIn(loginUserId, loginPassword);
     
     if (!error) {
       // Redirect will happen automatically via AuthProvider
@@ -73,18 +71,6 @@ const Auth = () => {
           </CardHeader>
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-type">Login As</Label>
-                <Select value={loginType} onValueChange={(value: 'employee' | 'admin') => setLoginType(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select login type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="login-userid">
                   Email Address

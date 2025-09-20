@@ -50,7 +50,6 @@ const editEmployeeFormSchema = z.object({
     message: "Please enter a valid date.",
   }),
   phone: z.string().optional(),
-  pan_number: z.string().optional(),
   status: z.string().min(1, 'Status is required'),
 });
 
@@ -74,7 +73,6 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       position: employee.position,
       hire_date: employee.hire_date.split('T')[0], // Convert to date format
       phone: employee.phone || '',
-      pan_number: employee.pan_number || '',
       status: employee.status,
     },
   });
@@ -178,19 +176,6 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="pan_number"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>PAN Number</FormLabel>
-              <FormControl>
-                <Input placeholder="ABCDE1234F" {...field} disabled={isLoading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField

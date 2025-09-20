@@ -76,8 +76,8 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
         .insert([{
           employee_id: employee.id,
           leave_type: values.leave_type,
-          start_date: values.start_date.toISOString().split('T')[0],
-          end_date: values.end_date.toISOString().split('T')[0],
+          start_date: format(values.start_date, 'yyyy-MM-dd'),
+          end_date: format(values.end_date, 'yyyy-MM-dd'),
           days,
           reason: values.reason,
           status: 'pending'

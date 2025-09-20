@@ -24,20 +24,23 @@ const EmployeeDashboard = () => {
         {/* Welcome Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {employee?.first_name}!
-            </h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#E15B55' }}>
+            Welcome back, {employee?.first_name}!
+          </h1>
+
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary">
-                Employee
-              </Badge>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{employee?.department}</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{employee?.position}</span>
+            <Badge className="bg-[#E15B55] text-white">
+              Employee
+            </Badge>
+
+            <span className="text-[#E15B55]">•</span>
+            <span className="text-[#E15B55]">{employee?.department}</span>
+            <span className="text-[#E15B55]">•</span>
+            <span className="text-[#E15B55]">{employee?.position}</span>
+
             </div>
           </div>
-          <Button>
+          <Button className="bg-[#E15B55] hover:bg-[#cc4f49] text-white">
             <Clock className="mr-2 h-4 w-4" />
             Clock In
           </Button>
@@ -79,14 +82,18 @@ const EmployeeDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Request Leave</CardTitle>
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-[#E15B55]">
+              Request Leave
+            </CardTitle>
+            <CalendarDays className="h-4 w-4 text-[#E15B55]" />
+
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground mb-3">
-                Submit a new leave request
-              </p>
-              <Button size="sm" className="w-full">
+            <p className="text-xs mb-3 text-[#E15B55]">
+              Submit a new leave request
+            </p>
+
+              <Button size="sm" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white">
                 New Request
               </Button>
             </CardContent>
@@ -94,14 +101,17 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">My Profile</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-[#E15B55]">
+              My Profile
+            </CardTitle>
+            <User className="h-4 w-4 text-[#E15B55]" />
+
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground mb-3">
-                Update personal information
+            <p className="text-xs mb-3 text-[#E15B55]">
+              Update personal information
               </p>
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white">
                 View Profile
               </Button>
             </CardContent>
@@ -109,14 +119,17 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Download Payslip</CardTitle>
-              <Download className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-[#E15B55]">
+              Download Payslip
+            </CardTitle>
+            <Download className="h-4 w-4 text-[#E15B55]" />
+
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground mb-3">
-                Get latest salary slip
+            <p className="text-xs mb-3 text-[#E15B55]">
+              Get latest salary slip
               </p>
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white">
                 Download
               </Button>
             </CardContent>

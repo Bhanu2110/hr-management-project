@@ -34,6 +34,7 @@ const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('first_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,13 +67,17 @@ const Employees = () => {
 
   const filteredEmployees = employees.filter(employee => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       employee.first_name.toLowerCase().includes(searchLower) ||
       employee.last_name.toLowerCase().includes(searchLower) ||
       employee.email.toLowerCase().includes(searchLower) ||
       employee.department.toLowerCase().includes(searchLower) ||
       employee.position.toLowerCase().includes(searchLower)
     );
+    
+    const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
@@ -145,15 +150,24 @@ const Employees = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
-                    Filter
+                    {statusFilter === 'all' ? 'Filter' : `Filter: ${statusFilter.replace('_', ' ')}`}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                  <DropdownMenuItem>Active</DropdownMenuItem>
-                  <DropdownMenuItem>Inactive</DropdownMenuItem>
-                  <DropdownMenuItem>On Leave</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                    All Employees
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('active')}>
+                    Active
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('inactive')}>
+                    Inactive
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('on_leave')}>
+                    On Leave
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
