@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/context/ThemeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Settings, FileText, Calendar } from "lucide-react";
@@ -8,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const { employee } = useAuth();
+  const { themeColor } = useTheme();
   const navigate = useNavigate();
 
   return (
@@ -16,18 +18,18 @@ const AdminDashboard = () => {
         {/* Welcome Header */}
         <div className="flex items-center justify-between">
           <div>
-          <h1 className="text-3xl font-bold text-[#E15B55]">
+          <h1 className="text-3xl font-bold" style={{ color: themeColor }}>
             Welcome back, {employee?.first_name}!
           </h1>
           <div className="flex items-center gap-2 mt-2">
   <Badge 
     variant="default" 
-    className="bg-[#E15B55]/10 text-[#E15B55]"
+    style={{ backgroundColor: `${themeColor}20`, color: themeColor === '#E15B55' ? 'black' : 'white' }}
   >
     Administrator
   </Badge>
-  <span className="text-[#E15B55]">•</span>
-  <span className="text-[#E15B55]">{employee?.department}</span>
+  <span style={{ color: themeColor }}>•</span>
+  <span style={{ color: themeColor }}>{employee?.department}</span>
 </div>
 
           </div>
@@ -40,8 +42,8 @@ const AdminDashboard = () => {
             onClick={() => navigate('/employees')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Manage Employees</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>Manage Employees</CardTitle>
+              <Users className="h-4 w-4" style={{ color: themeColor }} />
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">
@@ -52,8 +54,8 @@ const AdminDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Settings</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>System Settings</CardTitle>
+              <Settings className="h-4 w-4" style={{ color: themeColor }} />
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">
@@ -64,8 +66,8 @@ const AdminDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reports</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>Reports</CardTitle>
+              <FileText className="h-4 w-4" style={{ color: themeColor }} />
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">
@@ -79,8 +81,8 @@ const AdminDashboard = () => {
             onClick={() => navigate('/leave-requests')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Leave Management</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>Leave Management</CardTitle>
+              <Calendar className="h-4 w-4" style={{ color: themeColor }} />
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">

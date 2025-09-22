@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { RealTimeNotificationBell } from "@/components/notifications/RealTimeNotificationBell";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { useTheme } from "@/context/ThemeContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { employee, signOut, isAdmin } = useAuth();
+  const { themeColor } = useTheme();
   
   const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
@@ -46,13 +49,14 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
             
             <div className="flex items-center gap-3">
+              <ThemeSwitcher />
               <RealTimeNotificationBell />
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
   <Avatar className="h-9 w-9">
-    <AvatarFallback className="bg-[#E15B55] text-white">
+    <AvatarFallback style={{ backgroundColor: themeColor }} className="text-white">
       {getInitials(employee?.first_name, employee?.last_name)}
     </AvatarFallback>
   </Avatar>

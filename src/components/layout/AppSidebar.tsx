@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/context/ThemeContext";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,7 @@ const navigationItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const { employee } = useAuth();
+  const { themeColor } = useTheme();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
@@ -58,11 +60,10 @@ export function AppSidebar() {
     const active = isActive(path);
     return `${
       active 
-      ? "bg-[#E15B55] text-white font-medium shadow-sm" 
-: "text-foreground hover:bg-[#E15B55]/10 hover:text-[#E15B55]"
-
-    
-    } transition-all duration-200`;
+      ? "text-white font-medium shadow-sm" 
+: "text-foreground hover:text-[var(--theme-color)]"
+    }
+    transition-all duration-200`;
   };
 
   return (
@@ -71,7 +72,7 @@ export function AppSidebar() {
         {/* Logo/Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: themeColor }}>
               <Building2 className="h-5 w-5 text-white" />
             </div>
             {!collapsed && (
@@ -97,6 +98,7 @@ export function AppSidebar() {
                       to={item.url} 
                       end={item.url === "/"}
                       className={getNavClassName(item.url)}
+                      style={isActive(item.url) ? { backgroundColor: themeColor } : {}}
                     >
                       <item.icon className={`h-5 w-5 ${collapsed ? "mx-auto" : "mr-3"}`} />
                       {!collapsed && <span className="font-medium">{item.title}</span>}

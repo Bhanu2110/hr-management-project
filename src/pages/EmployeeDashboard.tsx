@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/context/ThemeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
 
 const EmployeeDashboard = () => {
   const { employee } = useAuth();
+  const { themeColor } = useTheme();
   const navigate = useNavigate(); // Initialize useNavigate
 
   return (
@@ -26,23 +28,23 @@ const EmployeeDashboard = () => {
         {/* Welcome Header */}
         <div className="flex items-center justify-between">
           <div>
-          <h1 className="text-3xl font-bold" style={{ color: '#E15B55' }}>
+          <h1 className="text-3xl font-bold" style={{ color: themeColor }}>
             Welcome back, {employee?.first_name}!
           </h1>
 
             <div className="flex items-center gap-2 mt-2">
-            <Badge className="bg-[#E15B55] text-white">
+            <Badge style={{ backgroundColor: themeColor }} className="text-white">
               Employee
             </Badge>
 
-            <span className="text-[#E15B55]">•</span>
-            <span className="text-[#E15B55]">{employee?.department}</span>
-            <span className="text-[#E15B55]">•</span>
-            <span className="text-[#E15B55]">{employee?.position}</span>
+            <span style={{ color: themeColor }}>•</span>
+            <span style={{ color: themeColor }}>{employee?.department}</span>
+            <span style={{ color: themeColor }}>•</span>
+            <span style={{ color: themeColor }}>{employee?.position}</span>
 
             </div>
           </div>
-          <Button className="bg-[#E15B55] hover:bg-[#cc4f49] text-white">
+          <Button style={{ backgroundColor: themeColor }} className="hover:bg-opacity-80 text-white">
             <Clock className="mr-2 h-4 w-4" />
             Clock In
           </Button>
@@ -84,18 +86,18 @@ const EmployeeDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#E15B55]">
+            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
               Request Leave
             </CardTitle>
-            <CalendarDays className="h-4 w-4 text-[#E15B55]" />
+            <CalendarDays className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3 text-[#E15B55]">
+            <p className="text-xs mb-3" style={{ color: themeColor }}>
               Submit a new leave request
             </p>
 
-              <Button size="sm" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white"
+              <Button size="sm" className="w-full text-white hover:bg-opacity-80" style={{ backgroundColor: themeColor }}
                 onClick={() => navigate("/employee/leave-requests")}>
                 New Request
               </Button>
@@ -104,17 +106,17 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#E15B55]">
+            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
               My Profile
             </CardTitle>
-            <User className="h-4 w-4 text-[#E15B55]" />
+            <User className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3 text-[#E15B55]">
+            <p className="text-xs mb-3" style={{ color: themeColor }}>
               Update personal information
               </p>
-              <Button size="sm" variant="outline" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white">
+              <Button size="sm" variant="outline" className="w-full text-white hover:bg-opacity-80" style={{ backgroundColor: themeColor }}>
                 View Profile
               </Button>
             </CardContent>
@@ -122,17 +124,17 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#E15B55]">
+            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
               Download Payslip
             </CardTitle>
-            <Download className="h-4 w-4 text-[#E15B55]" />
+            <Download className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3 text-[#E15B55]">
+            <p className="text-xs mb-3" style={{ color: themeColor }}>
               Get latest salary slip
               </p>
-              <Button size="sm" variant="outline" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white">
+              <Button size="sm" variant="outline" className="w-full text-white hover:bg-opacity-80" style={{ backgroundColor: themeColor }}>
                 Download
               </Button>
             </CardContent>
