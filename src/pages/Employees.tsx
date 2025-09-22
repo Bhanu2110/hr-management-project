@@ -239,9 +239,9 @@ const Employees = () => {
                     <TableRow key={employee.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white text-sm font-semibold">
-                            {employee.first_name[0]}{employee.last_name[0]}
-                          </div>
+                        <div className="w-8 h-8 rounded-full bg-[#E15B55] flex items-center justify-center text-white text-sm font-semibold">
+                          {employee.first_name[0]}{employee.last_name[0]}
+                        </div>
                           <div>
                             <div>{`${employee.first_name} ${employee.last_name}`}</div>
                             <div className="text-xs text-muted-foreground">{employee.email}</div>

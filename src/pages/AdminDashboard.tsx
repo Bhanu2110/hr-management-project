@@ -4,9 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Settings, FileText, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const { employee } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <AppLayout>
@@ -33,7 +35,10 @@ const AdminDashboard = () => {
 
         {/* Admin Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/employees')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Manage Employees</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -69,7 +74,10 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/leave-requests')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Leave Management</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />

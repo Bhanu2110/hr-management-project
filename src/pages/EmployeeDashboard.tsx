@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { 
   Calendar, 
   Clock, 
@@ -17,6 +18,7 @@ import {
 
 const EmployeeDashboard = () => {
   const { employee } = useAuth();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   return (
     <AppLayout>
@@ -93,7 +95,8 @@ const EmployeeDashboard = () => {
               Submit a new leave request
             </p>
 
-              <Button size="sm" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white">
+              <Button size="sm" className="w-full bg-[#E15B55] hover:bg-[#cc4f49] text-white"
+                onClick={() => navigate("/employee/leave-requests")}>
                 New Request
               </Button>
             </CardContent>

@@ -104,6 +104,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/employee/leave-requests" 
+              element={
+                <ProtectedRoute>
+                  <LeaveRequests />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/form-16" 
               element={
                 <ProtectedRoute>

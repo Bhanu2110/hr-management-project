@@ -220,9 +220,9 @@ export type Database = {
       leave_requests: {
         Row: {
           admin_notes: string | null
-          approved_at: string | null
+          approved_at: string
           approved_by: string | null
-          created_at: string | null
+          created_at: string
           days: number
           employee_id: string
           end_date: string
@@ -231,13 +231,13 @@ export type Database = {
           reason: string
           start_date: string
           status: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           admin_notes?: string | null
-          approved_at?: string | null
+          approved_at?: string
           approved_by?: string | null
-          created_at?: string | null
+          created_at?: string
           days: number
           employee_id: string
           end_date: string
@@ -246,13 +246,13 @@ export type Database = {
           reason: string
           start_date: string
           status?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           admin_notes?: string | null
-          approved_at?: string | null
+          approved_at?: string
           approved_by?: string | null
-          created_at?: string | null
+          created_at?: string
           days?: number
           employee_id?: string
           end_date?: string
@@ -261,7 +261,7 @@ export type Database = {
           reason?: string
           start_date?: string
           status?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -276,6 +276,56 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          recipient_id: string
+          title: string
+          message: string
+          type: string
+          related_table: string | null
+          related_id: string | null
+          is_read: boolean
+          action_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          recipient_id: string
+          title: string
+          message: string
+          type?: string
+          related_table?: string | null
+          related_id?: string | null
+          is_read?: boolean
+          action_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          recipient_id?: string
+          title?: string
+          message?: string
+          type?: string
+          related_table?: string | null
+          related_id?: string | null
+          is_read?: boolean
+          action_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "admins"
             referencedColumns: ["id"]
           },
         ]

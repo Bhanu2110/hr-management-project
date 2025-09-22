@@ -62,14 +62,31 @@ export const EmployeeAttendance = () => {
 
       if (error) throw error;
 
-      if (data && typeof data === 'object' && 'error' in data) {
-        throw new Error(data.message as string);
+      // Check if the response contains an error
+      if (data && typeof data === 'object' && 'error' in data && data.error) {
+        toast({
+          title: "Action Not Allowed",
+          description: data.message as string,
+          variant: "destructive",
+        });
+        return;
       }
 
-      toast({
-        title: "Success",
-        description: data && typeof data === 'object' && 'message' in data ? data.message as string : "Attendance updated successfully",
-      });
+      // Success case
+      if (data && typeof data === 'object' && 'message' in data) {
+        const action = data.action as string;
+        const actionTitle = action === 'checked_in' ? 'Checked In' : 'Checked Out';
+        
+        toast({
+          title: actionTitle,
+          description: data.message as string,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Attendance updated successfully",
+        });
+      }
 
       // Refresh attendance status
       await fetchAttendanceStatus();
@@ -77,7 +94,7 @@ export const EmployeeAttendance = () => {
       console.error('Error handling attendance:', error);
       toast({
         title: "Error",
-        description: "Failed to update attendance",
+        description: error instanceof Error ? error.message : "Failed to update attendance",
         variant: "destructive",
       });
     } finally {
@@ -131,29 +148,39 @@ export const EmployeeAttendance = () => {
                   Since {formatTime(attendanceStatus.last_check_in)}
                 </p>
               </div>
+            ) : attendanceStatus?.last_check_out ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-blue-600">
+                  <CheckCircle className="h-6 w-6" />
+                  <span className="font-semibold">Day Complete</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Checked out at {formatTime(attendanceStatus.last_check_out)}
+                </p>
+              </div>
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <XCircle className="h-6 w-6" />
                   <span className="font-semibold">Not Checked In</span>
                 </div>
-                {attendanceStatus?.last_check_out && (
-                  <p className="text-sm text-muted-foreground">
-                    Last checked out at {formatTime(attendanceStatus.last_check_out)}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  Ready to start your day
+                </p>
               </div>
             )}
           </div>
 
           <Button
             onClick={handleAttendance}
-            disabled={isLoading}
-            className="w-full bg-gradient-primary hover:opacity-90 text-white"
+            disabled={isLoading || (attendanceStatus?.last_check_out && !attendanceStatus?.has_checked_in)}
+            className="w-full bg-gradient-primary hover:opacity-90 text-white disabled:opacity-50"
             size="lg"
           >
             {isLoading ? (
               "Processing..."
+            ) : attendanceStatus?.last_check_out && !attendanceStatus?.has_checked_in ? (
+              "Day Complete"
             ) : attendanceStatus?.has_checked_in ? (
               "Check Out"
             ) : (

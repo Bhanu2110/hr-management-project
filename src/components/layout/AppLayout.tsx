@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { RealTimeNotificationBell } from "@/components/notifications/RealTimeNotificationBell";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -45,10 +46,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
             
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs"></span>
-              </Button>
+              <RealTimeNotificationBell />
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

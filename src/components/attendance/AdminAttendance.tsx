@@ -116,9 +116,9 @@ export const AdminAttendance = () => {
 
   const getStatusBadge = (status: string, checkOut: string | null) => {
     if (status === 'checked_out' || checkOut) {
-      return <Badge className="bg-success text-success-foreground">Present</Badge>;
+      return <Badge className="bg-blue-600 text-white">Complete</Badge>;
     } else if (status === 'checked_in') {
-      return <Badge className="bg-primary text-primary-foreground">Checked In</Badge>;
+      return <Badge className="bg-success text-success-foreground">Checked In</Badge>;
     } else {
       return <Badge variant="destructive">Absent</Badge>;
     }
