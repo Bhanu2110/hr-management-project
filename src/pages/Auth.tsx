@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Building2 } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 const Auth = () => {
   const { user, loading, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { themeColor } = useTheme();
 
   // Login form state
   const [loginUserId, setLoginUserId] = useState('');
@@ -42,18 +44,18 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: themeColor ? `${themeColor}0D` : '' }}>
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-          <div className="p-3 bg-[#E15B55] rounded-xl shadow-lg">
+          <div className="p-3 rounded-xl shadow-lg" style={{ backgroundColor: themeColor }}>
         <Building2 className="h-8 w-8 text-white" />
         </div>
 
 
           </div>
-          <h1 className="text-2xl font-bold text-[#E15B55]">
+          <h1 className="text-2xl font-bold" style={{ color: themeColor }}>
             Syncall Technology Solutions
 </h1>
 
@@ -102,7 +104,8 @@ const Auth = () => {
             <CardFooter>
               <Button 
                 type="submit" 
-                className="w-full bg-[#E15B55] hover:bg-[#cc4e49] text-white" 
+                className="w-full text-white" 
+                style={{ backgroundColor: themeColor, borderColor: themeColor }} 
                 disabled={isLoading}
               >
                 {isLoading ? (
