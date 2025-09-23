@@ -8,6 +8,7 @@ import { LeaveApplicationForm } from "@/components/leaves/LeaveApplicationForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from '@/context/ThemeContext';
 import { format } from "date-fns";
 
 interface LeaveRequest {
@@ -41,6 +42,7 @@ const LeaveRequests = () => {
   });
   const { employee, isAdmin, isEmployee } = useAuth();
   const { toast } = useToast();
+  const { themeColor } = useTheme();
 
   const fetchLeaveRequests = async () => {
     try {
@@ -125,11 +127,11 @@ const LeaveRequests = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-success text-success-foreground">Approved</Badge>;
+        return <Badge className="bg-success text-success-foreground" style={{ backgroundColor: themeColor }}>Approved</Badge>;
       case "rejected":
         return <Badge variant="destructive">Rejected</Badge>;
       case "pending":
-        return <Badge className="bg-warning text-warning-foreground">Pending</Badge>;
+        return <Badge className="bg-warning text-warning-foreground" style={{ backgroundColor: themeColor }}>Pending</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -161,8 +163,8 @@ const LeaveRequests = () => {
           <Card className="shadow-[--shadow-card]">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-warning" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: themeColor ? `${themeColor}1A` : '' }}>
+                  <Clock className="h-5 w-5 text-warning" style={{ color: themeColor }} />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
@@ -177,8 +179,8 @@ const LeaveRequests = () => {
           <Card className="shadow-[--shadow-card]">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                  <Check className="h-5 w-5 text-success" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: themeColor ? `${themeColor}1A` : '' }}>
+                  <Check className="h-5 w-5 text-success" style={{ color: themeColor }} />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
@@ -193,8 +195,8 @@ const LeaveRequests = () => {
           <Card className="shadow-[--shadow-card]">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: themeColor ? `${themeColor}1A` : '' }}>
+                  <Calendar className="h-5 w-5 text-primary" style={{ color: themeColor }} />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Average Days/Request</p>
@@ -276,7 +278,8 @@ const LeaveRequests = () => {
                         <div className="flex gap-2">
                           <Button 
                             size="sm" 
-                            className="bg-success hover:bg-success/90 text-success-foreground"
+                            className="text-success-foreground"
+                            style={{ backgroundColor: themeColor }}
                             onClick={() => handleApproveReject(request.id, 'approved')}
                           >
                             <Check className="h-4 w-4 mr-1" />

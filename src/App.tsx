@@ -17,7 +17,9 @@ import SalarySlips from "./pages/SalarySlips";
 import Form16 from "./pages/Form16";
 import Documents from "./pages/Documents";
 import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +134,16 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Notifications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Profile />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />

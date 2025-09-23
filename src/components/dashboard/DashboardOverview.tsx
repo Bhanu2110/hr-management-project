@@ -4,10 +4,82 @@ import { EmployeeDashboard } from "./EmployeeDashboard";
 import { Users, Clock, Calendar, DollarSign, TrendingUp, UserCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from '@/context/ThemeContext';
+import { useState, useEffect } from 'react';
+import { employeeService, Employee } from '@/services/api';
+import { supabase } from '@/integrations/supabase/client';
+
+interface AttendanceRecord {
+  id: string;
+  employee_id: string;
+  check_in: string;
+  check_out: string | null;
+  status: string;
+}
 
 export function DashboardOverview() {
   const { isEmployee, isAdmin } = useAuth();
   const { themeColor } = useTheme();
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [presentToday, setPresentToday] = useState(0);
+  const [onLeave, setOnLeave] = useState(0);
+  const [lateCheckIns, setLateCheckIns] = useState(0);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      // Fetch Total Employees
+      const { data: employeesData, error: employeesError } = await supabase
+        .from('employees')
+        .select('*');
+      
+      if (employeesError) {
+        console.error("Error fetching total employees:", employeesError);
+      } else {
+        setTotalEmployees(employeesData.length);
+      }
+
+      // Fetch Attendance Data for today
+      const today = new Date().toISOString().split('T')[0];
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('*')
+        .gte('check_in', `${today}T00:00:00.000Z`)
+        .lte('check_in', `${today}T23:59:59.999Z`);
+      
+      if (attendanceError) {
+        console.error("Error fetching attendance data:", attendanceError);
+      } else {
+        const presentCount = attendanceData.filter(record => record.status === 'checked_in' || record.status === 'checked_out').length;
+        const lateCount = attendanceData.filter(record => {
+          if (record.check_in) {
+            const checkInTime = new Date(record.check_in);
+            const nineAM = new Date();
+            nineAM.setHours(9, 0, 0, 0);
+            return checkInTime > nineAM;
+          }
+          return false;
+        }).length;
+        setPresentToday(presentCount);
+        setLateCheckIns(lateCount);
+      }
+
+      // Fetch On Leave data
+      const { data: leaveData, error: leaveError } = await supabase
+        .from('leave_requests')
+        .select('*')
+        .eq('status', 'approved')
+        .filter('start_date', 'lte', today)
+        .filter('end_date', 'gte', today);
+
+      if (leaveError) {
+        console.error("Error fetching leave data:", leaveError);
+      } else {
+        setOnLeave(leaveData.length);
+      }
+
+    };
+
+    fetchDashboardData();
+  }, []);
 
   // Show employee-specific dashboard for employees
   if (isEmployee) {
@@ -32,7 +104,7 @@ export function DashboardOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <MetricCard
           title="Total Employees"
-          value="156"
+          value={totalEmployees.toString()}
           change="+12 this month"
           changeType="positive"
           icon={Users}
@@ -40,7 +112,7 @@ export function DashboardOverview() {
         />
         <MetricCard
           title="Present Today"
-          value="142"
+          value={presentToday.toString()}
           change="91.2% attendance"
           changeType="positive"
           icon={UserCheck}
@@ -48,7 +120,7 @@ export function DashboardOverview() {
         />
         <MetricCard
           title="On Leave"
-          value="8"
+          value={onLeave.toString()}
           change="2 pending approvals"
           changeType="neutral"
           icon={Calendar}
@@ -56,9 +128,9 @@ export function DashboardOverview() {
         />
         <MetricCard
           title="Late Check-ins"
-          value="5"
+          value={lateCheckIns.toString()}
           change="-3 from yesterday"
-          changeType="positive"
+          changeType="negative"
           icon={Clock}
           iconColor="text-destructive"
         />

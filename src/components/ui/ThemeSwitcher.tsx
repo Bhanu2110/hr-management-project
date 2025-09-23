@@ -12,6 +12,10 @@ export function ThemeSwitcher() {
     Blue: '#3B82F6',
     Green: '#10B981',
     Purple: '#8B5CF6',
+    Black: '#000000',
+    Red: '#EF4444',
+    Pink: '#EC4899',
+    Grey: '#6B7280',
   };
 
   return (

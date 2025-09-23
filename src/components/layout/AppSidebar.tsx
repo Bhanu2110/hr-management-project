@@ -9,7 +9,8 @@ import {
   FolderOpen, 
   Bell,
   Home,
-  Building2
+  Building2,
+  User
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +38,7 @@ const navigationItems = [
   { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] }, 
   { title: "Documents", url: "/documents", icon: FolderOpen, roles: ['admin', 'employee'] },
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ['admin', 'employee'] },
+  { title: "Profile", url: "/profile", icon: User, roles: ['admin', 'employee'] },
 ];
 
 export function AppSidebar() {

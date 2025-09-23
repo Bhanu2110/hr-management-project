@@ -44,7 +44,11 @@ const EmployeeDashboard = () => {
 
             </div>
           </div>
-          <Button style={{ backgroundColor: themeColor }} className="hover:bg-opacity-80 text-white">
+          <Button 
+            style={{ backgroundColor: themeColor }} 
+            className="hover:bg-opacity-80 text-white"
+            onClick={() => navigate("/attendance")}
+          >
             <Clock className="mr-2 h-4 w-4" />
             Clock In
           </Button>
@@ -116,7 +120,12 @@ const EmployeeDashboard = () => {
             <p className="text-xs mb-3" style={{ color: themeColor }}>
               Update personal information
               </p>
-              <Button size="sm" variant="outline" className="w-full text-white hover:bg-opacity-80" style={{ backgroundColor: themeColor }}>
+              <Button 
+                size="sm" 
+                className="w-full text-white hover:bg-opacity-80" 
+                style={{ backgroundColor: themeColor }}
+                onClick={() => navigate("/profile")}
+              >
                 View Profile
               </Button>
             </CardContent>
