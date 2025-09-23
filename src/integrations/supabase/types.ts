@@ -330,6 +330,95 @@ export type Database = {
           },
         ]
       }
+      reports: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          type: string;
+          format: string;
+          status: string;
+          parameters: Json;
+          frequency: string | null;
+          scheduled_date: string | null;
+          next_run_date: string | null;
+          visibility: string;
+          accessible_roles: Json;
+          accessible_departments: Json;
+          accessible_employees: Json;
+          file_url: string | null;
+          file_size: number | null;
+          generated_by: string;
+          generated_by_name: string;
+          generated_date: string | null;
+          expires_at: string | null;
+          download_count: number;
+          last_downloaded: string | null;
+          created_at: string;
+          updated_at: string;
+        }
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          type: string;
+          format: string;
+          status?: string;
+          parameters: Json;
+          frequency?: string | null;
+          scheduled_date?: string | null;
+          next_run_date?: string | null;
+          visibility?: string;
+          accessible_roles?: Json;
+          accessible_departments?: Json;
+          accessible_employees?: Json;
+          file_url?: string | null;
+          file_size?: number | null;
+          generated_by: string;
+          generated_by_name: string;
+          generated_date?: string | null;
+          expires_at?: string | null;
+          download_count?: number;
+          last_downloaded?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          type?: string;
+          format?: string;
+          status?: string;
+          parameters?: Json;
+          frequency?: string | null;
+          scheduled_date?: string | null;
+          next_run_date?: string | null;
+          visibility?: string;
+          accessible_roles?: Json;
+          accessible_departments?: Json;
+          accessible_employees?: Json;
+          file_url?: string | null;
+          file_size?: number | null;
+          generated_by?: string;
+          generated_by_name?: string;
+          generated_date?: string | null;
+          expires_at?: string | null;
+          download_count?: number;
+          last_downloaded?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "admins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

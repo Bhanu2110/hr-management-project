@@ -80,6 +80,8 @@ import {
 } from "@/types/reports";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from "@/integrations/supabase/types";
+import { useAuth } from '@/hooks/useAuth';
 
 interface ReportsManagementProps {
   employees?: Array<{
@@ -103,6 +105,7 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { employee } = useAuth();
 
   const [reportData, setReportData] = useState<Partial<ReportGenerationRequest>>({
     title: "",
@@ -128,13 +131,13 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
     try {
       const { data, error } = await supabase
         .from('reports')
-        .select('*')
+        .select<"*", Report>('*')
         .order('created_at', { ascending: false });
       
       if (error) {
         throw error;
       }
-      setReports(data || []);
+      setReports((data as Report[]) || []);
     } catch (error) {
       console.error("Error fetching reports:", error);
       toast({
@@ -188,10 +191,38 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
   const handleCreateReport = async () => {
     setIsLoading(true);
     try {
+      if (!employee?.id || !employee?.first_name || !employee?.last_name) {
+        toast({
+          title: "Error",
+          description: "User information not available. Cannot generate report.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('reports')
-        .insert(reportData as ReportGenerationRequest)
-        .select()
+        .insert({
+          title: reportData.title || '',
+          description: reportData.description,
+          type: reportData.type || 'attendance',
+          format: reportData.format || 'pdf',
+          parameters: reportData.parameters as any,
+          visibility: reportData.visibility || 'role_based',
+          accessible_roles: reportData.accessible_roles as any || [],
+          accessible_departments: reportData.accessible_departments as any || [],
+          accessible_employees: reportData.accessible_employees as any || [],
+          expires_at: reportData.expires_at,
+          frequency: reportData.schedule?.frequency,
+          scheduled_date: reportData.schedule?.schedule_time ? new Date().toISOString().split('T')[0] : null,
+          next_run_date: reportData.schedule?.schedule_time ? new Date().toISOString() : null,
+          generated_by: employee.id,
+          generated_by_name: `${employee.first_name} ${employee.last_name}`,
+          status: 'generating', // Initial status
+          download_count: 0,
+        })
+        .select<"*", Report>()
         .single();
 
       if (error) {
