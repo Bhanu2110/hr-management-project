@@ -19,11 +19,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2 } from "lucide-react";
+import { Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2, Plus } from "lucide-react";
 import { employeeService, type Employee } from "@/services/api";
 import { AddEmployeeDialog } from "@/components/employees/AddEmployeeDialog";
 import { EditEmployeeDialog } from "@/components/employees/EditEmployeeDialog";
 import { DeleteEmployeeDialog } from "@/components/employees/DeleteEmployeeDialog";
+import { useTheme } from '@/context/ThemeContext'; // Import useTheme
 
 type SortDirection = 'asc' | 'desc';
 type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
@@ -39,6 +40,7 @@ const Employees = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0); // Add this line
+  const { themeColor } = useTheme(); // Use the themeColor
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -130,7 +132,15 @@ const Employees = () => {
               {loading ? 'Loading...' : `Showing ${filteredEmployees.length} employees`}
             </p>
           </div>
-          <AddEmployeeDialog onEmployeeAdded={() => setRefreshKey(prev => prev + 1)} />
+          <AddEmployeeDialog 
+            onEmployeeAdded={() => setRefreshKey(prev => prev + 1)}
+            trigger={
+              <Button style={{ backgroundColor: themeColor, borderColor: themeColor }} className="text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Employee
+              </Button>
+            }
+          />
         </div>
 
         {/* Search and Filters */}
@@ -239,7 +249,7 @@ const Employees = () => {
                     <TableRow key={employee.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-[#E15B55] flex items-center justify-center text-white text-sm font-semibold">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: themeColor }}>
                           {employee.first_name[0]}{employee.last_name[0]}
                         </div>
                           <div>
@@ -316,6 +326,7 @@ const Employees = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
+                  style={currentPage === 1 ? {} : { backgroundColor: themeColor, borderColor: themeColor, color: 'white' }}
                 >
                   Previous
                 </Button>
@@ -324,6 +335,7 @@ const Employees = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
+                  style={currentPage === totalPages ? {} : { backgroundColor: themeColor, borderColor: themeColor, color: 'white' }}
                 >
                   Next
                 </Button>

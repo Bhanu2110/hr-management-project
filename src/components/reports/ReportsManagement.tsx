@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Table,
@@ -37,12 +37,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Download, 
-  Edit, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Download,
+  Edit,
   Eye,
   Trash2,
   Play,
@@ -60,15 +60,16 @@ import {
   RefreshCw,
   Send,
   CheckCircle,
-  XCircle
+  XCircle,
+  Loader2
 } from "lucide-react";
-import { 
-  Report, 
+import {
+  Report,
   ReportType,
   ReportFormat,
   ReportFrequency,
   ReportGenerationRequest,
-  REPORT_TYPES, 
+  REPORT_TYPES,
   REPORT_STATUS_COLORS,
   REPORT_FORMAT_OPTIONS,
   FREQUENCY_OPTIONS,
@@ -77,6 +78,8 @@ import {
   formatDateRange,
   getReportTypeIcon
 } from "@/types/reports";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReportsManagementProps {
   employees?: Array<{
@@ -97,6 +100,10 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
   const [reportData, setReportData] = useState<Partial<ReportGenerationRequest>>({
     title: "",
     description: "",
@@ -112,177 +119,36 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
     accessible_roles: ["admin"],
   });
 
-  // Mock reports data for admin view
-  const mockReports: Report[] = [
-    {
-      id: "1",
-      title: "Monthly Payroll Report - November 2024",
-      description: "Complete payroll summary for all employees in November 2024",
-      type: "payroll",
-      format: "excel",
-      status: "completed",
-      parameters: {
-        date_range: {
-          start_date: "2024-11-01T00:00:00Z",
-          end_date: "2024-11-30T23:59:59Z"
-        },
-        payroll_params: {
-          include_deductions: true,
-          include_benefits: true,
-          include_tax_details: true,
-          group_by: "department",
-          show_year_to_date: true,
-          currency_format: "INR"
-        }
-      },
-      frequency: "monthly",
-      scheduled_date: "2024-12-01T09:00:00Z",
-      next_run_date: "2025-01-01T09:00:00Z",
-      visibility: "role_based",
-      accessible_roles: ["admin", "hr"],
-      accessible_departments: [],
-      accessible_employees: [],
-      file_url: "/reports/payroll_november_2024.xlsx",
-      file_size: 2456789,
-      generated_by: "admin",
-      generated_by_name: "System Admin",
-      generated_date: "2024-12-01T09:15:00Z",
-      download_count: 8,
-      last_downloaded: "2024-12-10T14:30:00Z",
-      created_at: "2024-11-25T10:00:00Z",
-      updated_at: "2024-12-01T09:15:00Z",
-    },
-    {
-      id: "2",
-      title: "Employee Performance Analysis - Q4 2024",
-      description: "Quarterly performance review analysis for all departments",
-      type: "performance",
-      format: "pdf",
-      status: "completed",
-      parameters: {
-        date_range: {
-          start_date: "2024-10-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        performance_params: {
-          review_periods: ["Q4-2024"],
-          include_goals: true,
-          include_ratings: true,
-          include_feedback: true,
-          group_by: "department"
-        }
-      },
-      visibility: "role_based",
-      accessible_roles: ["admin", "hr", "manager"],
-      accessible_departments: [],
-      accessible_employees: [],
-      file_url: "/reports/performance_q4_2024.pdf",
-      file_size: 1234567,
-      generated_by: "hr_admin",
-      generated_by_name: "HR Admin",
-      generated_date: "2024-12-05T16:00:00Z",
-      download_count: 15,
-      last_downloaded: "2024-12-12T11:20:00Z",
-      created_at: "2024-12-01T10:00:00Z",
-      updated_at: "2024-12-05T16:00:00Z",
-    },
-    {
-      id: "3",
-      title: "Attendance Summary - All Departments",
-      description: "Company-wide attendance report with overtime and leave analysis",
-      type: "attendance",
-      format: "pdf",
-      status: "generating",
-      parameters: {
-        date_range: {
-          start_date: "2024-12-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        attendance_params: {
-          include_overtime: true,
-          include_breaks: true,
-          group_by: "department",
-          show_summary: true,
-          include_late_arrivals: true,
-          include_early_departures: true
-        }
-      },
-      visibility: "public",
-      accessible_roles: ["admin", "hr", "manager", "employee"],
-      accessible_departments: [],
-      accessible_employees: [],
-      generated_by: "system",
-      generated_by_name: "System Generated",
-      download_count: 0,
-      created_at: "2024-12-12T10:00:00Z",
-      updated_at: "2024-12-12T10:00:00Z",
-    },
-    {
-      id: "4",
-      title: "Compliance Training Report - 2024",
-      description: "Annual compliance training completion and certification status",
-      type: "compliance",
-      format: "excel",
-      status: "scheduled",
-      parameters: {
-        date_range: {
-          start_date: "2024-01-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        compliance_params: {
-          compliance_types: ["training", "certification", "safety"],
-          include_violations: true,
-          include_training_status: true,
-          include_certifications: true,
-          risk_level: "all"
-        }
-      },
-      frequency: "yearly",
-      scheduled_date: "2024-12-31T23:59:00Z",
-      visibility: "role_based",
-      accessible_roles: ["admin", "hr"],
-      accessible_departments: [],
-      accessible_employees: [],
-      generated_by: "compliance_admin",
-      generated_by_name: "Compliance Admin",
-      download_count: 0,
-      created_at: "2024-12-01T15:00:00Z",
-      updated_at: "2024-12-01T15:00:00Z",
-    },
-    {
-      id: "5",
-      title: "Department Headcount Analysis",
-      description: "Department-wise employee distribution and growth analysis",
-      type: "department",
-      format: "pdf",
-      status: "failed",
-      parameters: {
-        date_range: {
-          start_date: "2024-01-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        department_params: {
-          include_headcount: true,
-          include_budget: true,
-          include_performance_metrics: true,
-          include_turnover_rate: true,
-          compare_periods: true
-        }
-      },
-      visibility: "role_based",
-      accessible_roles: ["admin"],
-      accessible_departments: [],
-      accessible_employees: [],
-      generated_by: "admin",
-      generated_by_name: "System Admin",
-      download_count: 0,
-      created_at: "2024-12-10T14:00:00Z",
-      updated_at: "2024-12-10T14:30:00Z",
-    },
-  ];
+  useEffect(() => {
+    fetchReports();
+  }, []);
 
-  const filteredReports = mockReports.filter((report) => {
-    const matchesSearch = 
+  const fetchReports = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      setReports(data || []);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch reports.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredReports = reports.filter((report) => {
+    const matchesSearch =
       report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.type.toLowerCase().includes(searchTerm.toLowerCase());
@@ -319,23 +185,49 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
     });
   };
 
-  const handleCreateReport = () => {
-    console.log("Creating report with data:", reportData);
-    setIsCreateDialogOpen(false);
-    setReportData({
-      title: "",
-      description: "",
-      type: "attendance",
-      format: "pdf",
-      parameters: {
-        date_range: {
-          start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          end_date: new Date().toISOString()
-        }
-      },
-      visibility: "role_based",
-      accessible_roles: ["admin"],
-    });
+  const handleCreateReport = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .insert(reportData as ReportGenerationRequest)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Report generated successfully.",
+      });
+      setIsCreateDialogOpen(false);
+      setReportData({
+        title: "",
+        description: "",
+        type: "attendance",
+        format: "pdf",
+        parameters: {
+          date_range: {
+            start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            end_date: new Date().toISOString()
+          }
+        },
+        visibility: "role_based",
+        accessible_roles: ["admin"],
+      });
+      fetchReports(); // Refresh the list of reports
+    } catch (error) {
+      console.error("Error creating report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate report.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDownload = (report: Report) => {
@@ -346,8 +238,33 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
     console.log("Editing report:", report.id);
   };
 
-  const handleDelete = (report: Report) => {
-    console.log("Deleting report:", report.id);
+  const handleDelete = async (report: Report) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', report.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Report deleted successfully.",
+      });
+      fetchReports(); // Refresh the list of reports
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete report.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRunNow = (report: Report) => {
@@ -360,12 +277,21 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
 
   // Calculate statistics
   const stats = {
-    total: mockReports.length,
-    completed: mockReports.filter(r => r.status === 'completed').length,
-    generating: mockReports.filter(r => r.status === 'generating').length,
-    scheduled: mockReports.filter(r => r.status === 'scheduled').length,
-    failed: mockReports.filter(r => r.status === 'failed').length,
+    total: reports.length,
+    completed: reports.filter(r => r.status === 'completed').length,
+    generating: reports.filter(r => r.status === 'generating').length,
+    scheduled: reports.filter(r => r.status === 'scheduled').length,
+    failed: reports.filter(r => r.status === 'failed').length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-2">Loading reports...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -497,21 +423,21 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="visibility">Visibility</Label>
-                      <Select 
-                        value={reportData.visibility} 
-                        onValueChange={(value) => setReportData(prev => ({ ...prev, visibility: value as any }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {VISIBILITY_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <Select 
+                      value={reportData.visibility} 
+                      onValueChange={(value) => setReportData(prev => ({ ...prev, visibility: value as any }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISIBILITY_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Accessible Roles</Label>
