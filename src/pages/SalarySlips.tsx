@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from 'lucide-react';
 import EmployeeSalarySlip from "@/components/salary/EmployeeSalarySlip";
 import AdminSalaryDashboard from "@/components/salary/AdminSalaryDashboard";
+import { Card, CardContent } from "@/components/ui/card";
 
 const SalarySlips = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, employee } = useAuth();
   const [activeTab, setActiveTab] = useState('my-slip');
   const isAdmin = user?.role === 'admin' || user?.role === 'hr';
 
@@ -40,7 +41,24 @@ const SalarySlips = () => {
           </div>
 
           <TabsContent value="my-slip" className="space-y-4">
-            <EmployeeSalarySlip />
+            {employee ? (
+              <EmployeeSalarySlip 
+                employeeData={{
+                  id: employee.employee_id || employee.id || 'N/A',
+                  name: `${employee.first_name} ${employee.last_name}`.trim(),
+                  designation: employee.position || 'N/A',
+                  department: employee.department || 'N/A',
+                  netSalary: 0, // Placeholder, actual net salary would come from a salary record
+                  // Other fields will be default in EmployeeSalarySlip if not provided
+                }}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">No employee data available to display salary slip.</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
           
           {isAdmin && (

@@ -10,7 +10,8 @@ import {
   Bell,
   Home,
   Building2,
-  User
+  User,
+  FileSpreadsheet
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,8 +34,9 @@ const navigationItems = [
   { title: "Attendance", url: "/attendance", icon: Clock, roles: ['admin', 'employee'] },
   { title: "Salary", url: "/salary", icon: DollarSign, roles: ['admin'] },
   { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
+  { title: "Payroll", url: "/payroll", icon: Receipt, roles: ['admin'] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
-  { title: "Salary Slips", url: "/salary-slips", icon: Receipt, roles: ['admin', 'employee'] },
+  { title: "Salary Slips", url: "/salary-slips", icon: FileSpreadsheet, roles: ['admin', 'employee'] },
   { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] }, 
   { title: "Documents", url: "/documents", icon: FolderOpen, roles: ['admin', 'employee'] },
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ['admin', 'employee'] },

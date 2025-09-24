@@ -18,6 +18,7 @@ import Form16 from "./pages/Form16";
 import Documents from "./pages/Documents";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import Payroll from "./pages/Payroll"; // Import the new Payroll component
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/layout/AppLayout";
 
@@ -86,6 +87,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <LeaveRequests />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payroll" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <Payroll />
                 </ProtectedRoute>
               } 
             />

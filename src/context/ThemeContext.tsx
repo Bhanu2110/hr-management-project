@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { hexToHsl } from '@/lib/utils';
 
 interface ThemeContextType {
   themeColor: string;
@@ -20,6 +21,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', themeColor);
     localStorage.setItem('themeColor', themeColor);
+  }, [themeColor]);
+
+  useEffect(() => {
+    const hslColor = hexToHsl(themeColor);
+    document.documentElement.style.setProperty('--theme-color-hsl', hslColor);
   }, [themeColor]);
 
   useEffect(() => {

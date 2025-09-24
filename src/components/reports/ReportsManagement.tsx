@@ -335,7 +335,7 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button variant="default" className="gap-2">
                 <Plus className="h-4 w-4" />
                 Generate Report
               </Button>

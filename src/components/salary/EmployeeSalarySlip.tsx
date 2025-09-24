@@ -9,11 +9,18 @@ export interface EmployeeSalaryData {
   name: string;
   designation: string;
   department: string;
-  status?: 'pending' | 'approved' | 'rejected';
+  status?: 'pending' | 'approved' | 'rejected' | 'generated' | 'sent';
   netSalary: number;
+  salarySlipId?: string;
+  workingDays?: number;
+  leavesTaken?: number;
+  overtimeHours?: number;
+  employerPfContribution?: number;
+  approvalStatus?: 'Generated' | 'Approved' | 'Sent';
 }
 
 interface SalarySlipProps {
+  salarySlipId: string;
   employee: {
     id: string;
     name: string;
@@ -24,6 +31,9 @@ interface SalarySlipProps {
   payPeriod: {
     month: string;
     year: number;
+    workingDays: number;
+    leavesTaken: number;
+    overtimeHours: number;
   };
   earnings: {
     basic: number;
@@ -39,6 +49,9 @@ interface SalarySlipProps {
     loan: number;
     insurance: number;
   };
+  employerContributions: {
+    pf: number;
+  };
   salarySummary: {
     gross: number;
     totalDeductions: number;
@@ -48,6 +61,7 @@ interface SalarySlipProps {
     accountLastFour: string;
     creditDate: string;
   };
+  approvalStatus: 'Generated' | 'Approved' | 'Sent';
 }
 
 interface EmployeeSalarySlipProps {
@@ -60,11 +74,31 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
   employeeData
 }) => {
   // Generate sample data based on employeeData or use defaults
-  const defaultEmployee = employeeData || {
+  const employeeInfo = employeeData ? {
+    id: employeeData.id || 'N/A',
+    name: employeeData.name || 'N/A',
+    designation: employeeData.designation || 'N/A',
+    department: employeeData.department || 'N/A',
+    bankAccount: 'XXXXXX' + (employeeData.id?.slice(-4) || '0000'),
+    salarySlipId: employeeData.salarySlipId || 'SLIP001',
+    workingDays: employeeData.workingDays || 20,
+    leavesTaken: employeeData.leavesTaken || 2,
+    overtimeHours: employeeData.overtimeHours || 5,
+    employerPfContribution: employeeData.employerPfContribution || 3000,
+    approvalStatus: employeeData.approvalStatus || 'Generated',
+    netSalary: employeeData.netSalary || 50000,
+  } : {
     id: 'EMP001',
     name: 'John Doe',
     designation: 'Employee',
     department: 'General',
+    bankAccount: 'XXXXXX0001',
+    salarySlipId: 'SLIP001',
+    workingDays: 20,
+    leavesTaken: 2,
+    overtimeHours: 5,
+    employerPfContribution: 3000,
+    approvalStatus: 'Generated',
     netSalary: 50000
   };
 
@@ -102,19 +136,23 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
     };
   };
 
-  const salaryComponents = calculateSalaryComponents(defaultEmployee.netSalary);
+  const salaryComponents = calculateSalaryComponents(employeeInfo.netSalary);
 
   const salaryData: SalarySlipProps = {
+    salarySlipId: employeeInfo.salarySlipId,
     employee: {
-      id: defaultEmployee.id,
-      name: defaultEmployee.name,
-      designation: defaultEmployee.designation,
-      department: defaultEmployee.department,
-      bankAccount: 'XXXXXX' + defaultEmployee.id.slice(-4),
+      id: employeeInfo.id,
+      name: employeeInfo.name,
+      designation: employeeInfo.designation,
+      department: employeeInfo.department,
+      bankAccount: employeeInfo.bankAccount,
     },
     payPeriod: {
       month: new Date().toLocaleString('default', { month: 'long' }),
       year: new Date().getFullYear(),
+      workingDays: employeeInfo.workingDays,
+      leavesTaken: employeeInfo.leavesTaken,
+      overtimeHours: employeeInfo.overtimeHours,
     },
     earnings: {
       basic: salaryComponents.basic,
@@ -130,15 +168,19 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
       loan: salaryComponents.loan,
       insurance: salaryComponents.insurance,
     },
+    employerContributions: {
+      pf: employeeInfo.employerPfContribution,
+    },
     salarySummary: {
       gross: salaryComponents.gross,
       totalDeductions: salaryComponents.totalDeductions,
       net: salaryComponents.net,
     },
     paymentInfo: {
-      accountLastFour: defaultEmployee.id.slice(-4),
+      accountLastFour: employeeInfo.bankAccount.slice(-4),
       creditDate: new Date().toLocaleDateString('en-GB'),
     },
+    approvalStatus: employeeInfo.approvalStatus,
   };
 
   const handleDownload = () => {
@@ -154,8 +196,11 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
           <p className="text-muted-foreground">
             {salaryData.payPeriod.month} {salaryData.payPeriod.year}
           </p>
+          <p className="text-sm text-muted-foreground">
+            ID: {salaryData.salarySlipId}
+          </p>
         </div>
-        <Button onClick={handleDownload}>
+        <Button variant="default" onClick={handleDownload}>
           <Download className="mr-2 h-4 w-4" />
           Download PDF
         </Button>
@@ -169,10 +214,17 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
             <div>
               <p><span className="font-medium">Employee ID:</span> {salaryData.employee.id}</p>
               <p><span className="font-medium">Name:</span> {salaryData.employee.name}</p>
+              <p><span className="font-medium">Working Days:</span> {salaryData.payPeriod.workingDays}</p>
             </div>
             <div>
               <p><span className="font-medium">Designation:</span> {salaryData.employee.designation}</p>
               <p><span className="font-medium">Department:</span> {salaryData.employee.department}</p>
+              <p><span className="font-medium">Leaves Taken:</span> {salaryData.payPeriod.leavesTaken}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div>
+              <p><span className="font-medium">Overtime Hours:</span> {salaryData.payPeriod.overtimeHours}</p>
             </div>
           </div>
         </div>
@@ -195,6 +247,19 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
                 <span>₹{item.value.toLocaleString()}</span>
               </div>
             ))}
+          </div>
+        </div>
+
+        <Separator className="my-6" />
+
+        {/* Employer Contributions */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold mb-4">Employer Contributions</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>Provident Fund (PF)</span>
+              <span>₹{salaryData.employerContributions.pf.toLocaleString()}</span>
+            </div>
           </div>
         </div>
 
@@ -250,6 +315,7 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
           <div className="space-y-1">
             <p>Bank Account: ••••{salaryData.paymentInfo.accountLastFour}</p>
             <p>Salary Credit Date: {salaryData.paymentInfo.creditDate}</p>
+            <p>Approval Status: {salaryData.approvalStatus}</p>
           </div>
         </div>
 
