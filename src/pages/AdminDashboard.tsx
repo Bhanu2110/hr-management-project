@@ -64,7 +64,9 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/reports')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>Reports</CardTitle>
               <FileText className="h-4 w-4" style={{ color: themeColor }} />

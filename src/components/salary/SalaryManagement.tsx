@@ -78,12 +78,24 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     year: new Date().getFullYear(),
     working_days: 22,
     present_days: 22,
-    overtime_hours: 0,
+    basic_salary: 0,
+    hra: 0,
+    transport_allowance: 0,
+    medical_allowance: 0,
+    special_allowance: 0,
     performance_bonus: 0,
+    overtime_hours: 0,
+    overtime_rate: 0,
     other_allowances: 0,
+    pf_employee: 0,
+    esi_employee: 0,
+    professional_tax: 0,
+    income_tax: 0,
     loan_deduction: 0,
     advance_deduction: 0,
+    late_deduction: 0,
     other_deductions: 0,
+    paid_date: undefined,
   });
 
   // Mock salary slip data
@@ -279,12 +291,24 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       year: new Date().getFullYear(),
       working_days: 22,
       present_days: 22,
-      overtime_hours: 0,
+      basic_salary: 0,
+      hra: 0,
+      transport_allowance: 0,
+      medical_allowance: 0,
+      special_allowance: 0,
       performance_bonus: 0,
+      overtime_hours: 0,
+      overtime_rate: 0,
       other_allowances: 0,
+      pf_employee: 0,
+      esi_employee: 0,
+      professional_tax: 0,
+      income_tax: 0,
       loan_deduction: 0,
       advance_deduction: 0,
+      late_deduction: 0,
       other_deductions: 0,
+      paid_date: undefined,
     });
   };
 
@@ -316,7 +340,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                 Generate Salary Slip
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Generate Salary Slip</DialogTitle>
                 <DialogDescription>
@@ -393,12 +417,54 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="overtime_hours">Overtime Hours</Label>
+                    <Label htmlFor="basic_salary">Basic Salary</Label>
                     <Input
-                      id="overtime_hours"
+                      id="basic_salary"
                       type="number"
-                      value={formData.overtime_hours || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: Number(e.target.value) }))}
+                      value={formData.basic_salary || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hra">HRA</Label>
+                    <Input
+                      id="hra"
+                      type="number"
+                      value={formData.hra || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hra: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="transport_allowance">Transport Allowance</Label>
+                    <Input
+                      id="transport_allowance"
+                      type="number"
+                      value={formData.transport_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="medical_allowance">Medical Allowance</Label>
+                    <Input
+                      id="medical_allowance"
+                      type="number"
+                      value={formData.medical_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="special_allowance">Special Allowance</Label>
+                    <Input
+                      id="special_allowance"
+                      type="number"
+                      value={formData.special_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -414,6 +480,36 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label htmlFor="overtime_hours">Overtime Hours</Label>
+                    <Input
+                      id="overtime_hours"
+                      type="number"
+                      value={formData.overtime_hours || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="overtime_rate">Overtime Rate</Label>
+                    <Input
+                      id="overtime_rate"
+                      type="number"
+                      value={formData.overtime_rate || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="other_allowances">Other Allowances</Label>
+                    <Input
+                      id="other_allowances"
+                      type="number"
+                      value={formData.other_allowances || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="loan_deduction">Loan Deduction</Label>
                     <Input
                       id="loan_deduction"
@@ -422,6 +518,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: Number(e.target.value) }))}
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="advance_deduction">Advance Deduction</Label>
                     <Input
@@ -431,6 +530,43 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: Number(e.target.value) }))}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="late_deduction">Late Deduction</Label>
+                    <Input
+                      id="late_deduction"
+                      type="number"
+                      value={formData.late_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="other_deductions">Other Deductions</Label>
+                    <Input
+                      id="other_deductions"
+                      type="number"
+                      value={formData.other_deductions || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
+                    />
+                  </div>
+                  {/* Assuming Payment Mode will be added later or is not a direct input */}
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Payment Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paid_date">Payment Date</Label>
+                    <Input
+                      id="paid_date"
+                      type="date"
+                      value={formData.paid_date ? new Date(formData.paid_date).toISOString().split('T')[0] : ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paid_date: e.target.value }))}
+                    />
+                  </div>
+                  {/* Assuming Payment Mode will be added later or is not a direct input */}
                 </div>
               </div>
 
@@ -570,11 +706,14 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employee</TableHead>
-                    <TableHead>Month/Year</TableHead>
-                    <TableHead>Gross Salary</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Basic Salary</TableHead>
+                    <TableHead>Allowances</TableHead>
+                    <TableHead>Bonuses</TableHead>
                     <TableHead>Deductions</TableHead>
                     <TableHead>Net Salary</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Payment Date</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -588,15 +727,45 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {MONTHS.find(m => m.value === slip.month)?.label} {slip.year}
+                        <div>
+                          <p className="font-medium">{slip.department}</p>
+                          <p className="text-sm text-muted-foreground">{slip.position}</p>
+                        </div>
                       </TableCell>
-                      <TableCell>{formatCurrency(slip.gross_earnings)}</TableCell>
-                      <TableCell>{formatCurrency(slip.total_deductions)}</TableCell>
+                      <TableCell>{formatCurrency(slip.basic_salary)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          <p>HRA: {formatCurrency(slip.hra)}</p>
+                          <p>Transport: {formatCurrency(slip.transport_allowance)}</p>
+                          <p>Medical: {formatCurrency(slip.medical_allowance)}</p>
+                          <p>Special: {formatCurrency(slip.special_allowance)}</p>
+                          {slip.other_allowances > 0 && <p>Other: {formatCurrency(slip.other_allowances)}</p>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {slip.performance_bonus > 0 && <p>Bonus: {formatCurrency(slip.performance_bonus)}</p>}
+                          {slip.overtime_amount > 0 && <p>Overtime: {formatCurrency(slip.overtime_amount)}</p>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          <p>PF: {formatCurrency(slip.pf_employee)}</p>
+                          <p>PT: {formatCurrency(slip.professional_tax)}</p>
+                          <p>IT: {formatCurrency(slip.income_tax)}</p>
+                          {slip.loan_deduction > 0 && <p>Loan: {formatCurrency(slip.loan_deduction)}</p>}
+                          {slip.advance_deduction > 0 && <p>Advance: {formatCurrency(slip.advance_deduction)}</p>}
+                          {slip.other_deductions > 0 && <p>Other: {formatCurrency(slip.other_deductions)}</p>}
+                        </div>
+                      </TableCell>
                       <TableCell className="font-semibold">{formatCurrency(slip.net_salary)}</TableCell>
                       <TableCell>
                         <Badge className={SALARY_STATUS_COLORS[slip.status]}>
                           {slip.status.charAt(0).toUpperCase() + slip.status.slice(1)}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {slip.paid_date ? new Date(slip.paid_date).toLocaleDateString() : 'N/A'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

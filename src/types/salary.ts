@@ -117,12 +117,24 @@ export interface SalaryCreateRequest {
   year: number;
   working_days: number;
   present_days: number;
-  overtime_hours?: number;
+  basic_salary?: number;
+  hra?: number;
+  transport_allowance?: number;
+  medical_allowance?: number;
+  special_allowance?: number;
   performance_bonus?: number;
+  overtime_hours?: number;
+  overtime_rate?: number;
   other_allowances?: number;
+  pf_employee?: number;
+  esi_employee?: number;
+  professional_tax?: number;
+  income_tax?: number;
   loan_deduction?: number;
   advance_deduction?: number;
+  late_deduction?: number;
   other_deductions?: number;
+  paid_date?: string;
 }
 
 export interface SalaryUpdateRequest {
