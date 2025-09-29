@@ -142,7 +142,9 @@ const App = () => (
               path="/notifications" 
               element={
                 <ProtectedRoute>
-                  <Notifications />
+                  <AppLayout>
+                    <Notifications />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
