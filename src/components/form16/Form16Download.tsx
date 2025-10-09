@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, FileText, Calendar, AlertCircle, LogOut } from 'lucide-react';
+import { Download, FileText, Calendar, AlertCircle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface Form16Document {
@@ -20,7 +20,7 @@ interface Form16Document {
 }
 
 export function Form16Download() {
-  const { employee, isEmployee, signOut } = useAuth();
+  const { employee, isEmployee } = useAuth();
   const [documents, setDocuments] = useState<Form16Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -222,14 +222,6 @@ export function Form16Download() {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={signOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
           </div>
         </div>
       </div>
