@@ -180,7 +180,7 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
       accountLastFour: employeeInfo.bankAccount.slice(-4),
       creditDate: new Date().toLocaleDateString('en-GB'),
     },
-    approvalStatus: employeeInfo.approvalStatus,
+    approvalStatus: (employeeInfo.approvalStatus || 'Generated') as 'Generated' | 'Approved' | 'Sent',
   };
 
   const handleDownload = () => {

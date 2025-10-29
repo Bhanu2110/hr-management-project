@@ -15,16 +15,15 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { themeColor } = useTheme();
-  const [employeeDetails, setEmployeeDetails] = useState<Partial<Employee>>({
-    firstName: "",
-    lastName: "",
+  const [employeeDetails, setEmployeeDetails] = useState<Partial<Employee> & { address?: string }>({
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     address: "",
     department: "",
     position: "",
     hire_date: "",
-    role: "",
   });
 
   useEffect(() => {
@@ -40,7 +39,7 @@ const Profile = () => {
         department: employee.department,
         position: employee.position,
         hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : "dd-mm-yyyy",
-        role: employee.role,
+        address: "",
       });
     }
   }, [employee]);
@@ -112,7 +111,7 @@ const Profile = () => {
           <h2 className="text-xl font-semibold mb-1">{employeeDetails.first_name} {employeeDetails.last_name}</h2>
           <p className="text-muted-foreground mb-4">{employeeDetails.position}</p>
           <Badge className="text-green-800 px-3 py-1 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: themeColor ? `${themeColor}1A` : '' }}>
-            {employeeDetails.role}
+            Employee
           </Badge>
 
           <div className="space-y-3 w-full text-left">

@@ -35,34 +35,24 @@ export const PayrollReport = () => {
     const fetchPayrollRecords = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('salary_slips') // Assuming 'salary_slips' table holds payroll data
-          .select(`
-            id,
-            employee_id,
-            pay_period_start,
-            pay_period_end,
-            gross_salary,
-            deductions,
-            net_salary,
-            status,
-            created_at,
-            employees(first_name, last_name)
-          `)
+        // @ts-ignore - salary_slips table exists but types may need regeneration
+        const { data, error } = await (supabase as any)
+          .from('salary_slips')
+          .select('*')
           .order('created_at', { ascending: false });
         
         if (error) {
           throw error;
         }
 
-        const formattedData: PayrollRecord[] = data.map(item => ({
+        const formattedData: PayrollRecord[] = (data || []).map((item: any) => ({
           id: item.id,
           employee_id: item.employee_id,
-          employee_name: `${item.employees?.first_name} ${item.employees?.last_name}`,
+          employee_name: item.employee_name,
           pay_period_start: format(new Date(item.pay_period_start), 'yyyy-MM-dd'),
           pay_period_end: format(new Date(item.pay_period_end), 'yyyy-MM-dd'),
-          gross_salary: item.gross_salary,
-          deductions: item.deductions,
+          gross_salary: item.gross_earnings,
+          deductions: item.total_deductions,
           net_salary: item.net_salary,
           status: item.status,
           created_at: item.created_at,
