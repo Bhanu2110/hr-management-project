@@ -38,28 +38,34 @@ export const AttendanceReport = () => {
           .select(`
             id,
             employee_id,
-            check_in,
-            check_out,
+            date,
+            intervals,
             total_hours,
             status,
             employees(first_name, last_name)
           `)
-          .order('check_in', { ascending: false });
+          .order('date', { ascending: false });
         
         if (error) {
           throw error;
         }
 
-        const formattedData: AttendanceRecord[] = data.map(item => ({
-          id: item.id,
-          employee_id: item.employee_id,
-          employee_name: `${item.employees?.first_name} ${item.employees?.last_name}`,
-          date: format(new Date(item.check_in), 'yyyy-MM-dd'),
-          check_in: format(new Date(item.check_in), 'hh:mm a'),
-          check_out: item.check_out ? format(new Date(item.check_out), 'hh:mm a') : '-',
-          total_hours: item.total_hours,
-          status: item.status,
-        }));
+        const formattedData: AttendanceRecord[] = data.map(item => {
+          const intervals = item.intervals as any[] || [];
+          const firstInterval = intervals[0];
+          const lastInterval = intervals[intervals.length - 1];
+          
+          return {
+            id: item.id,
+            employee_id: item.employee_id,
+            employee_name: `${item.employees?.first_name} ${item.employees?.last_name}`,
+            date: item.date,
+            check_in: firstInterval?.check_in ? format(new Date(firstInterval.check_in), 'hh:mm a') : '-',
+            check_out: lastInterval?.check_out ? format(new Date(lastInterval.check_out), 'hh:mm a') : '-',
+            total_hours: item.total_hours,
+            status: item.status,
+          };
+        });
 
         setAttendanceRecords(formattedData);
       } catch (error) {

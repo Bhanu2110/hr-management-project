@@ -82,6 +82,7 @@ export const employeeService = {
         status: 'active' as const,
         created_at: currentTime,
         updated_at: currentTime,
+        password_hash: '',
       };
       
       console.log('Inserting employee with data:', employeeDataToInsert);

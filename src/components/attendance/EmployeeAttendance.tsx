@@ -28,13 +28,27 @@ export const EmployeeAttendance = () => {
     if (!employee?.id) return;
 
     try {
+      const today = new Date().toISOString().split('T')[0];
+      
       const { data, error } = await supabase
-        .rpc('get_attendance_status', { employee_uuid: employee.id });
+        .from('attendance')
+        .select('*')
+        .eq('employee_id', employee.id)
+        .gte('date', today)
+        .lte('date', today)
+        .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
 
-      if (data && data.length > 0) {
-        setAttendanceStatus(data[0]);
+      if (data && data.intervals) {
+        const intervals = data.intervals as any[];
+        const lastInterval = intervals[intervals.length - 1];
+        
+        setAttendanceStatus({
+          has_checked_in: lastInterval?.check_in && !lastInterval?.check_out,
+          last_check_in: lastInterval?.check_in || null,
+          last_check_out: lastInterval?.check_out || null
+        });
       } else {
         setAttendanceStatus({
           has_checked_in: false,
@@ -57,35 +71,86 @@ export const EmployeeAttendance = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .rpc('handle_attendance', { employee_id: employee.id });
+      const today = new Date().toISOString().split('T')[0];
+      const currentTime = new Date().toISOString();
+      
+      // Get today's attendance
+      const { data: existingData, error: fetchError } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('employee_id', employee.id)
+        .gte('date', today)
+        .lte('date', today)
+        .single();
 
-      if (error) throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
-      // Check if the response contains an error
-      if (data && typeof data === 'object' && 'error' in data && data.error) {
+      if (!existingData) {
+        // First check-in of the day
+        const { error: insertError } = await supabase
+          .from('attendance')
+          .insert({
+            employee_id: employee.id,
+            date: today,
+            intervals: [{ check_in: currentTime }],
+            status: 'present',
+            total_hours: 0
+          });
+
+        if (insertError) throw insertError;
+
         toast({
-          title: "Action Not Allowed",
-          description: data.message as string,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Success case
-      if (data && typeof data === 'object' && 'message' in data) {
-        const action = data.action as string;
-        const actionTitle = action === 'checked_in' ? 'Checked In' : 'Checked Out';
-        
-        toast({
-          title: actionTitle,
-          description: data.message as string,
+          title: "Checked In",
+          description: "Successfully checked in for the day",
         });
       } else {
-        toast({
-          title: "Success",
-          description: "Attendance updated successfully",
-        });
+        const intervals = (existingData.intervals as any[]) || [];
+        const lastInterval = intervals[intervals.length - 1];
+
+        if (lastInterval?.check_in && !lastInterval?.check_out) {
+          // Check out
+          lastInterval.check_out = currentTime;
+          
+          // Calculate total hours
+          let totalHours = 0;
+          intervals.forEach((interval: any) => {
+            if (interval.check_in && interval.check_out) {
+              const checkIn = new Date(interval.check_in);
+              const checkOut = new Date(interval.check_out);
+              totalHours += (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
+            }
+          });
+
+          const { error: updateError } = await supabase
+            .from('attendance')
+            .update({
+              intervals,
+              total_hours: Math.round(totalHours * 100) / 100
+            })
+            .eq('id', existingData.id);
+
+          if (updateError) throw updateError;
+
+          toast({
+            title: "Checked Out",
+            description: "Successfully checked out",
+          });
+        } else {
+          // New check-in
+          intervals.push({ check_in: currentTime });
+
+          const { error: updateError } = await supabase
+            .from('attendance')
+            .update({ intervals })
+            .eq('id', existingData.id);
+
+          if (updateError) throw updateError;
+
+          toast({
+            title: "Checked In",
+            description: "Successfully checked in",
+          });
+        }
       }
 
       // Refresh attendance status

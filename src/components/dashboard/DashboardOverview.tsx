@@ -11,8 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface AttendanceRecord {
   id: string;
   employee_id: string;
-  check_in: string;
-  check_out: string | null;
+  date: string;
+  intervals: any[];
   status: string;
 }
 
@@ -42,19 +42,22 @@ export function DashboardOverview() {
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('attendance')
         .select('*')
-        .gte('check_in', `${today}T00:00:00.000Z`)
-        .lte('check_in', `${today}T23:59:59.999Z`);
+        .eq('date', today);
       
       if (attendanceError) {
         console.error("Error fetching attendance data:", attendanceError);
       } else {
-        const presentCount = attendanceData.filter(record => record.status === 'checked_in' || record.status === 'checked_out').length;
+        const presentCount = attendanceData.filter(record => record.status === 'present').length;
         const lateCount = attendanceData.filter(record => {
-          if (record.check_in) {
-            const checkInTime = new Date(record.check_in);
-            const nineAM = new Date();
-            nineAM.setHours(9, 0, 0, 0);
-            return checkInTime > nineAM;
+          const intervals = Array.isArray(record.intervals) ? record.intervals : [];
+          if (intervals.length > 0) {
+            const firstInterval = intervals[0] as any;
+            if (firstInterval?.check_in) {
+              const checkInTime = new Date(firstInterval.check_in);
+              const nineAM = new Date();
+              nineAM.setHours(9, 0, 0, 0);
+              return checkInTime > nineAM;
+            }
           }
           return false;
         }).length;
