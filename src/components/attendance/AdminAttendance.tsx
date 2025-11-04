@@ -33,39 +33,47 @@ export const AdminAttendance = () => {
 
   const fetchAttendanceData = async () => {
     try {
+      const today = new Date().toISOString().split('T')[0];
+      
       // Fetch today's attendance with employee names
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('attendance')
         .select(`
           id,
-          check_in,
-          check_out,
+          date,
+          intervals,
           total_hours,
           status,
           employees!inner(first_name, last_name)
         `)
-        .gte('check_in', new Date().toISOString().split('T')[0]);
+        .eq('date', today);
 
       if (attendanceError) throw attendanceError;
 
       // Transform data
-      const records: AttendanceRecord[] = attendanceData?.map((record: any) => ({
-        id: record.id,
-        employee_name: `${record.employees.first_name} ${record.employees.last_name}`,
-        check_in: record.check_in,
-        check_out: record.check_out,
-        total_hours: record.total_hours,
-        status: record.status
-      })) || [];
+      const records: AttendanceRecord[] = attendanceData?.map((record: any) => {
+        const intervals = record.intervals as any[] || [];
+        const firstInterval = intervals[0];
+        const lastInterval = intervals[intervals.length - 1];
+        
+        return {
+          id: record.id,
+          employee_name: `${record.employees.first_name} ${record.employees.last_name}`,
+          check_in: firstInterval?.check_in || null,
+          check_out: lastInterval?.check_out || null,
+          total_hours: record.total_hours,
+          status: record.status
+        };
+      }) || [];
 
       setAttendanceRecords(records);
 
       // Calculate stats
-      const present = records.filter(r => r.status === 'checked_in' || r.status === 'checked_out').length;
+      const present = records.filter(r => r.check_in !== null).length;
       const late = records.filter(r => {
         if (r.check_in) {
           const checkInTime = new Date(r.check_in);
-          const nineAM = new Date();
+          const nineAM = new Date(checkInTime);
           nineAM.setHours(9, 0, 0, 0);
           return checkInTime > nineAM;
         }
@@ -115,9 +123,9 @@ export const AdminAttendance = () => {
   };
 
   const getStatusBadge = (status: string, checkOut: string | null) => {
-    if (status === 'checked_out' || checkOut) {
+    if (checkOut) {
       return <Badge className="bg-blue-600 text-white">Complete</Badge>;
-    } else if (status === 'checked_in') {
+    } else if (status === 'present') {
       return <Badge className="bg-success text-success-foreground">Checked In</Badge>;
     } else {
       return <Badge variant="destructive">Absent</Badge>;
