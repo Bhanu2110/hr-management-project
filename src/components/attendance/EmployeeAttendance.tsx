@@ -34,11 +34,10 @@ export const EmployeeAttendance = () => {
         .from('attendance')
         .select('*')
         .eq('employee_id', employee.id)
-        .gte('date', today)
-        .lte('date', today)
-        .single();
+        .eq('date', today)
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
 
       if (data && data.intervals) {
         const intervals = data.intervals as any[];
@@ -79,11 +78,10 @@ export const EmployeeAttendance = () => {
         .from('attendance')
         .select('*')
         .eq('employee_id', employee.id)
-        .gte('date', today)
-        .lte('date', today)
-        .single();
+        .eq('date', today)
+        .maybeSingle();
 
-      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+      if (fetchError) throw fetchError;
 
       if (!existingData) {
         // First check-in of the day
