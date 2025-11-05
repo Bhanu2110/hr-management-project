@@ -44,11 +44,15 @@ export const AdminAttendance = () => {
           intervals,
           total_hours,
           status,
-          employees!inner(first_name, last_name)
+          employee_id,
+          employees!attendance_employee_id_fkey(first_name, last_name)
         `)
         .eq('date', today);
 
-      if (attendanceError) throw attendanceError;
+      if (attendanceError) {
+        console.error('Error fetching attendance:', attendanceError);
+        throw attendanceError;
+      }
 
       // Transform data
       const records: AttendanceRecord[] = attendanceData?.map((record: any) => {

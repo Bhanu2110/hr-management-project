@@ -42,7 +42,7 @@ export const AttendanceReport = () => {
             intervals,
             total_hours,
             status,
-            employees(first_name, last_name)
+            employees!attendance_employee_id_fkey(first_name, last_name)
           `)
           .order('date', { ascending: false });
         

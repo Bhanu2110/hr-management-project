@@ -39,12 +39,12 @@ export const EmployeeAttendance = () => {
 
       if (error) throw error;
 
-      if (data && data.intervals) {
+      if (data && Array.isArray(data.intervals) && data.intervals.length > 0) {
         const intervals = data.intervals as any[];
         const lastInterval = intervals[intervals.length - 1];
         
         setAttendanceStatus({
-          has_checked_in: lastInterval?.check_in && !lastInterval?.check_out,
+          has_checked_in: !!(lastInterval?.check_in && !lastInterval?.check_out),
           last_check_in: lastInterval?.check_in || null,
           last_check_out: lastInterval?.check_out || null
         });
