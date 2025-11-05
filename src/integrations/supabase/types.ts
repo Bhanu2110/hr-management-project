@@ -70,36 +70,42 @@ export type Database = {
       }
       attendance: {
         Row: {
+          check_in: string | null
+          check_out: string | null
           created_at: string | null
           date: string | null
           employee_id: string
           id: string
-          intervals: Json
+          intervals: Json | null
           notes: string | null
-          status: string
-          total_hours: number
+          status: string | null
+          total_hours: number | null
           updated_at: string | null
         }
         Insert: {
+          check_in?: string | null
+          check_out?: string | null
           created_at?: string | null
           date?: string | null
           employee_id: string
           id?: string
-          intervals?: Json
+          intervals?: Json | null
           notes?: string | null
-          status?: string
-          total_hours?: number
+          status?: string | null
+          total_hours?: number | null
           updated_at?: string | null
         }
         Update: {
+          check_in?: string | null
+          check_out?: string | null
           created_at?: string | null
           date?: string | null
           employee_id?: string
           id?: string
-          intervals?: Json
+          intervals?: Json | null
           notes?: string | null
-          status?: string
-          total_hours?: number
+          status?: string | null
+          total_hours?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -659,6 +665,8 @@ export type Database = {
           position: string
         }[]
       }
+      can_employee_check_in: { Args: { emp_id: string }; Returns: boolean }
+      can_employee_check_out: { Args: { emp_id: string }; Returns: boolean }
       create_admin_user: {
         Args: {
           admin_department?: string
@@ -683,8 +691,18 @@ export type Database = {
       }
       fix_existing_admins: { Args: never; Returns: undefined }
       generate_temp_password: { Args: never; Returns: string }
+      get_attendance_status: {
+        Args: { employee_uuid: string }
+        Returns: {
+          has_checked_in: boolean
+          last_check_in: string
+          last_check_out: string
+          total_working_hours: number
+        }[]
+      }
       get_current_user_role: { Args: never; Returns: string }
       get_user_role: { Args: { user_id: string }; Returns: string }
+      handle_attendance: { Args: { emp_id: string }; Returns: Json }
       hash_password: { Args: { password: string }; Returns: string }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       link_admin_to_auth: {
