@@ -110,6 +110,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "attendance_employee_fk"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "attendance_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
