@@ -120,7 +120,7 @@ export function DashboardOverview() {
         setPendingLeaveCount(pendingLeaves.length || 0);
       }
 
-      // Combine and sort activities
+      // Combine activities with check-in first, then leave request
       const activities: RecentActivity[] = [];
 
       if (recentCheckIns && !checkInError) {
@@ -153,9 +153,7 @@ export function DashboardOverview() {
         });
       }
 
-      // Sort by timestamp and take latest 5
-      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setRecentActivities(activities.slice(0, 5));
+      setRecentActivities(activities);
     };
 
     fetchDashboardData();
