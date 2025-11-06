@@ -90,7 +90,7 @@ export function DashboardOverview() {
         setOnLeave(leaveData.length);
       }
 
-      // Fetch recent check-ins
+      // Fetch recent check-ins (only the latest one)
       const { data: recentCheckIns, error: checkInError } = await supabase
         .from('attendance')
         .select(`
@@ -98,7 +98,7 @@ export function DashboardOverview() {
           employee:employees!attendance_employee_id_fkey(first_name, last_name)
         `)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(1);
 
       // Fetch recent leave requests
       const { data: recentLeaves, error: leaveReqError } = await supabase
