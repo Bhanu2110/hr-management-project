@@ -90,6 +90,7 @@ export const EmployeeAttendance = () => {
           .insert({
             employee_id: employee.id,
             date: today,
+            check_in: currentTime,
             intervals: [{ check_in: currentTime }],
             status: 'present',
             total_hours: 0
@@ -122,6 +123,7 @@ export const EmployeeAttendance = () => {
           const { error: updateError } = await supabase
             .from('attendance')
             .update({
+              check_out: currentTime,
               intervals,
               total_hours: Math.round(totalHours * 100) / 100
             })
@@ -134,12 +136,16 @@ export const EmployeeAttendance = () => {
             description: "Successfully checked out",
           });
         } else {
-          // New check-in
+          // New check-in after a previous check-out
           intervals.push({ check_in: currentTime });
 
           const { error: updateError } = await supabase
             .from('attendance')
-            .update({ intervals })
+            .update({ 
+              check_in: currentTime,
+              check_out: null,
+              intervals 
+            })
             .eq('id', existingData.id);
 
           if (updateError) throw updateError;
