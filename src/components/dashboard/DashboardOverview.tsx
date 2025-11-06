@@ -100,7 +100,7 @@ export function DashboardOverview() {
         .order('created_at', { ascending: false })
         .limit(1);
 
-      // Fetch recent leave requests
+      // Fetch recent leave requests (only the latest one)
       const { data: recentLeaves, error: leaveReqError } = await supabase
         .from('leave_requests')
         .select(`
@@ -108,7 +108,7 @@ export function DashboardOverview() {
           employee:employees!leave_requests_employee_id_fkey(first_name, last_name)
         `)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(1);
 
       // Fetch pending leave requests count
       const { data: pendingLeaves, error: pendingError } = await supabase
