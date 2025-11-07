@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,8 @@ import {
   FileSpreadsheet
 } from "lucide-react";
 import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS_COLORS } from "@/types/salary";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface SalaryManagementProps {
   employees?: Array<{
@@ -73,6 +75,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [dbEmployees, setDbEmployees] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<SalaryCreateRequest>>({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -97,6 +101,27 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     other_deductions: 0,
     paid_date: undefined,
   });
+
+  // Fetch employees from database
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('status', 'active')
+          .order('first_name', { ascending: true });
+        
+        if (error) throw error;
+        setDbEmployees(data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+        toast.error('Failed to load employees');
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   // Mock salary slip data
   const mockSalarySlips: SalarySlip[] = [
@@ -282,34 +307,135 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     }).format(amount);
   };
 
-  const handleCreateSalarySlip = () => {
-    console.log("Creating salary slip with data:", { ...formData, employee_id: selectedEmployee });
-    setIsCreateDialogOpen(false);
-    setSelectedEmployee("");
-    setFormData({
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-      working_days: 22,
-      present_days: 22,
-      basic_salary: 0,
-      hra: 0,
-      transport_allowance: 0,
-      medical_allowance: 0,
-      special_allowance: 0,
-      performance_bonus: 0,
-      overtime_hours: 0,
-      overtime_rate: 0,
-      other_allowances: 0,
-      pf_employee: 0,
-      esi_employee: 0,
-      professional_tax: 0,
-      income_tax: 0,
-      loan_deduction: 0,
-      advance_deduction: 0,
-      late_deduction: 0,
-      other_deductions: 0,
-      paid_date: undefined,
-    });
+  const handleCreateSalarySlip = async () => {
+    if (!selectedEmployee) {
+      toast.error("Please select an employee");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Find the selected employee
+      const employee = dbEmployees.find(emp => emp.employee_id === selectedEmployee);
+      if (!employee) {
+        throw new Error("Employee not found");
+      }
+
+      // Calculate overtime amount
+      const overtime_amount = (formData.overtime_hours || 0) * (formData.overtime_rate || 0);
+
+      // Calculate gross earnings
+      const gross_earnings = 
+        (formData.basic_salary || 0) +
+        (formData.hra || 0) +
+        (formData.transport_allowance || 0) +
+        (formData.medical_allowance || 0) +
+        (formData.special_allowance || 0) +
+        (formData.performance_bonus || 0) +
+        overtime_amount +
+        (formData.other_allowances || 0);
+
+      // Calculate total deductions
+      const total_deductions = 
+        (formData.pf_employee || 0) +
+        (formData.esi_employee || 0) +
+        (formData.professional_tax || 0) +
+        (formData.income_tax || 0) +
+        (formData.loan_deduction || 0) +
+        (formData.advance_deduction || 0) +
+        (formData.late_deduction || 0) +
+        (formData.other_deductions || 0);
+
+      // Calculate net salary
+      const net_salary = gross_earnings - total_deductions;
+
+      // Calculate pay period dates
+      const year = formData.year || new Date().getFullYear();
+      const month = formData.month || new Date().getMonth() + 1;
+      const pay_period_start = new Date(year, month - 1, 1).toISOString();
+      const pay_period_end = new Date(year, month, 0, 23, 59, 59).toISOString();
+
+      // Prepare salary slip data
+      const salarySlipData = {
+        employee_id: employee.employee_id,
+        employee_name: `${employee.first_name} ${employee.last_name}`,
+        employee_email: employee.email,
+        department: employee.department || '',
+        position: employee.position || '',
+        month: formData.month || new Date().getMonth() + 1,
+        year: formData.year || new Date().getFullYear(),
+        pay_period_start,
+        pay_period_end,
+        working_days: formData.working_days || 22,
+        present_days: formData.present_days || 22,
+        basic_salary: formData.basic_salary || 0,
+        hra: formData.hra || 0,
+        transport_allowance: formData.transport_allowance || 0,
+        medical_allowance: formData.medical_allowance || 0,
+        special_allowance: formData.special_allowance || 0,
+        performance_bonus: formData.performance_bonus || 0,
+        overtime_hours: formData.overtime_hours || 0,
+        overtime_rate: formData.overtime_rate || 0,
+        overtime_amount,
+        other_allowances: formData.other_allowances || 0,
+        gross_earnings,
+        pf_employee: formData.pf_employee || 0,
+        esi_employee: formData.esi_employee || 0,
+        professional_tax: formData.professional_tax || 0,
+        income_tax: formData.income_tax || 0,
+        loan_deduction: formData.loan_deduction || 0,
+        advance_deduction: formData.advance_deduction || 0,
+        late_deduction: formData.late_deduction || 0,
+        other_deductions: formData.other_deductions || 0,
+        total_deductions,
+        net_salary,
+        pf_employer: formData.pf_employee || 0, // Usually same as employee PF
+        esi_employer: formData.esi_employee || 0, // Usually same as employee ESI
+        status: 'draft' as const,
+        generated_date: new Date().toISOString(),
+        paid_date: formData.paid_date || null,
+      };
+
+      // Insert into database
+      const { error } = await supabase
+        .from('salary_slips')
+        .insert([salarySlipData]);
+
+      if (error) throw error;
+
+      toast.success("Salary slip generated successfully!");
+      setIsCreateDialogOpen(false);
+      setSelectedEmployee("");
+      setFormData({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        working_days: 22,
+        present_days: 22,
+        basic_salary: 0,
+        hra: 0,
+        transport_allowance: 0,
+        medical_allowance: 0,
+        special_allowance: 0,
+        performance_bonus: 0,
+        overtime_hours: 0,
+        overtime_rate: 0,
+        other_allowances: 0,
+        pf_employee: 0,
+        esi_employee: 0,
+        professional_tax: 0,
+        income_tax: 0,
+        loan_deduction: 0,
+        advance_deduction: 0,
+        late_deduction: 0,
+        other_deductions: 0,
+        paid_date: undefined,
+      });
+    } catch (error: any) {
+      console.error('Error creating salary slip:', error);
+      toast.error(error.message || "Failed to generate salary slip");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleProcessSalary = (id: string) => {
@@ -357,7 +483,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                         <SelectValue placeholder="Choose an employee" />
                       </SelectTrigger>
                       <SelectContent>
-                        {employees.map((employee) => (
+                        {dbEmployees.map((employee) => (
                           <SelectItem key={employee.id} value={employee.employee_id}>
                             {employee.first_name} {employee.last_name} ({employee.employee_id})
                           </SelectItem>
@@ -571,11 +697,11 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isLoading}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateSalarySlip} disabled={!selectedEmployee}>
-                  Generate Salary Slip
+                <Button onClick={handleCreateSalarySlip} disabled={!selectedEmployee || isLoading}>
+                  {isLoading ? "Generating..." : "Generate Salary Slip"}
                 </Button>
               </DialogFooter>
             </DialogContent>
