@@ -923,20 +923,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                           <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {slip.status === 'paid' && (
-                            <Button variant="ghost" size="sm">
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {slip.status === 'processed' && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handlePaySalary(slip.id)}
-                            >
-                              <Send className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="sm">
+                            <Download className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
