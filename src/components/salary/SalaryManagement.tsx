@@ -76,6 +76,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [dbEmployees, setDbEmployees] = useState<any[]>([]);
+  const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<SalaryCreateRequest>>({
     month: new Date().getMonth() + 1,
@@ -122,6 +123,26 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
     fetchEmployees();
   }, []);
+
+  // Fetch salary slips from database
+  useEffect(() => {
+    fetchSalarySlips();
+  }, []);
+
+  const fetchSalarySlips = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('salary_slips')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setSalarySlips(data || []);
+    } catch (error) {
+      console.error('Error fetching salary slips:', error);
+      toast.error('Failed to load salary slips');
+    }
+  };
 
   // Mock salary slip data
   const mockSalarySlips: SalarySlip[] = [
@@ -276,7 +297,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     },
   ];
 
-  const filteredSalarySlips = mockSalarySlips.filter((slip) => {
+  const filteredSalarySlips = salarySlips.filter((slip) => {
     const matchesSearch = 
       slip.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       slip.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -404,6 +425,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       if (error) throw error;
 
       toast.success("Salary slip generated successfully!");
+      fetchSalarySlips(); // Refresh the list
       setIsCreateDialogOpen(false);
       setSelectedEmployee("");
       setFormData({
