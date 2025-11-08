@@ -96,6 +96,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     esi_employee: 0,
     professional_tax: 0,
     income_tax: 0,
+    medical_insurance: 0,
     loan_deduction: 0,
     advance_deduction: 0,
     late_deduction: 0,
@@ -174,6 +175,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employee: 0,
       professional_tax: 200,
       income_tax: 8500,
+      medical_insurance: 0,
       loan_deduction: 0,
       advance_deduction: 0,
       late_deduction: 0,
@@ -216,6 +218,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employee: 0,
       professional_tax: 200,
       income_tax: 12000,
+      medical_insurance: 0,
       loan_deduction: 5000,
       advance_deduction: 0,
       late_deduction: 1000,
@@ -254,6 +257,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employer: 0,
       professional_tax: 200,
       income_tax: 8500,
+      medical_insurance: 0,
       loan_deduction: 0,
       other_deductions: 0,
       gross_salary: 83500,
@@ -285,6 +289,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employer: 0,
       professional_tax: 200,
       income_tax: 12000,
+      medical_insurance: 0,
       loan_deduction: 0,
       other_deductions: 0,
       gross_salary: 102500,
@@ -362,6 +367,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         (formData.esi_employee || 0) +
         (formData.professional_tax || 0) +
         (formData.income_tax || 0) +
+        (formData.medical_insurance || 0) +
         (formData.loan_deduction || 0) +
         (formData.advance_deduction || 0) +
         (formData.late_deduction || 0) +
@@ -404,6 +410,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         esi_employee: formData.esi_employee || 0,
         professional_tax: formData.professional_tax || 0,
         income_tax: formData.income_tax || 0,
+        medical_insurance: formData.medical_insurance || 0,
         loan_deduction: formData.loan_deduction || 0,
         advance_deduction: formData.advance_deduction || 0,
         late_deduction: formData.late_deduction || 0,
@@ -446,6 +453,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         esi_employee: 0,
         professional_tax: 0,
         income_tax: 0,
+        medical_insurance: 0,
         loan_deduction: 0,
         advance_deduction: 0,
         late_deduction: 0,
@@ -657,6 +665,63 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
                     />
                   </div>
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Deductions</h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pf_employee">PF (Employee Contribution)</Label>
+                    <Input
+                      id="pf_employee"
+                      type="number"
+                      value={formData.pf_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="professional_tax">Professional Tax</Label>
+                    <Input
+                      id="professional_tax"
+                      type="number"
+                      value={formData.professional_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="esi_employee">ESI</Label>
+                    <Input
+                      id="esi_employee"
+                      type="number"
+                      value={formData.esi_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="medical_insurance">Medical Insurance</Label>
+                    <Input
+                      id="medical_insurance"
+                      type="number"
+                      value={formData.medical_insurance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="income_tax">Income Tax</Label>
+                    <Input
+                      id="income_tax"
+                      type="number"
+                      value={formData.income_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: Number(e.target.value) }))}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="loan_deduction">Loan Deduction</Label>
                     <Input
@@ -699,7 +764,6 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
                     />
                   </div>
-                  {/* Assuming Payment Mode will be added later or is not a direct input */}
                 </div>
 
                 <Separator />

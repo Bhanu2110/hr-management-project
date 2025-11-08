@@ -23,6 +23,7 @@ export interface SalaryStructure {
   esi_employer: number;
   professional_tax: number;
   income_tax: number;
+  medical_insurance: number;
   loan_deduction: number;
   other_deductions: number;
   
@@ -72,6 +73,7 @@ export interface SalarySlip {
   esi_employee: number;
   professional_tax: number;
   income_tax: number;
+  medical_insurance: number;
   loan_deduction: number;
   advance_deduction: number;
   late_deduction: number;
@@ -130,6 +132,7 @@ export interface SalaryCreateRequest {
   esi_employee?: number;
   professional_tax?: number;
   income_tax?: number;
+  medical_insurance?: number;
   loan_deduction?: number;
   advance_deduction?: number;
   late_deduction?: number;
