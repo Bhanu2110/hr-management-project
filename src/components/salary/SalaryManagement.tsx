@@ -140,7 +140,12 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setSalarySlips(data || []);
+     const mappedData: SalarySlip[] = (data || []).map((item: any) => ({
+        ...item,
+        medical_insurance: item.medical_insurance ?? 0,
+      }));
+      
+      setSalarySlips(mappedData);
     } catch (error) {
       console.error('Error fetching salary slips:', error);
       toast.error('Failed to load salary slips');
