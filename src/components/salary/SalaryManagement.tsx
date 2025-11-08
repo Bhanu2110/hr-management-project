@@ -74,7 +74,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [editingSlip, setEditingSlip] = useState<SalarySlip | null>(null);
   const [dbEmployees, setDbEmployees] = useState<any[]>([]);
   const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -476,6 +478,127 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     console.log("Paying salary with ID:", id);
   };
 
+  const handleUpdateSalarySlip = async () => {
+    if (!editingSlip) {
+      toast.error("No salary slip selected for editing");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Calculate overtime amount
+      const overtime_amount = (formData.overtime_hours || 0) * (formData.overtime_rate || 0);
+
+      // Calculate gross earnings
+      const gross_earnings = 
+        (formData.basic_salary || 0) +
+        (formData.hra || 0) +
+        (formData.transport_allowance || 0) +
+        (formData.medical_allowance || 0) +
+        (formData.special_allowance || 0) +
+        (formData.performance_bonus || 0) +
+        overtime_amount +
+        (formData.other_allowances || 0);
+
+      // Calculate total deductions
+      const total_deductions = 
+        (formData.pf_employee || 0) +
+        (formData.esi_employee || 0) +
+        (formData.professional_tax || 0) +
+        (formData.income_tax || 0) +
+        (formData.medical_insurance || 0) +
+        (formData.loan_deduction || 0) +
+        (formData.advance_deduction || 0) +
+        (formData.late_deduction || 0) +
+        (formData.other_deductions || 0);
+
+      // Calculate net salary
+      const net_salary = gross_earnings - total_deductions;
+
+      // Calculate pay period dates
+      const year = formData.year || editingSlip.year;
+      const month = formData.month || editingSlip.month;
+      const pay_period_start = new Date(year, month - 1, 1).toISOString();
+      const pay_period_end = new Date(year, month, 0, 23, 59, 59).toISOString();
+
+      // Prepare update data
+      const updateData = {
+        month: formData.month || editingSlip.month,
+        year: formData.year || editingSlip.year,
+        pay_period_start,
+        pay_period_end,
+        working_days: formData.working_days || editingSlip.working_days,
+        present_days: formData.present_days || editingSlip.present_days,
+        basic_salary: formData.basic_salary || 0,
+        hra: formData.hra || 0,
+        transport_allowance: formData.transport_allowance || 0,
+        medical_allowance: formData.medical_allowance || 0,
+        special_allowance: formData.special_allowance || 0,
+        performance_bonus: formData.performance_bonus || 0,
+        overtime_hours: formData.overtime_hours || 0,
+        overtime_rate: formData.overtime_rate || 0,
+        overtime_amount,
+        other_allowances: formData.other_allowances || 0,
+        gross_earnings,
+        pf_employee: formData.pf_employee || 0,
+        esi_employee: formData.esi_employee || 0,
+        professional_tax: formData.professional_tax || 0,
+        income_tax: formData.income_tax || 0,
+        medical_insurance: formData.medical_insurance || 0,
+        loan_deduction: formData.loan_deduction || 0,
+        advance_deduction: formData.advance_deduction || 0,
+        late_deduction: formData.late_deduction || 0,
+        other_deductions: formData.other_deductions || 0,
+        total_deductions,
+        net_salary,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('salary_slips')
+        .update(updateData)
+        .eq('id', editingSlip.id);
+
+      if (error) throw error;
+
+      toast.success("Salary slip updated successfully!");
+      fetchSalarySlips(); // Refresh the list
+      setIsEditDialogOpen(false);
+      setEditingSlip(null);
+      setFormData({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        working_days: 22,
+        present_days: 22,
+        basic_salary: 0,
+        hra: 0,
+        transport_allowance: 0,
+        medical_allowance: 0,
+        special_allowance: 0,
+        performance_bonus: 0,
+        overtime_hours: 0,
+        overtime_rate: 0,
+        other_allowances: 0,
+        pf_employee: 0,
+        esi_employee: 0,
+        professional_tax: 0,
+        income_tax: 0,
+        medical_insurance: 0,
+        loan_deduction: 0,
+        advance_deduction: 0,
+        late_deduction: 0,
+        other_deductions: 0,
+        paid_date: undefined,
+      });
+    } catch (error: any) {
+      console.error('Error updating salary slip:', error);
+      toast.error(error.message || "Failed to update salary slip");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   const totalGrossSalary = filteredSalarySlips.reduce((sum, slip) => sum + slip.gross_earnings, 0);
   const totalNetSalary = filteredSalarySlips.reduce((sum, slip) => sum + slip.net_salary, 0);
   const totalDeductions = filteredSalarySlips.reduce((sum, slip) => sum + slip.total_deductions, 0);
@@ -792,6 +915,280 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Salary Slip Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Salary Slip</DialogTitle>
+                <DialogDescription>
+                  Update salary slip for {editingSlip?.employee_name}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_month">Month</Label>
+                    <Select 
+                      value={formData.month?.toString()} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, month: Number(value) }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MONTHS.map((month) => (
+                          <SelectItem key={month.value} value={month.value.toString()}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_year">Year</Label>
+                    <Input
+                      id="edit_year"
+                      type="number"
+                      value={formData.year || 2024}
+                      onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_working_days">Working Days</Label>
+                    <Input
+                      id="edit_working_days"
+                      type="number"
+                      value={formData.working_days || 22}
+                      onChange={(e) => setFormData(prev => ({ ...prev, working_days: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_present_days">Present Days</Label>
+                    <Input
+                      id="edit_present_days"
+                      type="number"
+                      value={formData.present_days || 22}
+                      onChange={(e) => setFormData(prev => ({ ...prev, present_days: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Earnings</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_basic_salary">Basic Salary</Label>
+                    <Input
+                      id="edit_basic_salary"
+                      type="number"
+                      value={formData.basic_salary || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_hra">HRA</Label>
+                    <Input
+                      id="edit_hra"
+                      type="number"
+                      value={formData.hra || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hra: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_transport_allowance">Transport Allowance</Label>
+                    <Input
+                      id="edit_transport_allowance"
+                      type="number"
+                      value={formData.transport_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_medical_allowance">Medical Allowance</Label>
+                    <Input
+                      id="edit_medical_allowance"
+                      type="number"
+                      value={formData.medical_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_special_allowance">Special Allowance</Label>
+                    <Input
+                      id="edit_special_allowance"
+                      type="number"
+                      value={formData.special_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_performance_bonus">Performance Bonus</Label>
+                    <Input
+                      id="edit_performance_bonus"
+                      type="number"
+                      value={formData.performance_bonus || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, performance_bonus: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_overtime_hours">Overtime Hours</Label>
+                    <Input
+                      id="edit_overtime_hours"
+                      type="number"
+                      value={formData.overtime_hours || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_overtime_rate">Overtime Rate</Label>
+                    <Input
+                      id="edit_overtime_rate"
+                      type="number"
+                      value={formData.overtime_rate || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_other_allowances">Other Allowances</Label>
+                    <Input
+                      id="edit_other_allowances"
+                      type="number"
+                      value={formData.other_allowances || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Deductions</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_pf_employee">PF (Employee)</Label>
+                    <Input
+                      id="edit_pf_employee"
+                      type="number"
+                      value={formData.pf_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_professional_tax">Professional Tax</Label>
+                    <Input
+                      id="edit_professional_tax"
+                      type="number"
+                      value={formData.professional_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_esi_employee">ESI</Label>
+                    <Input
+                      id="edit_esi_employee"
+                      type="number"
+                      value={formData.esi_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_medical_insurance">Medical Insurance</Label>
+                    <Input
+                      id="edit_medical_insurance"
+                      type="number"
+                      value={formData.medical_insurance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_income_tax">Income Tax</Label>
+                    <Input
+                      id="edit_income_tax"
+                      type="number"
+                      value={formData.income_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_loan_deduction">Loan Deduction</Label>
+                    <Input
+                      id="edit_loan_deduction"
+                      type="number"
+                      value={formData.loan_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_advance_deduction">Advance Deduction</Label>
+                    <Input
+                      id="edit_advance_deduction"
+                      type="number"
+                      value={formData.advance_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_late_deduction">Late Deduction</Label>
+                    <Input
+                      id="edit_late_deduction"
+                      type="number"
+                      value={formData.late_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_other_deductions">Other Deductions</Label>
+                    <Input
+                      id="edit_other_deductions"
+                      type="number"
+                      value={formData.other_deductions || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setEditingSlip(null);
+                  }} 
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateSalarySlip} disabled={isLoading}>
+                  {isLoading ? "Updating..." : "Update Salary Slip"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -979,12 +1376,43 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       <TableCell>
                         {slip.paid_date ? new Date(slip.paid_date).toLocaleDateString() : 'N/A'}
                       </TableCell>
-                      <TableCell>
+                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingSlip(slip);
+                              setFormData({
+                                month: slip.month,
+                                year: slip.year,
+                                working_days: slip.working_days,
+                                present_days: slip.present_days,
+                                basic_salary: slip.basic_salary,
+                                hra: slip.hra,
+                                transport_allowance: slip.transport_allowance,
+                                medical_allowance: slip.medical_allowance,
+                                special_allowance: slip.special_allowance,
+                                performance_bonus: slip.performance_bonus,
+                                overtime_hours: slip.overtime_hours,
+                                overtime_rate: slip.overtime_rate,
+                                other_allowances: slip.other_allowances,
+                                pf_employee: slip.pf_employee,
+                                esi_employee: slip.esi_employee,
+                                professional_tax: slip.professional_tax,
+                                income_tax: slip.income_tax,
+                                medical_insurance: slip.medical_insurance,
+                                loan_deduction: slip.loan_deduction,
+                                advance_deduction: slip.advance_deduction,
+                                late_deduction: slip.late_deduction,
+                                other_deductions: slip.other_deductions,
+                              });
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
