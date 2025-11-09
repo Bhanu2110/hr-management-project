@@ -48,11 +48,13 @@ import {
   Users,
   TrendingUp,
   Calculator,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Trash2
 } from "lucide-react";
 import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS_COLORS } from "@/types/salary";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SalarySlipView } from "./SalarySlipView";
 
 interface SalaryManagementProps {
   employees?: Array<{
@@ -75,8 +77,10 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [editingSlip, setEditingSlip] = useState<SalarySlip | null>(null);
+  const [viewingSlip, setViewingSlip] = useState<SalarySlip | null>(null);
   const [dbEmployees, setDbEmployees] = useState<any[]>([]);
   const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -481,6 +485,37 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
   const handlePaySalary = (id: string) => {
     console.log("Paying salary with ID:", id);
+  };
+
+  const handleDeleteSalarySlip = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this salary slip?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('salary_slips')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Salary slip deleted successfully');
+      fetchSalarySlips();
+    } catch (error) {
+      console.error('Error deleting salary slip:', error);
+      toast.error('Failed to delete salary slip');
+    }
+  };
+
+  const handleViewSalarySlip = (slip: SalarySlip) => {
+    setViewingSlip(slip);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleDownloadSlip = () => {
+    if (viewingSlip) {
+      toast.success('Downloading salary slip...');
+      // TODO: Implement PDF download functionality
+    }
   };
 
   const handleUpdateSalarySlip = async () => {
@@ -1383,7 +1418,11 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       </TableCell>
                        <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewSalarySlip(slip)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button 
@@ -1420,8 +1459,12 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteSalarySlip(slip.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -1485,6 +1528,26 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* View Salary Slip Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Salary Slip Preview</DialogTitle>
+          </DialogHeader>
+          {viewingSlip && (
+            <div className="space-y-4">
+              <SalarySlipView salarySlip={viewingSlip} />
+              <div className="flex justify-end pt-4 border-t">
+                <Button onClick={handleDownloadSlip}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
