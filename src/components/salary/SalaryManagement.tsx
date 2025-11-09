@@ -511,10 +511,32 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     setIsViewDialogOpen(true);
   };
 
-  const handleDownloadSlip = () => {
+  const handleDownloadSlip = async () => {
     if (viewingSlip) {
-      toast.success('Downloading salary slip...');
-      // TODO: Implement PDF download functionality
+      try {
+        const html2pdf = (await import('html2pdf.js')).default;
+        const element = document.getElementById('salary-slip-preview');
+        
+        if (!element) {
+          toast.error('Unable to find salary slip content');
+          return;
+        }
+
+        const opt = {
+          margin: 10,
+          filename: `salary-slip-${viewingSlip.employee_name}-${MONTHS[viewingSlip.month - 1]}-${viewingSlip.year}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+
+        toast.success('Generating PDF...');
+        await html2pdf().set(opt).from(element).save();
+        toast.success('PDF downloaded successfully');
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to generate PDF');
+      }
     }
   };
 
@@ -1537,7 +1559,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
           </DialogHeader>
           {viewingSlip && (
             <div className="space-y-4">
-              <SalarySlipView salarySlip={viewingSlip} />
+              <div id="salary-slip-preview">
+                <SalarySlipView salarySlip={viewingSlip} />
+              </div>
               <div className="flex justify-end pt-4 border-t">
                 <Button onClick={handleDownloadSlip}>
                   <Download className="h-4 w-4 mr-2" />
