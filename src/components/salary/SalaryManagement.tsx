@@ -55,6 +55,7 @@ import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SalarySlipView } from "./SalarySlipView";
+import html2pdf from 'html2pdf.js';
 
 interface SalaryManagementProps {
   employees?: Array<{
@@ -511,10 +512,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     setIsViewDialogOpen(true);
   };
 
-  const handleDownloadSlip = async () => {
+  const handleDownloadSlip = () => {
     if (viewingSlip) {
       try {
-        const html2pdf = (await import('html2pdf.js')).default;
         const element = document.getElementById('salary-slip-preview');
         
         if (!element) {
@@ -531,8 +531,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         };
 
         toast.success('Generating PDF...');
-        await html2pdf().set(opt).from(element).save();
-        toast.success('PDF downloaded successfully');
+        html2pdf().set(opt).from(element).save();
       } catch (error) {
         console.error('Error generating PDF:', error);
         toast.error('Failed to generate PDF');
