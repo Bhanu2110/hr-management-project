@@ -55,6 +55,7 @@ import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SalarySlipView } from "./SalarySlipView";
+import { CTCSalarySlip } from "./CTCSalarySlip";
 import html2pdf from 'html2pdf.js';
 
 interface SalaryManagementProps {
@@ -1552,14 +1553,14 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
       {/* View Salary Slip Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Salary Slip Preview</DialogTitle>
           </DialogHeader>
           {viewingSlip && (
             <div className="space-y-4">
               <div id="salary-slip-preview">
-                <SalarySlipView salarySlip={viewingSlip} />
+                <CTCSalarySlip salarySlip={viewingSlip} />
               </div>
               <div className="flex justify-end pt-4 border-t">
                 <Button onClick={handleDownloadSlip}>
