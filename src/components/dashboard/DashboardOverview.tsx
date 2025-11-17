@@ -7,13 +7,22 @@ import { useTheme } from '@/context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { employeeService, Employee } from '@/services/api';
 import { supabase } from '@/integrations/supabase/client';
+import { formatDistanceToNow } from 'date-fns';
 
 interface AttendanceRecord {
   id: string;
   employee_id: string;
-  check_in: string;
-  check_out: string | null;
+  date: string;
+  intervals: any[];
   status: string;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'check_in' | 'leave_request';
+  message: string;
+  timestamp: string;
+  status?: string;
 }
 
 export function DashboardOverview() {
@@ -23,6 +32,8 @@ export function DashboardOverview() {
   const [presentToday, setPresentToday] = useState(0);
   const [onLeave, setOnLeave] = useState(0);
   const [lateCheckIns, setLateCheckIns] = useState(0);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -42,19 +53,22 @@ export function DashboardOverview() {
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('attendance')
         .select('*')
-        .gte('check_in', `${today}T00:00:00.000Z`)
-        .lte('check_in', `${today}T23:59:59.999Z`);
+        .eq('date', today);
       
       if (attendanceError) {
         console.error("Error fetching attendance data:", attendanceError);
       } else {
-        const presentCount = attendanceData.filter(record => record.status === 'checked_in' || record.status === 'checked_out').length;
+        const presentCount = attendanceData.filter(record => record.status === 'present').length;
         const lateCount = attendanceData.filter(record => {
-          if (record.check_in) {
-            const checkInTime = new Date(record.check_in);
-            const nineAM = new Date();
-            nineAM.setHours(9, 0, 0, 0);
-            return checkInTime > nineAM;
+          const intervals = Array.isArray(record.intervals) ? record.intervals : [];
+          if (intervals.length > 0) {
+            const firstInterval = intervals[0] as any;
+            if (firstInterval?.check_in) {
+              const checkInTime = new Date(firstInterval.check_in);
+              const nineAM = new Date();
+              nineAM.setHours(9, 0, 0, 0);
+              return checkInTime > nineAM;
+            }
           }
           return false;
         }).length;
@@ -76,6 +90,70 @@ export function DashboardOverview() {
         setOnLeave(leaveData.length);
       }
 
+      // Fetch recent check-ins (only the latest one)
+      const { data: recentCheckIns, error: checkInError } = await supabase
+        .from('attendance')
+        .select(`
+          *,
+          employee:employees!attendance_employee_id_fkey(first_name, last_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      // Fetch recent leave requests (only the latest one)
+      const { data: recentLeaves, error: leaveReqError } = await supabase
+        .from('leave_requests')
+        .select(`
+          *,
+          employee:employees!leave_requests_employee_id_fkey(first_name, last_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      // Fetch pending leave requests count
+      const { data: pendingLeaves, error: pendingError } = await supabase
+        .from('leave_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      if (!pendingError && pendingLeaves) {
+        setPendingLeaveCount(pendingLeaves.length || 0);
+      }
+
+      // Combine activities with check-in first, then leave request
+      const activities: RecentActivity[] = [];
+
+      if (recentCheckIns && !checkInError) {
+        recentCheckIns.forEach((record: any) => {
+          const intervals = Array.isArray(record.intervals) ? record.intervals : [];
+          if (intervals.length > 0) {
+            const lastInterval = intervals[intervals.length - 1];
+            const checkInTime = lastInterval.check_in;
+            if (checkInTime) {
+              activities.push({
+                id: `checkin_${record.id}`,
+                type: 'check_in',
+                message: `${record.employee?.first_name} ${record.employee?.last_name} checked in`,
+                timestamp: checkInTime,
+              });
+            }
+          }
+        });
+      }
+
+      if (recentLeaves && !leaveReqError) {
+        recentLeaves.forEach((leave: any) => {
+          activities.push({
+            id: `leave_${leave.id}`,
+            type: 'leave_request',
+            message: `Leave request from ${leave.employee?.first_name} ${leave.employee?.last_name}`,
+            timestamp: leave.created_at,
+            status: leave.status,
+          });
+        });
+      }
+
+      setRecentActivities(activities);
     };
 
     fetchDashboardData();
@@ -129,7 +207,7 @@ export function DashboardOverview() {
         <MetricCard
           title="Late Check-ins"
           value={lateCheckIns.toString()}
-          change="-3 from yesterday"
+          
           changeType="negative"
           icon={Clock}
           iconColor="text-destructive"
@@ -159,27 +237,43 @@ export function DashboardOverview() {
             <CardTitle className="text-lg font-semibold">Recent Activities</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-              <div className="w-2 h-2 rounded-full bg-success mt-2" style={{ backgroundColor: themeColor }}></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">John Doe checked in</p>
-                <p className="text-xs text-muted-foreground">2 minutes ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-              <div className="w-2 h-2 rounded-full bg-warning mt-2" style={{ backgroundColor: themeColor }}></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Leave request from Sarah Wilson</p>
-                <p className="text-xs text-muted-foreground">1 hour ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-              <div className="w-2 h-2 rounded-full bg-primary mt-2" style={{ backgroundColor: themeColor }}></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Monthly payroll generated</p>
-                <p className="text-xs text-muted-foreground">3 hours ago</p>
-              </div>
-            </div>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity) => {
+                const getStatusColor = () => {
+                  if (activity.type === 'check_in') return themeColor;
+                  if (activity.status === 'pending') return '#f59e0b'; // warning
+                  if (activity.status === 'approved') return '#10b981'; // success
+                  if (activity.status === 'rejected') return '#ef4444'; // destructive
+                  return themeColor;
+                };
+
+                const getStatusText = () => {
+                  if (activity.type === 'leave_request' && activity.status) {
+                    return ` - ${activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}`;
+                  }
+                  return '';
+                };
+
+                return (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                    <div 
+                      className="w-2 h-2 rounded-full mt-2" 
+                      style={{ backgroundColor: getStatusColor() }}
+                    ></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {activity.message}{getStatusText()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-muted-foreground">No recent activities</p>
+            )}
           </CardContent>
         </Card>
 
@@ -188,13 +282,15 @@ export function DashboardOverview() {
             <CardTitle className="text-lg font-semibold">Pending Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-warning/10 border border-warning/20" style={{ borderColor: themeColor, backgroundColor: `${themeColor}20` }}>
-              <div>
-                <p className="text-sm font-medium">2 Leave approvals pending</p>
-                <p className="text-xs text-muted-foreground">Requires your attention</p>
+            {pendingLeaveCount > 0 && (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-warning/10 border border-warning/20" style={{ borderColor: themeColor, backgroundColor: `${themeColor}20` }}>
+                <div>
+                  <p className="text-sm font-medium">{pendingLeaveCount} Leave approval{pendingLeaveCount > 1 ? 's' : ''} pending</p>
+                  <p className="text-xs text-muted-foreground">Requires your attention</p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: themeColor, color: 'white' }}>Urgent</span>
               </div>
-              <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: themeColor, color: 'white' }}>Urgent</span>
-            </div>
+            )}
             <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20" style={{ borderColor: themeColor, backgroundColor: `${themeColor}20` }}>
               <div>
                 <p className="text-sm font-medium">Performance reviews due</p>

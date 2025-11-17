@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import {
@@ -12,7 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { AddEmployeeForm } from "./AddEmployeeForm";
 
-export function AddEmployeeDialog({ onEmployeeAdded }: { onEmployeeAdded: () => void }) {
+interface AddEmployeeDialogProps {
+  onEmployeeAdded: () => void;
+  trigger?: ReactNode;
+}
+
+export function AddEmployeeDialog({ onEmployeeAdded, trigger }: AddEmployeeDialogProps) {
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -22,12 +27,18 @@ export function AddEmployeeDialog({ onEmployeeAdded }: { onEmployeeAdded: () => 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-primary hover:opacity-90 text-black shadow-sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Employee
-        </Button>
-      </DialogTrigger>
+      {trigger ? (
+        <div onClick={() => setOpen(true)} className="cursor-pointer">
+          {trigger}
+        </div>
+      ) : (
+        <DialogTrigger asChild>
+          <Button className="bg-gradient-primary hover:opacity-90 text-black shadow-sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Employee
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Employee</DialogTitle>

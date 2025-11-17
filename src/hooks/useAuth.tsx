@@ -322,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: email,
             department: employeeData.department,
             position: employeeData.position,
+            password_hash: '',
           }]);
         insertError = error;
       } else {
@@ -335,6 +336,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: email,
             department: employeeData.department,
             position: employeeData.position,
+            password_hash: '',
           }]);
         insertError = error;
       }

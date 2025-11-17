@@ -17,9 +17,9 @@ import { useState } from "react";
 
 export function RealTimeNotificationBell() {
   const [open, setOpen] = useState(false);
-  const { isAdmin } = useAuth();
+  // Render for both admins and employees
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useLeaveNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissNotification } = useLeaveNotifications();
 
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) {
@@ -28,6 +28,7 @@ export function RealTimeNotificationBell() {
 
     if (notification.action_url) {
       navigate(notification.action_url);
+      dismissNotification(notification.id);
       setOpen(false);
     }
   };
@@ -49,11 +50,6 @@ export function RealTimeNotificationBell() {
         return 'bg-primary/10 border-primary/20';
     }
   };
-
-  // Don't show notification bell for employees
-  if (!isAdmin) {
-    return null;
-  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -177,11 +173,11 @@ export function RealTimeNotificationBell() {
                 size="sm"
                 className="w-full text-xs"
                 onClick={() => {
-                  navigate('/leave-requests');
+                  navigate('/employee/leave-requests');
                   setOpen(false);
                 }}
               >
-                View all leave requests
+                View my leave requests
               </Button>
             </div>
           )}

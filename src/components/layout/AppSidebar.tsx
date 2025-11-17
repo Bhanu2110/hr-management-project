@@ -5,14 +5,14 @@ import {
   Calendar, 
   BarChart3, 
   FileText, 
-  Receipt, 
   FolderOpen, 
   Bell,
   Home,
-  Building2,
   User,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Briefcase
 } from "lucide-react";
+
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
@@ -28,16 +28,19 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+// ✅ Import Image Logo
+import logo from "@/assets/images/sts-logo.jpg";
+
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: Home, roles: ['admin', 'employee'] },
   { title: "Employees", url: "/employees", icon: Users, roles: ['admin'] },
   { title: "Attendance", url: "/attendance", icon: Clock, roles: ['admin', 'employee'] },
   { title: "Salary", url: "/salary", icon: DollarSign, roles: ['admin'] },
   { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
-  { title: "Payroll", url: "/payroll", icon: Receipt, roles: ['admin'] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
   { title: "Salary Slips", url: "/salary-slips", icon: FileSpreadsheet, roles: ['admin', 'employee'] },
   { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] }, 
+  { title: "Holidays", url: "/holidays", icon: Briefcase, roles: ['admin', 'employee'] },
   { title: "Documents", url: "/documents", icon: FolderOpen, roles: ['admin', 'employee'] },
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ['admin', 'employee'] },
   { title: "Profile", url: "/profile", icon: User, roles: ['admin', 'employee'] },
@@ -64,28 +67,24 @@ export function AppSidebar() {
     const active = isActive(path);
     return `${
       active 
-      ? "text-white font-medium shadow-sm" 
-: "text-foreground hover:text-[var(--theme-color)]"
-    }
-    transition-all duration-200`;
+        ? "text-white font-medium shadow-sm" 
+        : "text-foreground hover:text-[var(--theme-color)]"
+    } transition-all duration-200`;
   };
 
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="bg-background border-r border-border shadow-nav">
-        {/* Logo/Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: themeColor }}>
-              <Building2 className="h-5 w-5 text-white" />
-            </div>
-            {!collapsed && (
-              <div>
-                <h1 className="font-bold text-lg text-foreground">HR System</h1>
-                <p className="text-xs text-muted-foreground">Management Portal</p>
-              </div>
-            )}
-          </div>
+
+        {/* ✅ Logo Only Header — Centered & Full View */}
+        <div className="p-4 border-b border-border flex justify-center">
+          <img
+            src={logo}
+            alt="Company Logo"
+            className={`transition-all duration-200 object-contain ${
+              collapsed ? "w-12 h-12" : "w-36 h-14"
+            }`}
+          />
         </div>
 
         <SidebarGroup className="px-2 py-4">
@@ -99,7 +98,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild size="lg">
                     <NavLink 
-                      to={item.url} 
+                      to={item.url}
                       end={item.url === "/"}
                       className={getNavClassName(item.url)}
                       style={isActive(item.url) ? { backgroundColor: themeColor } : {}}
@@ -113,6 +112,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
       </SidebarContent>
     </Sidebar>
   );

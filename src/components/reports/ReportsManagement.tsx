@@ -203,25 +203,24 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
 
       const { data, error } = await supabase
         .from('reports')
-        .insert({
-          title: reportData.title || '',
+        .insert([{
+          title: reportData.description || 'Report',
           description: reportData.description,
-          type: reportData.type || 'attendance',
-          format: reportData.format || 'pdf',
+          type: (reportData.type || 'attendance') as any,
+          format: (reportData.format || 'pdf') as any,
           parameters: reportData.parameters as any,
-          visibility: reportData.visibility || 'role_based',
+          visibility: (reportData.visibility || 'role_based') as any,
           accessible_roles: reportData.accessible_roles as any || [],
           accessible_departments: reportData.accessible_departments as any || [],
           accessible_employees: reportData.accessible_employees as any || [],
-          expires_at: reportData.expires_at,
-          frequency: reportData.schedule?.frequency,
+          frequency: reportData.schedule?.frequency as any,
           scheduled_date: reportData.schedule?.schedule_time ? new Date().toISOString().split('T')[0] : null,
           next_run_date: reportData.schedule?.schedule_time ? new Date().toISOString() : null,
           generated_by: employee.id,
           generated_by_name: `${employee.first_name} ${employee.last_name}`,
-          status: 'generating', // Initial status
+          status: 'generating' as any, // Initial status
           download_count: 0,
-        })
+        }])
         .select<"*", Report>()
         .single();
 

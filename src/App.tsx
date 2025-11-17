@@ -19,6 +19,7 @@ import Documents from "./pages/Documents";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Payroll from "./pages/Payroll"; // Import the new Payroll component
+import Holidays from "./pages/Holidays";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/layout/AppLayout";
 
@@ -154,6 +155,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Profile />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/holidays" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Holidays />
                   </AppLayout>
                 </ProtectedRoute>
               } 

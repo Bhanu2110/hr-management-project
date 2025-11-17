@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,9 +48,13 @@ import {
   Users,
   TrendingUp,
   Calculator,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Trash2
 } from "lucide-react";
 import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS_COLORS } from "@/types/salary";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { SalarySlipView } from "./SalarySlipView";
 
 interface SalaryManagementProps {
   employees?: Array<{
@@ -69,10 +73,17 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>("all");
-  const [filterYear, setFilterYear] = useState<string>("2024");
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [editingSlip, setEditingSlip] = useState<SalarySlip | null>(null);
+  const [viewingSlip, setViewingSlip] = useState<SalarySlip | null>(null);
+  const [dbEmployees, setDbEmployees] = useState<any[]>([]);
+  const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<SalaryCreateRequest>>({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -91,12 +102,59 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     esi_employee: 0,
     professional_tax: 0,
     income_tax: 0,
+    medical_insurance: 0,
     loan_deduction: 0,
     advance_deduction: 0,
     late_deduction: 0,
     other_deductions: 0,
     paid_date: undefined,
   });
+
+  // Fetch employees from database
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('status', 'active')
+          .order('first_name', { ascending: true });
+        
+        if (error) throw error;
+        setDbEmployees(data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+        toast.error('Failed to load employees');
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  // Fetch salary slips from database
+  useEffect(() => {
+    fetchSalarySlips();
+  }, []);
+
+  const fetchSalarySlips = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('salary_slips')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+     const mappedData: SalarySlip[] = (data || []).map((item: any) => ({
+        ...item,
+        medical_insurance: item.medical_insurance ?? 0,
+      }));
+      
+      setSalarySlips(mappedData);
+    } catch (error) {
+      console.error('Error fetching salary slips:', error);
+      toast.error('Failed to load salary slips');
+    }
+  };
 
   // Mock salary slip data
   const mockSalarySlips: SalarySlip[] = [
@@ -128,6 +186,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employee: 0,
       professional_tax: 200,
       income_tax: 8500,
+      medical_insurance: 0,
       loan_deduction: 0,
       advance_deduction: 0,
       late_deduction: 0,
@@ -170,6 +229,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employee: 0,
       professional_tax: 200,
       income_tax: 12000,
+      medical_insurance: 0,
       loan_deduction: 5000,
       advance_deduction: 0,
       late_deduction: 1000,
@@ -208,6 +268,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employer: 0,
       professional_tax: 200,
       income_tax: 8500,
+      medical_insurance: 0,
       loan_deduction: 0,
       other_deductions: 0,
       gross_salary: 83500,
@@ -239,6 +300,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       esi_employer: 0,
       professional_tax: 200,
       income_tax: 12000,
+      medical_insurance: 0,
       loan_deduction: 0,
       other_deductions: 0,
       gross_salary: 102500,
@@ -251,7 +313,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     },
   ];
 
-  const filteredSalarySlips = mockSalarySlips.filter((slip) => {
+  const filteredSalarySlips = salarySlips.filter((slip) => {
     const matchesSearch = 
       slip.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       slip.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -282,34 +344,139 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     }).format(amount);
   };
 
-  const handleCreateSalarySlip = () => {
-    console.log("Creating salary slip with data:", { ...formData, employee_id: selectedEmployee });
-    setIsCreateDialogOpen(false);
-    setSelectedEmployee("");
-    setFormData({
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-      working_days: 22,
-      present_days: 22,
-      basic_salary: 0,
-      hra: 0,
-      transport_allowance: 0,
-      medical_allowance: 0,
-      special_allowance: 0,
-      performance_bonus: 0,
-      overtime_hours: 0,
-      overtime_rate: 0,
-      other_allowances: 0,
-      pf_employee: 0,
-      esi_employee: 0,
-      professional_tax: 0,
-      income_tax: 0,
-      loan_deduction: 0,
-      advance_deduction: 0,
-      late_deduction: 0,
-      other_deductions: 0,
-      paid_date: undefined,
-    });
+  const handleCreateSalarySlip = async () => {
+    if (!selectedEmployee) {
+      toast.error("Please select an employee");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Find the selected employee
+      const employee = dbEmployees.find(emp => emp.employee_id === selectedEmployee);
+      if (!employee) {
+        throw new Error("Employee not found");
+      }
+
+      // Calculate overtime amount
+      const overtime_amount = (formData.overtime_hours || 0) * (formData.overtime_rate || 0);
+
+      // Calculate gross earnings
+      const gross_earnings = 
+        (formData.basic_salary || 0) +
+        (formData.hra || 0) +
+        (formData.transport_allowance || 0) +
+        (formData.medical_allowance || 0) +
+        (formData.special_allowance || 0) +
+        (formData.performance_bonus || 0) +
+        overtime_amount +
+        (formData.other_allowances || 0);
+
+      // Calculate total deductions
+      const total_deductions = 
+        (formData.pf_employee || 0) +
+        (formData.esi_employee || 0) +
+        (formData.professional_tax || 0) +
+        (formData.income_tax || 0) +
+        (formData.medical_insurance || 0) +
+        (formData.loan_deduction || 0) +
+        (formData.advance_deduction || 0) +
+        (formData.late_deduction || 0) +
+        (formData.other_deductions || 0);
+
+      // Calculate net salary
+      const net_salary = gross_earnings - total_deductions;
+
+      // Calculate pay period dates
+      const year = formData.year || new Date().getFullYear();
+      const month = formData.month || new Date().getMonth() + 1;
+      const pay_period_start = new Date(year, month - 1, 1).toISOString();
+      const pay_period_end = new Date(year, month, 0, 23, 59, 59).toISOString();
+
+      // Prepare salary slip data
+      const salarySlipData = {
+        employee_id: employee.employee_id,
+        employee_name: `${employee.first_name} ${employee.last_name}`,
+        employee_email: employee.email,
+        department: employee.department || '',
+        position: employee.position || '',
+        month: formData.month || new Date().getMonth() + 1,
+        year: formData.year || new Date().getFullYear(),
+        pay_period_start,
+        pay_period_end,
+        working_days: formData.working_days || 22,
+        present_days: formData.present_days || 22,
+        basic_salary: formData.basic_salary || 0,
+        hra: formData.hra || 0,
+        transport_allowance: formData.transport_allowance || 0,
+        medical_allowance: formData.medical_allowance || 0,
+        special_allowance: formData.special_allowance || 0,
+        performance_bonus: formData.performance_bonus || 0,
+        overtime_hours: formData.overtime_hours || 0,
+        overtime_rate: formData.overtime_rate || 0,
+        overtime_amount,
+        other_allowances: formData.other_allowances || 0,
+        gross_earnings,
+        pf_employee: formData.pf_employee || 0,
+        esi_employee: formData.esi_employee || 0,
+        professional_tax: formData.professional_tax || 0,
+        income_tax: formData.income_tax || 0,
+        medical_insurance: formData.medical_insurance || 0,
+        loan_deduction: formData.loan_deduction || 0,
+        advance_deduction: formData.advance_deduction || 0,
+        late_deduction: formData.late_deduction || 0,
+        other_deductions: formData.other_deductions || 0,
+        total_deductions,
+        net_salary,
+        pf_employer: formData.pf_employee || 0, // Usually same as employee PF
+        esi_employer: formData.esi_employee || 0, // Usually same as employee ESI
+        status: 'draft' as const,
+        generated_date: new Date().toISOString(),
+        paid_date: formData.paid_date || null,
+      };
+
+      // Insert into database
+      const { error } = await supabase
+        .from('salary_slips')
+        .insert([salarySlipData]);
+
+      if (error) throw error;
+
+      toast.success("Salary slip generated successfully!");
+      fetchSalarySlips(); // Refresh the list
+      setIsCreateDialogOpen(false);
+      setSelectedEmployee("");
+      setFormData({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        working_days: 22,
+        present_days: 22,
+        basic_salary: 0,
+        hra: 0,
+        transport_allowance: 0,
+        medical_allowance: 0,
+        special_allowance: 0,
+        performance_bonus: 0,
+        overtime_hours: 0,
+        overtime_rate: 0,
+        other_allowances: 0,
+        pf_employee: 0,
+        esi_employee: 0,
+        professional_tax: 0,
+        income_tax: 0,
+        medical_insurance: 0,
+        loan_deduction: 0,
+        advance_deduction: 0,
+        late_deduction: 0,
+        other_deductions: 0,
+        paid_date: undefined,
+      });
+    } catch (error: any) {
+      console.error('Error creating salary slip:', error);
+      toast.error(error.message || "Failed to generate salary slip");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleProcessSalary = (id: string) => {
@@ -319,6 +486,180 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const handlePaySalary = (id: string) => {
     console.log("Paying salary with ID:", id);
   };
+
+  const handleDeleteSalarySlip = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this salary slip?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('salary_slips')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Salary slip deleted successfully');
+      fetchSalarySlips();
+    } catch (error) {
+      console.error('Error deleting salary slip:', error);
+      toast.error('Failed to delete salary slip');
+    }
+  };
+
+  const handleViewSalarySlip = (slip: SalarySlip) => {
+    setViewingSlip(slip);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleDownloadSlip = async () => {
+    if (viewingSlip) {
+      try {
+        const html2pdf = (await import('html2pdf.js')).default;
+        const element = document.getElementById('salary-slip-preview');
+        
+        if (!element) {
+          toast.error('Unable to find salary slip content');
+          return;
+        }
+
+        const opt = {
+          margin: 10,
+          filename: `salary-slip-${viewingSlip.employee_name}-${MONTHS[viewingSlip.month - 1]}-${viewingSlip.year}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+
+        toast.success('Generating PDF...');
+        await html2pdf().set(opt).from(element).save();
+        toast.success('PDF downloaded successfully');
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to generate PDF');
+      }
+    }
+  };
+
+  const handleUpdateSalarySlip = async () => {
+    if (!editingSlip) {
+      toast.error("No salary slip selected for editing");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Calculate overtime amount
+      const overtime_amount = (formData.overtime_hours || 0) * (formData.overtime_rate || 0);
+
+      // Calculate gross earnings
+      const gross_earnings = 
+        (formData.basic_salary || 0) +
+        (formData.hra || 0) +
+        (formData.transport_allowance || 0) +
+        (formData.medical_allowance || 0) +
+        (formData.special_allowance || 0) +
+        (formData.performance_bonus || 0) +
+        overtime_amount +
+        (formData.other_allowances || 0);
+
+      // Calculate total deductions
+      const total_deductions = 
+        (formData.pf_employee || 0) +
+        (formData.esi_employee || 0) +
+        (formData.professional_tax || 0) +
+        (formData.income_tax || 0) +
+        (formData.medical_insurance || 0) +
+        (formData.loan_deduction || 0) +
+        (formData.advance_deduction || 0) +
+        (formData.late_deduction || 0) +
+        (formData.other_deductions || 0);
+
+      // Calculate net salary
+      const net_salary = gross_earnings - total_deductions;
+
+      // Calculate pay period dates
+      const year = formData.year || editingSlip.year;
+      const month = formData.month || editingSlip.month;
+      const pay_period_start = new Date(year, month - 1, 1).toISOString();
+      const pay_period_end = new Date(year, month, 0, 23, 59, 59).toISOString();
+
+      // Prepare update data
+      const updateData = {
+        month: formData.month || editingSlip.month,
+        year: formData.year || editingSlip.year,
+        pay_period_start,
+        pay_period_end,
+        working_days: formData.working_days || editingSlip.working_days,
+        present_days: formData.present_days || editingSlip.present_days,
+        basic_salary: formData.basic_salary || 0,
+        hra: formData.hra || 0,
+        transport_allowance: formData.transport_allowance || 0,
+        medical_allowance: formData.medical_allowance || 0,
+        special_allowance: formData.special_allowance || 0,
+        performance_bonus: formData.performance_bonus || 0,
+        overtime_hours: formData.overtime_hours || 0,
+        overtime_rate: formData.overtime_rate || 0,
+        overtime_amount,
+        other_allowances: formData.other_allowances || 0,
+        gross_earnings,
+        pf_employee: formData.pf_employee || 0,
+        esi_employee: formData.esi_employee || 0,
+        professional_tax: formData.professional_tax || 0,
+        income_tax: formData.income_tax || 0,
+        medical_insurance: formData.medical_insurance || 0,
+        loan_deduction: formData.loan_deduction || 0,
+        advance_deduction: formData.advance_deduction || 0,
+        late_deduction: formData.late_deduction || 0,
+        other_deductions: formData.other_deductions || 0,
+        total_deductions,
+        net_salary,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('salary_slips')
+        .update(updateData)
+        .eq('id', editingSlip.id);
+
+      if (error) throw error;
+
+      toast.success("Salary slip updated successfully!");
+      fetchSalarySlips(); // Refresh the list
+      setIsEditDialogOpen(false);
+      setEditingSlip(null);
+      setFormData({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        working_days: 22,
+        present_days: 22,
+        basic_salary: 0,
+        hra: 0,
+        transport_allowance: 0,
+        medical_allowance: 0,
+        special_allowance: 0,
+        performance_bonus: 0,
+        overtime_hours: 0,
+        overtime_rate: 0,
+        other_allowances: 0,
+        pf_employee: 0,
+        esi_employee: 0,
+        professional_tax: 0,
+        income_tax: 0,
+        medical_insurance: 0,
+        loan_deduction: 0,
+        advance_deduction: 0,
+        late_deduction: 0,
+        other_deductions: 0,
+        paid_date: undefined,
+      });
+    } catch (error: any) {
+      console.error('Error updating salary slip:', error);
+      toast.error(error.message || "Failed to update salary slip");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const totalGrossSalary = filteredSalarySlips.reduce((sum, slip) => sum + slip.gross_earnings, 0);
   const totalNetSalary = filteredSalarySlips.reduce((sum, slip) => sum + slip.net_salary, 0);
@@ -357,7 +698,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                         <SelectValue placeholder="Choose an employee" />
                       </SelectTrigger>
                       <SelectContent>
-                        {employees.map((employee) => (
+                        {dbEmployees.map((employee) => (
                           <SelectItem key={employee.id} value={employee.employee_id}>
                             {employee.first_name} {employee.last_name} ({employee.employee_id})
                           </SelectItem>
@@ -509,6 +850,63 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
                     />
                   </div>
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Deductions</h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pf_employee">PF (Employee Contribution)</Label>
+                    <Input
+                      id="pf_employee"
+                      type="number"
+                      value={formData.pf_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="professional_tax">Professional Tax</Label>
+                    <Input
+                      id="professional_tax"
+                      type="number"
+                      value={formData.professional_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="esi_employee">ESI</Label>
+                    <Input
+                      id="esi_employee"
+                      type="number"
+                      value={formData.esi_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="medical_insurance">Medical Insurance</Label>
+                    <Input
+                      id="medical_insurance"
+                      type="number"
+                      value={formData.medical_insurance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="income_tax">Income Tax</Label>
+                    <Input
+                      id="income_tax"
+                      type="number"
+                      value={formData.income_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: Number(e.target.value) }))}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="loan_deduction">Loan Deduction</Label>
                     <Input
@@ -551,7 +949,6 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
                     />
                   </div>
-                  {/* Assuming Payment Mode will be added later or is not a direct input */}
                 </div>
 
                 <Separator />
@@ -571,11 +968,285 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isLoading}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateSalarySlip} disabled={!selectedEmployee}>
-                  Generate Salary Slip
+                <Button onClick={handleCreateSalarySlip} disabled={!selectedEmployee || isLoading}>
+                  {isLoading ? "Generating..." : "Generate Salary Slip"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Salary Slip Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Salary Slip</DialogTitle>
+                <DialogDescription>
+                  Update salary slip for {editingSlip?.employee_name}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_month">Month</Label>
+                    <Select 
+                      value={formData.month?.toString()} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, month: Number(value) }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MONTHS.map((month) => (
+                          <SelectItem key={month.value} value={month.value.toString()}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_year">Year</Label>
+                    <Input
+                      id="edit_year"
+                      type="number"
+                      value={formData.year || 2024}
+                      onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_working_days">Working Days</Label>
+                    <Input
+                      id="edit_working_days"
+                      type="number"
+                      value={formData.working_days || 22}
+                      onChange={(e) => setFormData(prev => ({ ...prev, working_days: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_present_days">Present Days</Label>
+                    <Input
+                      id="edit_present_days"
+                      type="number"
+                      value={formData.present_days || 22}
+                      onChange={(e) => setFormData(prev => ({ ...prev, present_days: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Earnings</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_basic_salary">Basic Salary</Label>
+                    <Input
+                      id="edit_basic_salary"
+                      type="number"
+                      value={formData.basic_salary || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_hra">HRA</Label>
+                    <Input
+                      id="edit_hra"
+                      type="number"
+                      value={formData.hra || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hra: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_transport_allowance">Transport Allowance</Label>
+                    <Input
+                      id="edit_transport_allowance"
+                      type="number"
+                      value={formData.transport_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_medical_allowance">Medical Allowance</Label>
+                    <Input
+                      id="edit_medical_allowance"
+                      type="number"
+                      value={formData.medical_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_special_allowance">Special Allowance</Label>
+                    <Input
+                      id="edit_special_allowance"
+                      type="number"
+                      value={formData.special_allowance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_performance_bonus">Performance Bonus</Label>
+                    <Input
+                      id="edit_performance_bonus"
+                      type="number"
+                      value={formData.performance_bonus || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, performance_bonus: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_overtime_hours">Overtime Hours</Label>
+                    <Input
+                      id="edit_overtime_hours"
+                      type="number"
+                      value={formData.overtime_hours || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_overtime_rate">Overtime Rate</Label>
+                    <Input
+                      id="edit_overtime_rate"
+                      type="number"
+                      value={formData.overtime_rate || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_other_allowances">Other Allowances</Label>
+                    <Input
+                      id="edit_other_allowances"
+                      type="number"
+                      value={formData.other_allowances || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+                <h3 className="text-lg font-semibold">Deductions</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_pf_employee">PF (Employee)</Label>
+                    <Input
+                      id="edit_pf_employee"
+                      type="number"
+                      value={formData.pf_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_professional_tax">Professional Tax</Label>
+                    <Input
+                      id="edit_professional_tax"
+                      type="number"
+                      value={formData.professional_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_esi_employee">ESI</Label>
+                    <Input
+                      id="edit_esi_employee"
+                      type="number"
+                      value={formData.esi_employee || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_medical_insurance">Medical Insurance</Label>
+                    <Input
+                      id="edit_medical_insurance"
+                      type="number"
+                      value={formData.medical_insurance || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_income_tax">Income Tax</Label>
+                    <Input
+                      id="edit_income_tax"
+                      type="number"
+                      value={formData.income_tax || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_loan_deduction">Loan Deduction</Label>
+                    <Input
+                      id="edit_loan_deduction"
+                      type="number"
+                      value={formData.loan_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_advance_deduction">Advance Deduction</Label>
+                    <Input
+                      id="edit_advance_deduction"
+                      type="number"
+                      value={formData.advance_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_late_deduction">Late Deduction</Label>
+                    <Input
+                      id="edit_late_deduction"
+                      type="number"
+                      value={formData.late_deduction || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_other_deductions">Other Deductions</Label>
+                    <Input
+                      id="edit_other_deductions"
+                      type="number"
+                      value={formData.other_deductions || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setEditingSlip(null);
+                  }} 
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateSalarySlip} disabled={isLoading}>
+                  {isLoading ? "Updating..." : "Update Salary Slip"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -767,28 +1438,56 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       <TableCell>
                         {slip.paid_date ? new Date(slip.paid_date).toLocaleDateString() : 'N/A'}
                       </TableCell>
-                      <TableCell>
+                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewSalarySlip(slip)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingSlip(slip);
+                              setFormData({
+                                month: slip.month,
+                                year: slip.year,
+                                working_days: slip.working_days,
+                                present_days: slip.present_days,
+                                basic_salary: slip.basic_salary,
+                                hra: slip.hra,
+                                transport_allowance: slip.transport_allowance,
+                                medical_allowance: slip.medical_allowance,
+                                special_allowance: slip.special_allowance,
+                                performance_bonus: slip.performance_bonus,
+                                overtime_hours: slip.overtime_hours,
+                                overtime_rate: slip.overtime_rate,
+                                other_allowances: slip.other_allowances,
+                                pf_employee: slip.pf_employee,
+                                esi_employee: slip.esi_employee,
+                                professional_tax: slip.professional_tax,
+                                income_tax: slip.income_tax,
+                                medical_insurance: slip.medical_insurance,
+                                loan_deduction: slip.loan_deduction,
+                                advance_deduction: slip.advance_deduction,
+                                late_deduction: slip.late_deduction,
+                                other_deductions: slip.other_deductions,
+                              });
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {slip.status === 'paid' && (
-                            <Button variant="ghost" size="sm">
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {slip.status === 'processed' && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handlePaySalary(slip.id)}
-                            >
-                              <Send className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteSalarySlip(slip.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -851,6 +1550,28 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* View Salary Slip Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Salary Slip Preview</DialogTitle>
+          </DialogHeader>
+          {viewingSlip && (
+            <div className="space-y-4">
+              <div id="salary-slip-preview">
+                <SalarySlipView salarySlip={viewingSlip} />
+              </div>
+              <div className="flex justify-end pt-4 border-t">
+                <Button onClick={handleDownloadSlip}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

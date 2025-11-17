@@ -24,6 +24,8 @@ export type Database = {
           hire_date: string | null
           id: string
           last_name: string
+          password_hash: string
+          password_plain: string | null
           phone: string | null
           position: string | null
           status: string | null
@@ -39,11 +41,13 @@ export type Database = {
           hire_date?: string | null
           id?: string
           last_name: string
+          password_hash: string
+          password_plain?: string | null
           phone?: string | null
           position?: string | null
           status?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           admin_id?: string
@@ -54,6 +58,8 @@ export type Database = {
           hire_date?: string | null
           id?: string
           last_name?: string
+          password_hash?: string
+          password_plain?: string | null
           phone?: string | null
           position?: string | null
           status?: string | null
@@ -64,39 +70,52 @@ export type Database = {
       }
       attendance: {
         Row: {
-          check_in: string
+          check_in: string | null
           check_out: string | null
           created_at: string | null
+          date: string | null
           employee_id: string
           id: string
+          intervals: Json | null
           notes: string | null
-          status: string
+          status: string | null
           total_hours: number | null
           updated_at: string | null
         }
         Insert: {
-          check_in?: string
+          check_in?: string | null
           check_out?: string | null
           created_at?: string | null
+          date?: string | null
           employee_id: string
           id?: string
+          intervals?: Json | null
           notes?: string | null
-          status?: string
+          status?: string | null
           total_hours?: number | null
           updated_at?: string | null
         }
         Update: {
-          check_in?: string
+          check_in?: string | null
           check_out?: string | null
           created_at?: string | null
+          date?: string | null
           employee_id?: string
           id?: string
+          intervals?: Json | null
           notes?: string | null
-          status?: string
+          status?: string | null
           total_hours?: number | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_employee_fk"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_employee_id_fkey"
             columns: ["employee_id"]
@@ -117,6 +136,7 @@ export type Database = {
           id: string
           last_name: string
           pan_number: string | null
+          password_hash: string
           phone: string | null
           position: string | null
           role: string
@@ -134,6 +154,7 @@ export type Database = {
           id?: string
           last_name: string
           pan_number?: string | null
+          password_hash: string
           phone?: string | null
           position?: string | null
           role?: string
@@ -151,6 +172,7 @@ export type Database = {
           id?: string
           last_name?: string
           pan_number?: string | null
+          password_hash?: string
           phone?: string | null
           position?: string | null
           role?: string
@@ -220,9 +242,9 @@ export type Database = {
       leave_requests: {
         Row: {
           admin_notes: string | null
-          approved_at: string
+          approved_at: string | null
           approved_by: string | null
-          created_at: string
+          created_at: string | null
           days: number
           employee_id: string
           end_date: string
@@ -231,13 +253,13 @@ export type Database = {
           reason: string
           start_date: string
           status: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           admin_notes?: string | null
-          approved_at?: string
+          approved_at?: string | null
           approved_by?: string | null
-          created_at?: string
+          created_at?: string | null
           days: number
           employee_id: string
           end_date: string
@@ -246,13 +268,13 @@ export type Database = {
           reason: string
           start_date: string
           status?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           admin_notes?: string | null
-          approved_at?: string
+          approved_at?: string | null
           approved_by?: string | null
-          created_at?: string
+          created_at?: string | null
           days?: number
           employee_id?: string
           end_date?: string
@@ -261,7 +283,7 @@ export type Database = {
           reason?: string
           start_date?: string
           status?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -282,43 +304,43 @@ export type Database = {
       }
       notifications: {
         Row: {
-          id: string
-          recipient_id: string
-          title: string
-          message: string
-          type: string
-          related_table: string | null
-          related_id: string | null
-          is_read: boolean
           action_url: string | null
-          created_at: string
-          updated_at: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          recipient_id: string
+          related_id: string | null
+          related_table: string | null
+          title: string
+          type: string
+          updated_at: string | null
         }
         Insert: {
-          id?: string
-          recipient_id: string
-          title: string
-          message: string
-          type?: string
-          related_table?: string | null
-          related_id?: string | null
-          is_read?: boolean
           action_url?: string | null
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          recipient_id: string
+          related_id?: string | null
+          related_table?: string | null
+          title: string
+          type?: string
+          updated_at?: string | null
         }
         Update: {
-          id?: string
-          recipient_id?: string
-          title?: string
-          message?: string
-          type?: string
-          related_table?: string | null
-          related_id?: string | null
-          is_read?: boolean
           action_url?: string | null
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          recipient_id?: string
+          related_id?: string | null
+          related_table?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -332,124 +354,423 @@ export type Database = {
       }
       reports: {
         Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          type: string;
-          format: string;
-          status: string;
-          parameters: Json;
-          frequency: string | null;
-          scheduled_date: string | null;
-          next_run_date: string | null;
-          visibility: string;
-          accessible_roles: Json;
-          accessible_departments: Json;
-          accessible_employees: Json;
-          file_url: string | null;
-          file_size: number | null;
-          generated_by: string;
-          generated_by_name: string;
-          generated_date: string | null;
-          expires_at: string | null;
-          download_count: number;
-          last_downloaded: string | null;
-          created_at: string;
-          updated_at: string;
+          accessible_departments: string[] | null
+          accessible_employees: string[] | null
+          accessible_roles: string[] | null
+          created_at: string | null
+          description: string | null
+          download_count: number | null
+          file_size: number | null
+          file_url: string | null
+          format: Database["public"]["Enums"]["report_format"]
+          frequency: Database["public"]["Enums"]["report_frequency"] | null
+          generated_by: string | null
+          generated_by_name: string | null
+          generated_date: string | null
+          id: string
+          last_downloaded: string | null
+          next_run_date: string | null
+          parameters: Json | null
+          scheduled_date: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          title: string
+          type: Database["public"]["Enums"]["report_type"]
+          updated_at: string | null
+          visibility: Database["public"]["Enums"]["report_visibility"]
         }
         Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          type: string;
-          format: string;
-          status?: string;
-          parameters: Json;
-          frequency?: string | null;
-          scheduled_date?: string | null;
-          next_run_date?: string | null;
-          visibility?: string;
-          accessible_roles?: Json;
-          accessible_departments?: Json;
-          accessible_employees?: Json;
-          file_url?: string | null;
-          file_size?: number | null;
-          generated_by: string;
-          generated_by_name: string;
-          generated_date?: string | null;
-          expires_at?: string | null;
-          download_count?: number;
-          last_downloaded?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          accessible_departments?: string[] | null
+          accessible_employees?: string[] | null
+          accessible_roles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          download_count?: number | null
+          file_size?: number | null
+          file_url?: string | null
+          format: Database["public"]["Enums"]["report_format"]
+          frequency?: Database["public"]["Enums"]["report_frequency"] | null
+          generated_by?: string | null
+          generated_by_name?: string | null
+          generated_date?: string | null
+          id?: string
+          last_downloaded?: string | null
+          next_run_date?: string | null
+          parameters?: Json | null
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          title: string
+          type: Database["public"]["Enums"]["report_type"]
+          updated_at?: string | null
+          visibility?: Database["public"]["Enums"]["report_visibility"]
         }
         Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          type?: string;
-          format?: string;
-          status?: string;
-          parameters?: Json;
-          frequency?: string | null;
-          scheduled_date?: string | null;
-          next_run_date?: string | null;
-          visibility?: string;
-          accessible_roles?: Json;
-          accessible_departments?: Json;
-          accessible_employees?: Json;
-          file_url?: string | null;
-          file_size?: number | null;
-          generated_by?: string;
-          generated_by_name?: string;
-          generated_date?: string | null;
-          expires_at?: string | null;
-          download_count?: number;
-          last_downloaded?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          accessible_departments?: string[] | null
+          accessible_employees?: string[] | null
+          accessible_roles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          download_count?: number | null
+          file_size?: number | null
+          file_url?: string | null
+          format?: Database["public"]["Enums"]["report_format"]
+          frequency?: Database["public"]["Enums"]["report_frequency"] | null
+          generated_by?: string | null
+          generated_by_name?: string | null
+          generated_date?: string | null
+          id?: string
+          last_downloaded?: string | null
+          next_run_date?: string | null
+          parameters?: Json | null
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["report_type"]
+          updated_at?: string | null
+          visibility?: Database["public"]["Enums"]["report_visibility"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "admins"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      salary_slips: {
+        Row: {
+          advance_deduction: number
+          basic_salary: number
+          created_at: string | null
+          department: string
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          esi_employee: number
+          esi_employer: number
+          generated_date: string
+          gross_earnings: number
+          hra: number
+          id: string
+          income_tax: number
+          late_deduction: number
+          loan_deduction: number
+          medical_allowance: number
+          month: number
+          net_salary: number
+          other_allowances: number
+          other_deductions: number
+          overtime_amount: number
+          overtime_hours: number
+          overtime_rate: number
+          paid_date: string | null
+          pay_period_end: string
+          pay_period_start: string
+          performance_bonus: number
+          pf_employee: number
+          pf_employer: number
+          position: string
+          present_days: number
+          professional_tax: number
+          special_allowance: number
+          status: Database["public"]["Enums"]["salary_status"]
+          total_deductions: number
+          transport_allowance: number
+          updated_at: string | null
+          working_days: number
+          year: number
+        }
+        Insert: {
+          advance_deduction: number
+          basic_salary: number
+          created_at?: string | null
+          department: string
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          esi_employee: number
+          esi_employer: number
+          generated_date: string
+          gross_earnings: number
+          hra: number
+          id?: string
+          income_tax: number
+          late_deduction: number
+          loan_deduction: number
+          medical_allowance: number
+          month: number
+          net_salary: number
+          other_allowances: number
+          other_deductions: number
+          overtime_amount: number
+          overtime_hours: number
+          overtime_rate: number
+          paid_date?: string | null
+          pay_period_end: string
+          pay_period_start: string
+          performance_bonus: number
+          pf_employee: number
+          pf_employer: number
+          position: string
+          present_days: number
+          professional_tax: number
+          special_allowance: number
+          status?: Database["public"]["Enums"]["salary_status"]
+          total_deductions: number
+          transport_allowance: number
+          updated_at?: string | null
+          working_days: number
+          year: number
+        }
+        Update: {
+          advance_deduction?: number
+          basic_salary?: number
+          created_at?: string | null
+          department?: string
+          employee_email?: string
+          employee_id?: string
+          employee_name?: string
+          esi_employee?: number
+          esi_employer?: number
+          generated_date?: string
+          gross_earnings?: number
+          hra?: number
+          id?: string
+          income_tax?: number
+          late_deduction?: number
+          loan_deduction?: number
+          medical_allowance?: number
+          month?: number
+          net_salary?: number
+          other_allowances?: number
+          other_deductions?: number
+          overtime_amount?: number
+          overtime_hours?: number
+          overtime_rate?: number
+          paid_date?: string | null
+          pay_period_end?: string
+          pay_period_start?: string
+          performance_bonus?: number
+          pf_employee?: number
+          pf_employer?: number
+          position?: string
+          present_days?: number
+          professional_tax?: number
+          special_allowance?: number
+          status?: Database["public"]["Enums"]["salary_status"]
+          total_deductions?: number
+          transport_allowance?: number
+          updated_at?: string | null
+          working_days?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      salary_structures: {
+        Row: {
+          basic_salary: number
+          created_at: string | null
+          department: string
+          effective_date: string
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          esi_employee: number
+          esi_employer: number
+          gross_salary: number
+          hra: number
+          id: string
+          income_tax: number
+          loan_deduction: number
+          medical_allowance: number
+          net_salary: number
+          other_allowances: number
+          other_deductions: number
+          overtime_amount: number
+          performance_bonus: number
+          pf_employee: number
+          pf_employer: number
+          position: string
+          professional_tax: number
+          special_allowance: number
+          status: Database["public"]["Enums"]["salary_structure_status"]
+          total_deductions: number
+          transport_allowance: number
+          updated_at: string | null
+        }
+        Insert: {
+          basic_salary: number
+          created_at?: string | null
+          department: string
+          effective_date: string
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          esi_employee: number
+          esi_employer: number
+          gross_salary: number
+          hra: number
+          id?: string
+          income_tax: number
+          loan_deduction: number
+          medical_allowance: number
+          net_salary: number
+          other_allowances: number
+          other_deductions: number
+          overtime_amount: number
+          performance_bonus: number
+          pf_employee: number
+          pf_employer: number
+          position: string
+          professional_tax: number
+          special_allowance: number
+          status?: Database["public"]["Enums"]["salary_structure_status"]
+          total_deductions: number
+          transport_allowance: number
+          updated_at?: string | null
+        }
+        Update: {
+          basic_salary?: number
+          created_at?: string | null
+          department?: string
+          effective_date?: string
+          employee_email?: string
+          employee_id?: string
+          employee_name?: string
+          esi_employee?: number
+          esi_employer?: number
+          gross_salary?: number
+          hra?: number
+          id?: string
+          income_tax?: number
+          loan_deduction?: number
+          medical_allowance?: number
+          net_salary?: number
+          other_allowances?: number
+          other_deductions?: number
+          overtime_amount?: number
+          performance_bonus?: number
+          pf_employee?: number
+          pf_employer?: number
+          position?: string
+          professional_tax?: number
+          special_allowance?: number
+          status?: Database["public"]["Enums"]["salary_structure_status"]
+          total_deductions?: number
+          transport_allowance?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      authenticate_admin: {
+        Args: { admin_email: string; password: string }
+        Returns: {
+          admin_id: string
+          department: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          position: string
+        }[]
+      }
+      can_employee_check_in: { Args: { emp_id: string }; Returns: boolean }
+      can_employee_check_out: { Args: { emp_id: string }; Returns: boolean }
+      create_admin_user: {
+        Args: {
+          admin_department?: string
+          admin_email: string
+          admin_first_name: string
+          admin_last_name: string
+          admin_password: string
+          admin_position?: string
+        }
+        Returns: string
+      }
+      create_admin_with_password: {
+        Args: {
+          admin_department?: string
+          admin_email: string
+          admin_first_name: string
+          admin_last_name: string
+          admin_password: string
+          admin_position?: string
+        }
+        Returns: string
+      }
+      fix_existing_admins: { Args: never; Returns: undefined }
+      generate_temp_password: { Args: never; Returns: string }
       get_attendance_status: {
         Args: { employee_uuid: string }
         Returns: {
           has_checked_in: boolean
           last_check_in: string
           last_check_out: string
+          total_working_hours: number
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
+      get_current_user_role: { Args: never; Returns: string }
+      get_user_role: { Args: { user_id: string }; Returns: string }
+      handle_attendance: { Args: { emp_id: string }; Returns: Json }
+      hash_password: { Args: { password: string }; Returns: string }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      link_admin_to_auth: {
+        Args: { admin_email: string; admin_password: string }
+        Returns: boolean
+      }
+      reset_admin_password: {
+        Args: {
+          admin_user_id?: string
+          new_password: string
+          target_admin_id: string
+        }
+        Returns: boolean
+      }
+      reset_employee_password: {
+        Args: {
+          admin_user_id?: string
+          new_password: string
+          target_employee_id: string
+        }
+        Returns: boolean
+      }
+      reset_employee_password_auto: {
+        Args: { admin_user_id?: string; target_employee_id: string }
         Returns: string
       }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
+      verify_admin_setup: {
+        Args: { admin_email: string }
+        Returns: {
+          admin_exists: boolean
+          admin_user_id: string
+          auth_exists: boolean
+          auth_user_id: string
+          user_ids_match: boolean
+        }[]
       }
-      handle_attendance: {
-        Args: { employee_id: string }
-        Returns: Json
-      }
-      is_admin: {
-        Args: { user_id: string }
+      verify_password: {
+        Args: { hash: string; password: string }
         Returns: boolean
       }
     }
     Enums: {
+      report_format: "pdf" | "excel" | "csv"
+      report_frequency: "once" | "daily" | "weekly" | "monthly" | "yearly"
+      report_status:
+        | "pending"
+        | "generating"
+        | "completed"
+        | "failed"
+        | "scheduled"
+      report_type:
+        | "employee"
+        | "leave"
+        | "attendance"
+        | "payroll"
+        | "performance"
+        | "compliance"
+        | "department"
+      report_visibility: "public" | "role_based" | "employee_specific"
+      salary_status: "draft" | "processed" | "paid" | "cancelled"
+      salary_structure_status: "active" | "inactive" | "pending"
       user_role: "admin" | "employee"
     }
     CompositeTypes: {
@@ -578,6 +899,27 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      report_format: ["pdf", "excel", "csv"],
+      report_frequency: ["once", "daily", "weekly", "monthly", "yearly"],
+      report_status: [
+        "pending",
+        "generating",
+        "completed",
+        "failed",
+        "scheduled",
+      ],
+      report_type: [
+        "employee",
+        "leave",
+        "attendance",
+        "payroll",
+        "performance",
+        "compliance",
+        "department",
+      ],
+      report_visibility: ["public", "role_based", "employee_specific"],
+      salary_status: ["draft", "processed", "paid", "cancelled"],
+      salary_structure_status: ["active", "inactive", "pending"],
       user_role: ["admin", "employee"],
     },
   },
