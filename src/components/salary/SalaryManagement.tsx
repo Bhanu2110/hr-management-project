@@ -55,6 +55,8 @@ import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SalarySlipView } from "./SalarySlipView";
+import { CTCSalarySlip } from "./CTCSalarySlip";
+import html2pdf from 'html2pdf.js';
 
 interface SalaryManagementProps {
   employees?: Array<{
@@ -511,10 +513,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     setIsViewDialogOpen(true);
   };
 
-  const handleDownloadSlip = async () => {
+  const handleDownloadSlip = () => {
     if (viewingSlip) {
       try {
-        const html2pdf = (await import('html2pdf.js')).default;
         const element = document.getElementById('salary-slip-preview');
         
         if (!element) {
@@ -531,8 +532,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         };
 
         toast.success('Generating PDF...');
-        await html2pdf().set(opt).from(element).save();
-        toast.success('PDF downloaded successfully');
+        html2pdf().set(opt).from(element).save();
       } catch (error) {
         console.error('Error generating PDF:', error);
         toast.error('Failed to generate PDF');
@@ -1553,14 +1553,14 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
       {/* View Salary Slip Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Salary Slip Preview</DialogTitle>
           </DialogHeader>
           {viewingSlip && (
             <div className="space-y-4">
               <div id="salary-slip-preview">
-                <SalarySlipView salarySlip={viewingSlip} />
+                <CTCSalarySlip salarySlip={viewingSlip} />
               </div>
               <div className="flex justify-end pt-4 border-t">
                 <Button onClick={handleDownloadSlip}>

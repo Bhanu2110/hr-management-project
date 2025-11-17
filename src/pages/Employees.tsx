@@ -132,15 +132,7 @@ const Employees = () => {
               {loading ? 'Loading...' : `Showing ${filteredEmployees.length} employees`}
             </p>
           </div>
-          <AddEmployeeDialog 
-            onEmployeeAdded={() => setRefreshKey(prev => prev + 1)}
-            trigger={
-              <Button style={{ backgroundColor: themeColor, borderColor: themeColor }} className="text-white">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Employee
-              </Button>
-            }
-          />
+          <AddEmployeeDialog onEmployeeAdded={() => setRefreshKey(prev => prev + 1)} />
         </div>
 
         {/* Search and Filters */}
