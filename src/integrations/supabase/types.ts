@@ -449,7 +449,6 @@ export type Database = {
           late_deduction: number
           loan_deduction: number
           medical_allowance: number
-          medical_insurance: number
           month: number
           net_salary: number
           other_allowances: number
@@ -492,7 +491,6 @@ export type Database = {
           late_deduction: number
           loan_deduction: number
           medical_allowance: number
-          medical_insurance?: number
           month: number
           net_salary: number
           other_allowances: number
@@ -535,7 +533,6 @@ export type Database = {
           late_deduction?: number
           loan_deduction?: number
           medical_allowance?: number
-          medical_insurance?: number
           month?: number
           net_salary?: number
           other_allowances?: number
@@ -579,7 +576,6 @@ export type Database = {
           income_tax: number
           loan_deduction: number
           medical_allowance: number
-          medical_insurance: number
           net_salary: number
           other_allowances: number
           other_deductions: number
@@ -611,7 +607,6 @@ export type Database = {
           income_tax: number
           loan_deduction: number
           medical_allowance: number
-          medical_insurance?: number
           net_salary: number
           other_allowances: number
           other_deductions: number
@@ -643,7 +638,6 @@ export type Database = {
           income_tax?: number
           loan_deduction?: number
           medical_allowance?: number
-          medical_insurance?: number
           net_salary?: number
           other_allowances?: number
           other_deductions?: number
