@@ -138,19 +138,14 @@ const EmployeeDashboard = () => {
 
       // Calculate hours today from attendance entries
       const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-
-      const startOfDayIso = startOfDay.toISOString();
-      const endOfDayIso = endOfDay.toISOString();
-
-      console.log("Fetching today's attendance for employee:", employee?.id, "from", startOfDayIso, "to", endOfDayIso);
+      const todayDateString = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+      
+      console.log("Fetching today's attendance for employee:", employee?.id, "for date", todayDateString);
       const { data: todayAttendance, error: todayAttendanceError } = await supabase
         .from("attendance")
-        .select("id, check_in, check_out")
+        .select("id, check_in, check_out, intervals")
         .eq("employee_id", employee.id)
-        .gte("check_in", startOfDayIso.split('T')[0] + 'T00:00:00.000Z') // Compare only date part
-        .lte("check_in", endOfDayIso.split('T')[0] + 'T23:59:59.999Z'); // Compare only date part
+        .eq("date", todayDateString); // Use the date column which should contain the date of attendance
 
       if (todayAttendanceError) {
         console.error("Error fetching today's attendance:", todayAttendanceError);
@@ -158,11 +153,35 @@ const EmployeeDashboard = () => {
       console.log("Today's attendance data:", todayAttendance);
 
       let totalMinutes = 0;
+      
+      // Process attendance records for today only
       (todayAttendance || []).forEach((record: any) => {
-        if (record.check_in) {
+        // If the record has intervals, calculate from those (more accurate)
+        if (record.intervals && Array.isArray(record.intervals) && record.intervals.length > 0) {
+          record.intervals.forEach((interval: any) => {
+            if (interval.check_in) {
+              const checkInTime = new Date(interval.check_in);
+              // For active intervals (no check_out), use current time
+              const checkOutTime = interval.check_out ? new Date(interval.check_out) : new Date();
+              
+              // Only count if the check_in is from today
+              const checkInDate = checkInTime.toISOString().split('T')[0];
+              if (checkInDate === todayDateString) {
+                totalMinutes += (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+              }
+            }
+          });
+        } 
+        // Fallback to record-level check_in/check_out if intervals aren't available
+        else if (record.check_in) {
           const checkInTime = new Date(record.check_in);
           const checkOutTime = record.check_out ? new Date(record.check_out) : new Date(); // Use current time if not checked out
-          totalMinutes += (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+          
+          // Only count if the check_in is from today
+          const checkInDate = checkInTime.toISOString().split('T')[0];
+          if (checkInDate === todayDateString) {
+            totalMinutes += (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+          }
         }
       });
 
