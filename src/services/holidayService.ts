@@ -1,5 +1,8 @@
 import { Holiday } from "../types/holidays";
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
+// Mock holidays - kept for reference but not used for fetching
 const mockHolidays: Holiday[] = [
   {
     id: "1",
@@ -9,281 +12,209 @@ const mockHolidays: Holiday[] = [
     type: "Public",
     location: "New York",
   },
-  {
-    id: "2",
-    name: "Martin Luther King, Jr. Day",
-    date: "2023-01-16",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "3",
-    name: "Valentine's Day",
-    date: "2023-02-14",
-    day: "Tuesday",
-    type: "Optional",
-    location: "All",
-  },
-  {
-    id: "4",
-    name: "Presidents' Day",
-    date: "2023-02-20",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "5",
-    name: "Holi",
-    date: "2023-03-08",
-    day: "Wednesday",
-    type: "Optional",
-    location: "Bangalore",
-  },
-  {
-    id: "6",
-    name: "Good Friday",
-    date: "2023-04-07",
-    day: "Friday",
-    type: "Public",
-    location: "London",
-  },
-  {
-    id: "7",
-    name: "Memorial Day",
-    date: "2023-05-29",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "8",
-    name: "Eid al-Fitr",
-    date: "2023-04-21",
-    day: "Friday",
-    type: "Optional",
-    location: "All",
-  },
-  {
-    id: "9",
-    name: "Independence Day",
-    date: "2023-07-04",
-    day: "Tuesday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "10",
-    name: "Raksha Bandhan",
-    date: "2023-08-30",
-    day: "Wednesday",
-    type: "Optional",
-    location: "Bangalore",
-  },
-  {
-    id: "11",
-    name: "Labor Day",
-    date: "2023-09-04",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "12",
-    name: "Diwali",
-    date: "2023-11-12",
-    day: "Sunday",
-    type: "Optional",
-    location: "Bangalore",
-  },
-  {
-    id: "13",
-    name: "Thanksgiving Day",
-    date: "2023-11-23",
-    day: "Thursday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "14",
-    name: "Christmas Day",
-    date: "2023-12-25",
-    day: "Monday",
-    type: "Public",
-    location: "All",
-  },
-  {
-    id: "15",
-    name: "New Year's Day",
-    date: "2024-01-01",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "16",
-    name: "Republic Day (India)",
-    date: "2024-01-26",
-    day: "Friday",
-    type: "Public",
-    location: "Bangalore",
-  },
-  {
-    id: "17",
-    name: "Easter Monday",
-    date: "2024-04-01",
-    day: "Monday",
-    type: "Optional",
-    location: "London",
-  },
-  {
-    id: "18",
-    name: "Eid al-Adha",
-    date: "2024-06-16",
-    day: "Sunday",
-    type: "Optional",
-    location: "All",
-  },
-  {
-    id: "19",
-    name: "Independence Day (USA)",
-    date: "2024-07-04",
-    day: "Thursday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "20",
-    name: "Christmas Day",
-    date: "2024-12-25",
-    day: "Wednesday",
-    type: "Public",
-    location: "All",
-  },
-  {
-    id: "21",
-    name: "New Year's Day",
-    date: "2025-01-01",
-    day: "Wednesday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "22",
-    name: "Martin Luther King, Jr. Day",
-    date: "2025-01-20",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "23",
-    name: "Valentine's Day",
-    date: "2025-02-14",
-    day: "Friday",
-    type: "Optional",
-    location: "All",
-  },
-  {
-    id: "24",
-    name: "Presidents' Day",
-    date: "2025-02-17",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "25",
-    name: "Holi",
-    date: "2025-03-14",
-    day: "Friday",
-    type: "Optional",
-    location: "Bangalore",
-  },
-  {
-    id: "26",
-    name: "Good Friday",
-    date: "2025-04-18",
-    day: "Friday",
-    type: "Public",
-    location: "London",
-  },
-  {
-    id: "27",
-    name: "Memorial Day",
-    date: "2025-05-26",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "28",
-    name: "Eid al-Fitr",
-    date: "2025-03-31",
-    day: "Monday",
-    type: "Optional",
-    location: "All",
-  },
-  {
-    id: "29",
-    name: "Independence Day",
-    date: "2025-07-04",
-    day: "Friday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "30",
-    name: "Raksha Bandhan",
-    date: "2025-08-09",
-    day: "Saturday",
-    type: "Optional",
-    location: "Bangalore",
-  },
-  {
-    id: "31",
-    name: "Labor Day",
-    date: "2025-09-01",
-    day: "Monday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "32",
-    name: "Diwali",
-    date: "2025-10-21",
-    day: "Tuesday",
-    type: "Optional",
-    location: "Bangalore",
-  },
-  {
-    id: "33",
-    name: "Thanksgiving Day",
-    date: "2025-11-27",
-    day: "Thursday",
-    type: "Public",
-    location: "New York",
-  },
-  {
-    id: "34",
-    name: "Christmas Day",
-    date: "2025-12-25",
-    day: "Thursday",
-    type: "Public",
-    location: "All",
-  },
 ];
 
-export const fetchHolidays = async (year: string, location: string): Promise<Holiday[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let holidaysToReturn = mockHolidays.filter(holiday => holiday.date.startsWith(year));
+// Holiday service with CRUD operations
+export const holidayService = {
+  // Get all holidays with optional filtering - Returns empty array on error for better UX
+  async fetchHolidays(year: string, location: string = "All"): Promise<Holiday[]> {
+    try {
+      console.log('=== FETCH HOLIDAYS DEBUG ===');
+      console.log('Fetching holidays for year:', year, 'and location:', location);
 
-      if (location !== "All") {
-        holidaysToReturn = holidaysToReturn.filter(holiday => holiday.location === location);
+      // Fetch from Supabase
+      let query = supabase
+        .from('holidays')
+        .select('*');
+
+      if (year) {
+        // Filter by year using date range (gte and lt) instead of LIKE
+        const startDate = `${year}-01-01`;
+        const endDate = `${parseInt(year) + 1}-01-01`;
+        console.log('Applying year filter - start:', startDate, 'end:', endDate);
+        query = query.gte('date', startDate).lt('date', endDate);
       }
-      resolve(holidaysToReturn);
-    }, 500); // Simulate network delay
-  });
+
+      if (location && location !== "All") {
+        console.log('Applying location filter:', location);
+        query = query.eq('location', location);
+      }
+
+      console.log('Executing query...');
+      const { data, error } = await query.order('date', { ascending: true });
+
+      console.log('Query completed');
+      console.log('Error:', error);
+      console.log('Raw data from Supabase:', data);
+      console.log('Data length:', data?.length || 0);
+
+      if (error) {
+        console.error('Error fetching holidays:', error);
+        console.log('Returning empty array due to fetch error');
+        console.log('=== END FETCH DEBUG ===');
+        return []; // Return empty array instead of throwing
+      }
+
+      if (data && data.length > 0) {
+        console.log('Found', data.length, 'holidays in database');
+        const mappedData = data.map((holiday: any) => ({
+          ...holiday,
+          day: format(new Date(holiday.date), 'EEEE') // Calculate day of week from date
+        }));
+        console.log('Mapped data:', mappedData);
+        console.log('=== END FETCH DEBUG ===');
+        return mappedData;
+      }
+
+      // Return empty array if no holidays found
+      console.log('No holidays found in database');
+      console.log('=== END FETCH DEBUG ===');
+      return [];
+    } catch (error: any) {
+      console.error('Error in fetchHolidays:', error);
+      console.log('Returning empty array due to exception');
+      console.log('=== END FETCH DEBUG ===');
+      return []; // Return empty array instead of throwing
+    }
+  },
+
+  // Create a new holiday - DO NOT send created_by to avoid foreign key errors
+  async createHoliday(holiday: Omit<Holiday, 'id' | 'day' | 'created_at' | 'updated_at'>): Promise<Holiday> {
+    console.log('=== CREATE HOLIDAY DEBUG ===');
+    console.log('Input holiday:', JSON.stringify(holiday, null, 2));
+
+    const day = format(new Date(holiday.date), 'EEEE');
+
+    // Only send the required fields - DO NOT send created_by
+    // The created_by field has a foreign key constraint to the employees table
+    const holidayData: any = {
+      name: holiday.name,
+      date: holiday.date,
+      day: day,
+      type: holiday.type,
+    };
+
+    // Only add location if it has a value
+    if (holiday.location) {
+      holidayData.location = holiday.location;
+    }
+
+    console.log('Sending to Supabase:', JSON.stringify(holidayData, null, 2));
+
+    const { data, error } = await supabase
+      .from('holidays')
+      .insert(holidayData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('=== SUPABASE ERROR ===');
+      console.error('Error object:', JSON.stringify(error, null, 2));
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      throw new Error(`Failed to create holiday: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Failed to create holiday: No data returned from database');
+    }
+
+    console.log('Successfully created holiday:', data);
+    console.log('=== END DEBUG ===');
+    return data;
+  },
+
+  // Update an existing holiday
+  async updateHoliday(id: string, updates: Partial<Omit<Holiday, 'id' | 'created_at'>>): Promise<Holiday> {
+    console.log('Updating holiday with ID:', id, 'and updates:', updates);
+    const updateData: any = {};
+
+    // Only include fields that are being updated
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.date !== undefined) {
+      updateData.date = updates.date;
+      updateData.day = format(new Date(updates.date), 'EEEE');
+    }
+    if (updates.type !== undefined) updateData.type = updates.type;
+    if (updates.location !== undefined) updateData.location = updates.location;
+    // DO NOT update created_by to avoid foreign key issues
+
+    const { data, error } = await supabase
+      .from('holidays')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating holiday:', error);
+      throw new Error(`Failed to update holiday: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Failed to update holiday: No data returned from database');
+    }
+
+    console.log('Successfully updated holiday:', data);
+    return data;
+  },
+
+  // Delete a holiday
+  async deleteHoliday(id: string): Promise<boolean> {
+    console.log('Deleting holiday with ID:', id);
+
+    const { error } = await supabase
+      .from('holidays')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting holiday:', error);
+      throw new Error(`Failed to delete holiday: ${error.message}`);
+    }
+
+    console.log('Successfully deleted holiday with ID:', id);
+    return true;
+  },
+
+  // Get a single holiday by ID
+  async getHolidayById(id: string): Promise<Holiday | null> {
+    console.log('Getting holiday by ID:', id);
+
+    const { data, error } = await supabase
+      .from('holidays')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching holiday by ID:', error);
+      if (error.code === 'PGRST116') {
+        // Not found error
+        return null;
+      }
+      throw new Error(`Failed to fetch holiday: ${error.message}`);
+    }
+
+    console.log('Found holiday:', data);
+    return data;
+  },
+
+  // Helper method to get mock holidays (kept for reference, not used)
+  getMockHolidays(year: string, location: string = "All"): Holiday[] {
+    let holidaysToReturn = mockHolidays.filter(holiday => holiday.date.startsWith(year));
+
+    if (location !== "All") {
+      holidaysToReturn = holidaysToReturn.filter(holiday => holiday.location === location);
+    }
+
+    return holidaysToReturn;
+  }
+};
+
+// Legacy function for backward compatibility
+export const fetchHolidays = async (year: string, location: string): Promise<Holiday[]> => {
+  return holidayService.fetchHolidays(year, location);
 };

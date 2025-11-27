@@ -20,6 +20,7 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Payroll from "./pages/Payroll"; // Import the new Payroll component
 import Holidays from "./pages/Holidays";
+import AdminHolidays from "./pages/AdminHolidays";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/layout/AppLayout";
 
@@ -163,9 +164,15 @@ const App = () => (
               path="/holidays" 
               element={
                 <ProtectedRoute>
-                  <AppLayout>
-                    <Holidays />
-                  </AppLayout>
+                  <Holidays />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/holidays" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminHolidays />
                 </ProtectedRoute>
               } 
             />

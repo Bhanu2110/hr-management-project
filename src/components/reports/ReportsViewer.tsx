@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Dialog,
@@ -24,10 +24,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { 
-  Search, 
-  Download, 
-  Eye, 
+import {
+  Search,
+  Download,
+  Eye,
   Filter,
   FileText,
   Clock,
@@ -39,12 +39,13 @@ import {
   Shield,
   Settings,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
-import { 
-  Report, 
-  ReportType, 
-  REPORT_TYPES, 
+import {
+  Report,
+  ReportType,
+  REPORT_TYPES,
   REPORT_STATUS_COLORS,
   REPORT_FORMAT_OPTIONS,
   formatFileSize,
@@ -52,6 +53,8 @@ import {
   getReportTypeIcon,
   canAccessReport
 } from "@/types/reports";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReportsViewerProps {
   employeeId?: string;
@@ -59,194 +62,50 @@ interface ReportsViewerProps {
   userDepartment?: string;
 }
 
-export function ReportsViewer({ 
-  employeeId, 
+export function ReportsViewer({
+  employeeId,
   userRole = 'employee',
-  userDepartment 
+  userDepartment
 }: ReportsViewerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [activeTab, setActiveTab] = useState("available");
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock reports data for employee view
-  const mockReports: Report[] = [
-    {
-      id: "1",
-      title: "My Attendance Report - November 2024",
-      description: "Personal attendance summary for November 2024",
-      type: "attendance",
-      format: "pdf",
-      status: "completed",
-      parameters: {
-        date_range: {
-          start_date: "2024-11-01T00:00:00Z",
-          end_date: "2024-11-30T23:59:59Z"
-        },
-        employee_ids: [employeeId || "EMP001"],
-        attendance_params: {
-          include_overtime: true,
-          include_breaks: true,
-          group_by: "date",
-          show_summary: true,
-          include_late_arrivals: true,
-          include_early_departures: true
-        }
-      },
-      visibility: "private",
-      accessible_roles: ["employee"],
-      accessible_departments: [],
-      accessible_employees: [employeeId || "EMP001"],
-      file_url: "/reports/attendance_november_2024.pdf",
-      file_size: 245760,
-      generated_by: "system",
-      generated_by_name: "System Generated",
-      generated_date: "2024-12-01T10:00:00Z",
-      download_count: 3,
-      last_downloaded: "2024-12-05T14:30:00Z",
-      created_at: "2024-12-01T10:00:00Z",
-      updated_at: "2024-12-01T10:00:00Z",
-    },
-    {
-      id: "2",
-      title: "Leave Balance Report - 2024",
-      description: "Annual leave balance and usage summary",
-      type: "leave",
-      format: "excel",
-      status: "completed",
-      parameters: {
-        date_range: {
-          start_date: "2024-01-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        employee_ids: [employeeId || "EMP001"],
-        leave_params: {
-          leave_types: ["annual", "sick", "casual"],
-          include_pending: true,
-          include_approved: true,
-          include_rejected: false,
-          group_by: "leave_type",
-          show_balance: true
-        }
-      },
-      visibility: "private",
-      accessible_roles: ["employee"],
-      accessible_departments: [],
-      accessible_employees: [employeeId || "EMP001"],
-      file_url: "/reports/leave_balance_2024.xlsx",
-      file_size: 89456,
-      generated_by: "hr_admin",
-      generated_by_name: "HR Admin",
-      generated_date: "2024-11-25T15:00:00Z",
-      download_count: 1,
-      created_at: "2024-11-25T15:00:00Z",
-      updated_at: "2024-11-25T15:00:00Z",
-    },
-    {
-      id: "3",
-      title: "Department Performance Summary - Q4 2024",
-      description: "Engineering department performance metrics for Q4",
-      type: "department",
-      format: "pdf",
-      status: "completed",
-      parameters: {
-        date_range: {
-          start_date: "2024-10-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        department_ids: ["engineering"],
-        department_params: {
-          include_headcount: true,
-          include_budget: false,
-          include_performance_metrics: true,
-          include_turnover_rate: true,
-          compare_periods: true
-        }
-      },
-      visibility: "department",
-      accessible_roles: ["employee", "manager"],
-      accessible_departments: ["Engineering"],
-      accessible_employees: [],
-      file_url: "/reports/dept_performance_q4_2024.pdf",
-      file_size: 567890,
-      generated_by: "manager",
-      generated_by_name: "Engineering Manager",
-      generated_date: "2024-12-10T09:00:00Z",
-      download_count: 12,
-      last_downloaded: "2024-12-12T11:20:00Z",
-      created_at: "2024-12-10T09:00:00Z",
-      updated_at: "2024-12-10T09:00:00Z",
-    },
-    {
-      id: "4",
-      title: "Company Attendance Overview - November 2024",
-      description: "Company-wide attendance statistics and trends",
-      type: "attendance",
-      format: "pdf",
-      status: "completed",
-      parameters: {
-        date_range: {
-          start_date: "2024-11-01T00:00:00Z",
-          end_date: "2024-11-30T23:59:59Z"
-        },
-        attendance_params: {
-          include_overtime: true,
-          include_breaks: false,
-          group_by: "department",
-          show_summary: true,
-          include_late_arrivals: true,
-          include_early_departures: true
-        }
-      },
-      visibility: "public",
-      accessible_roles: ["employee", "manager", "admin"],
-      accessible_departments: [],
-      accessible_employees: [],
-      file_url: "/reports/company_attendance_november_2024.pdf",
-      file_size: 1234567,
-      generated_by: "hr_admin",
-      generated_by_name: "HR Admin",
-      generated_date: "2024-12-01T16:00:00Z",
-      download_count: 45,
-      last_downloaded: "2024-12-12T16:45:00Z",
-      created_at: "2024-12-01T16:00:00Z",
-      updated_at: "2024-12-01T16:00:00Z",
-    },
-    {
-      id: "5",
-      title: "Training Completion Report - 2024",
-      description: "Employee training completion status and certifications",
-      type: "compliance",
-      format: "excel",
-      status: "generating",
-      parameters: {
-        date_range: {
-          start_date: "2024-01-01T00:00:00Z",
-          end_date: "2024-12-31T23:59:59Z"
-        },
-        compliance_params: {
-          compliance_types: ["training", "certification"],
-          include_violations: false,
-          include_training_status: true,
-          include_certifications: true,
-          risk_level: "all"
-        }
-      },
-      visibility: "public",
-      accessible_roles: ["employee", "manager", "admin"],
-      accessible_departments: [],
-      accessible_employees: [],
-      generated_by: "training_admin",
-      generated_by_name: "Training Admin",
-      download_count: 0,
-      created_at: "2024-12-12T10:00:00Z",
-      updated_at: "2024-12-12T10:00:00Z",
-    },
-  ];
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .select<"*", Report>('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+      setReports((data as Report[]) || []);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch reports.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter reports based on user access and search criteria
-  const filteredReports = mockReports.filter((report) => {
+  const filteredReports = reports.filter((report) => {
     // Check access permissions
     if (!canAccessReport(report, userRole, userDepartment, employeeId)) {
       return false;
@@ -255,11 +114,11 @@ export function ReportsViewer({
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         report.title.toLowerCase().includes(searchLower) ||
         report.description?.toLowerCase().includes(searchLower) ||
         report.type.toLowerCase().includes(searchLower);
-      
+
       if (!matchesSearch) {
         return false;
       }
@@ -319,9 +178,19 @@ export function ReportsViewer({
   };
 
   const handleRefresh = () => {
-    console.log("Refreshing reports...");
-    // Mock refresh functionality
+    fetchReports();
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading reports...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -444,17 +313,17 @@ export function ReportsViewer({
                       </div>
 
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="flex-1 gap-2"
                           onClick={() => handleView(report)}
                         >
                           <Eye className="h-4 w-4" />
                           View
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="gap-2"
                           onClick={() => handleDownload(report)}
                         >
@@ -583,7 +452,7 @@ export function ReportsViewer({
                 {selectedReport.description}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -609,7 +478,7 @@ export function ReportsViewer({
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-semibold mb-2">Generation Info</h4>
                   <div className="space-y-2 text-sm">
@@ -644,7 +513,7 @@ export function ReportsViewer({
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button 
+                <Button
                   className="flex-1 gap-2"
                   onClick={() => handleDownload(selectedReport)}
                   disabled={selectedReport.status !== 'completed'}
@@ -652,8 +521,8 @@ export function ReportsViewer({
                   <Download className="h-4 w-4" />
                   Download Report
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setSelectedReport(null)}
                 >
                   Close

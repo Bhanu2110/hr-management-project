@@ -45,7 +45,7 @@ export const AttendanceReport = () => {
             employees!attendance_employee_id_fkey(first_name, last_name)
           `)
           .order('date', { ascending: false });
-        
+
         if (error) {
           throw error;
         }
@@ -54,7 +54,7 @@ export const AttendanceReport = () => {
           const intervals = item.intervals as any[] || [];
           const firstInterval = intervals[0];
           const lastInterval = intervals[intervals.length - 1];
-          
+
           return {
             id: item.id,
             employee_id: item.employee_id,
@@ -145,6 +145,7 @@ export const AttendanceReport = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px] text-center">S.No</TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('employee_name')}>
                 <div className="flex items-center">
                   Employee Name {sortKey === 'employee_name' && <ArrowUpDown className="ml-2 h-4 w-4" />}
@@ -178,8 +179,9 @@ export const AttendanceReport = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedAttendanceRecords.map((record) => (
+            {filteredAndSortedAttendanceRecords.map((record, index) => (
               <TableRow key={record.id}>
+                <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                 <TableCell className="font-medium">{record.employee_name}</TableCell>
                 <TableCell>{record.date}</TableCell>
                 <TableCell>{record.check_in}</TableCell>

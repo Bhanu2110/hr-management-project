@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { employeeService, Employee } from '@/services/api';
 import { Loader2 } from 'lucide-react';
 
-interface EmployeeReportData extends Employee {}
+interface EmployeeReportData extends Employee { }
 
 export const EmployeeReport = () => {
   const { themeColor } = useTheme();
@@ -97,6 +97,7 @@ export const EmployeeReport = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px] text-center">S.No</TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('employee_id')}>
                 <div className="flex items-center">
                   Employee ID {sortKey === 'employee_id' && <ArrowUpDown className="ml-2 h-4 w-4" />}
@@ -135,8 +136,9 @@ export const EmployeeReport = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedEmployees.map((employee) => (
+            {filteredAndSortedEmployees.map((employee, index) => (
               <TableRow key={employee.id}>
+                <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                 <TableCell className="font-medium">{employee.employee_id}</TableCell>
                 <TableCell>{employee.first_name} {employee.last_name}</TableCell>
                 <TableCell>{employee.email}</TableCell>

@@ -40,7 +40,7 @@ export const PayrollReport = () => {
           .from('salary_slips')
           .select('*')
           .order('created_at', { ascending: false });
-        
+
         if (error) {
           throw error;
         }
@@ -141,6 +141,7 @@ export const PayrollReport = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px] text-center">S.No</TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('employee_name')}>
                 <div className="flex items-center">
                   Employee Name {sortKey === 'employee_name' && <ArrowUpDown className="ml-2 h-4 w-4" />}
@@ -174,8 +175,9 @@ export const PayrollReport = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedPayrollRecords.map((record) => (
+            {filteredAndSortedPayrollRecords.map((record, index) => (
               <TableRow key={record.id}>
+                <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                 <TableCell className="font-medium">{record.employee_name}</TableCell>
                 <TableCell>{record.pay_period_start} to {record.pay_period_end}</TableCell>
                 <TableCell>{record.gross_salary.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</TableCell>

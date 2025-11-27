@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Settings, FileText, Calendar } from "lucide-react";
+import { Users, Settings, FileText, Calendar, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
@@ -89,6 +89,21 @@ const AdminDashboard = () => {
             <CardContent>
               <p className="text-xs text-muted-foreground">
                 Approve and track leave requests
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/admin/holidays')}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>Manage Holidays</CardTitle>
+              <CalendarDays className="h-4 w-4" style={{ color: themeColor }} />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Add, edit, and manage holidays
               </p>
             </CardContent>
           </Card>

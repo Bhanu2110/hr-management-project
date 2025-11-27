@@ -3,13 +3,21 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Check, X, Clock, Calendar, User } from "lucide-react";
+import { Plus, Check, X, Clock, Calendar, User, LayoutGrid, List } from "lucide-react";
 import { LeaveApplicationForm } from "@/components/leaves/LeaveApplicationForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from '@/context/ThemeContext';
 import { format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface LeaveRequest {
   id: string;
@@ -32,9 +40,12 @@ interface LeaveRequest {
   };
 }
 
+type ViewMode = 'grid' | 'list';
+
 const LeaveRequests = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -67,13 +78,13 @@ const LeaveRequests = () => {
       }
 
       setLeaveRequests(data || []);
-      
+
       // Calculate stats
       const pending = data?.filter(req => req.status === 'pending').length || 0;
       const approved = data?.filter(req => req.status === 'approved').length || 0;
       const totalDays = data?.reduce((sum, req) => sum + req.days, 0) || 0;
       const avgDays = data?.length ? (totalDays / data.length) : 0;
-      
+
       setStats({ pending, approved, avgDays });
     } catch (error) {
       console.error('Error fetching leave requests:', error);
@@ -97,7 +108,7 @@ const LeaveRequests = () => {
     try {
       const { error } = await supabase
         .from('leave_requests')
-        .update({ 
+        .update({
           status,
           approved_by: employee?.id,
           approved_at: new Date().toISOString()
@@ -147,8 +158,8 @@ const LeaveRequests = () => {
               {isEmployee ? "My Leave Requests" : "Leave Requests"}
             </h1>
             <p className="text-muted-foreground">
-              {isEmployee 
-                ? "View and manage your leave applications" 
+              {isEmployee
+                ? "View and manage your leave applications"
                 : "Manage employee leave applications and approvals"
               }
             </p>
@@ -175,7 +186,7 @@ const LeaveRequests = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-[--shadow-card]">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -207,12 +218,36 @@ const LeaveRequests = () => {
           </Card>
         </div>
 
-        {/* Leave Requests Table */}
+        {/* Leave Requests */}
         <Card className="shadow-[--shadow-card]">
           <CardHeader>
-            <CardTitle>
-              {isEmployee ? "My Leave Requests" : "Recent Leave Requests"}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                {isEmployee ? "My Leave Requests" : "Recent Leave Requests"}
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  style={viewMode === 'grid' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}
+                  className={viewMode === 'grid' ? 'text-white' : ''}
+                >
+                  <LayoutGrid className="h-4 w-4 mr-1" />
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  style={viewMode === 'list' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}
+                  className={viewMode === 'list' ? 'text-white' : ''}
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  List
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -228,7 +263,7 @@ const LeaveRequests = () => {
                   </p>
                 </div>
               </div>
-            ) : (
+            ) : viewMode === 'grid' ? (
               <div className="space-y-4">
                 {leaveRequests.map((request) => (
                   <div key={request.id} className="p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors">
@@ -273,11 +308,11 @@ const LeaveRequests = () => {
                           <p className="text-sm">{request.reason}</p>
                         </div>
                       </div>
-                      
+
                       {isAdmin && request.status === "pending" && (
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="text-success-foreground"
                             style={{ backgroundColor: themeColor }}
                             onClick={() => handleApproveReject(request.id, 'approved')}
@@ -285,8 +320,8 @@ const LeaveRequests = () => {
                             <Check className="h-4 w-4 mr-1" />
                             Approve
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => handleApproveReject(request.id, 'rejected')}
                           >
@@ -298,6 +333,71 @@ const LeaveRequests = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px] text-center">S.No</TableHead>
+                      {isAdmin && <TableHead>Employee</TableHead>}
+                      <TableHead>Leave Type</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead className="text-center">Days</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Status</TableHead>
+                      {isAdmin && <TableHead className="text-center">Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leaveRequests.map((request, index) => (
+                      <TableRow key={request.id}>
+                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                        {isAdmin && (
+                          <TableCell className="font-medium">
+                            <div>
+                              <div>{request.employee?.first_name} {request.employee?.last_name}</div>
+                              <div className="text-xs text-muted-foreground">({request.employee?.employee_id})</div>
+                            </div>
+                          </TableCell>
+                        )}
+                        <TableCell>{request.leave_type}</TableCell>
+                        <TableCell>{format(new Date(request.start_date), "MMM dd, yyyy")}</TableCell>
+                        <TableCell>{format(new Date(request.end_date), "MMM dd, yyyy")}</TableCell>
+                        <TableCell className="text-center">{request.days}</TableCell>
+                        <TableCell className="max-w-xs truncate" title={request.reason}>{request.reason}</TableCell>
+                        <TableCell>{getStatusBadge(request.status)}</TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            {request.status === "pending" ? (
+                              <div className="flex gap-1 justify-center">
+                                <Button
+                                  size="sm"
+                                  className="text-white h-8"
+                                  style={{ backgroundColor: themeColor }}
+                                  onClick={() => handleApproveReject(request.id, 'approved')}
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-8"
+                                  onClick={() => handleApproveReject(request.id, 'rejected')}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="text-center text-muted-foreground text-sm">-</div>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>

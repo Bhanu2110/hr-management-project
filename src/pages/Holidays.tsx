@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download } from "lucide-react";
-import { Holiday } from "@/types/holidays";
+import { Download, Calendar } from "lucide-react";
+import { Holiday, HOLIDAY_TYPES } from "@/types/holidays";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { fetchHolidays } from "@/services/holidayService";
+import { holidayService } from "@/services/holidayService";
+import { useTheme } from "@/context/ThemeContext";
 
 const Holidays = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +30,7 @@ const Holidays = () => {
       setError(null);
       try {
         console.log("Fetching holidays for year:", selectedYear, "and location:", selectedLocation);
-        const data = await fetchHolidays(selectedYear, selectedLocation);
+        const data = await holidayService.fetchHolidays(selectedYear, selectedLocation);
         setHolidays(data);
       } catch (err) {
         setError("Failed to fetch holidays.");
@@ -43,7 +45,7 @@ const Holidays = () => {
   const filteredHolidays = useMemo(() => {
     return holidays.filter((holiday) => {
       const matchesSearch = holiday.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            holiday.day.toLowerCase().includes(searchQuery.toLowerCase());
+        holiday.day.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
   }, [searchQuery, holidays]);
@@ -100,89 +102,96 @@ const Holidays = () => {
     doc.save(`Holidays_${selectedYear}.pdf`);
   };
 
+  const { themeColor } = useTheme();
+
   return (
-    <div className="holidays-container p-4 sm:p-6 lg:p-8">
-      <Card>
-        <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <CardTitle className="text-2xl font-bold">Holidays</CardTitle>
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <Input
-              placeholder="Search holidays..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-[250px]"
-            />
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select Year" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleDownloadPdf} className="w-full sm:w-auto">
-              <Download className="mr-2 h-4 w-4" /> Download PDF
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading && <p>Loading holidays...</p>}
-          {error && <p className="text-red-500">Error: {error}</p>}
-          {!loading && !error && (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Holiday Name</TableHead>
-                    <TableHead className="w-[120px]">Date</TableHead>
-                    <TableHead className="w-[100px]">Day</TableHead>
-                    <TableHead className="w-[100px]">Type</TableHead>
-                    <TableHead className="w-[150px]">Location</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredHolidays.length > 0 ? (
-                    filteredHolidays.map((holiday) => (
-                      <TableRow key={holiday.id} className={getRowClassName(holiday.type)}>
-                        <TableCell className="font-medium">{holiday.name}</TableCell>
-                        <TableCell>{holiday.date}</TableCell>
-                        <TableCell>{holiday.day}</TableCell>
-                        <TableCell>{holiday.type}</TableCell>
-                        <TableCell>{holiday.location || "N/A"}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        No holidays found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+    <AppLayout>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <CardTitle className="text-2xl font-bold">Holidays</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <Input
+                placeholder="Search holidays..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-[250px]"
+              />
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Select Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Locations</SelectItem>
+                  {locations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleDownloadPdf} className="w-full sm:w-auto">
+                <Download className="mr-2 h-4 w-4" /> Download PDF
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent>
+            {loading && <p>Loading holidays...</p>}
+            {error && <p className="text-red-500">Error: {error}</p>}
+            {!loading && !error && (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px] text-center">S.No</TableHead>
+                      <TableHead className="w-[200px]">Holiday Name</TableHead>
+                      <TableHead className="w-[120px]">Date</TableHead>
+                      <TableHead className="w-[100px]">Day</TableHead>
+                      <TableHead className="w-[100px]">Type</TableHead>
+                      <TableHead className="w-[150px]">Location</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredHolidays.length > 0 ? (
+                      filteredHolidays.map((holiday, index) => (
+                        <TableRow key={holiday.id} className={getRowClassName(holiday.type)}>
+                          <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                          <TableCell className="font-medium">{holiday.name}</TableCell>
+                          <TableCell>{holiday.date}</TableCell>
+                          <TableCell>{holiday.day}</TableCell>
+                          <TableCell>{holiday.type}</TableCell>
+                          <TableCell>{holiday.location || "N/A"}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No holidays found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
+
 };
 
 export default Holidays;

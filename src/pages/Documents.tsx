@@ -2,71 +2,53 @@ import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { DocumentViewer } from "@/components/documents/DocumentViewer";
-import { DocumentManagement } from "@/components/documents/DocumentManagement";
+import { AdminDocumentManagement } from "@/components/documents/AdminDocumentManagement";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Employee {
+  id: string;
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department: string;
+  position: string;
+}
 
 const Documents = () => {
   const { user, isAdmin, employee } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-
-  // Mock employees data for admin view
-  const mockEmployees = [
-    {
-      id: "1",
-      employee_id: "EMP001",
-      first_name: "John",
-      last_name: "Doe",
-      email: "john.doe@company.com",
-      department: "Engineering",
-      position: "Senior Developer",
-    },
-    {
-      id: "2",
-      employee_id: "EMP002",
-      first_name: "Jane",
-      last_name: "Smith",
-      email: "jane.smith@company.com",
-      department: "HR",
-      position: "HR Manager",
-    },
-    {
-      id: "3",
-      employee_id: "EMP003",
-      first_name: "Mike",
-      last_name: "Johnson",
-      email: "mike.johnson@company.com",
-      department: "Finance",
-      position: "Financial Analyst",
-    },
-    {
-      id: "4",
-      employee_id: "EMP004",
-      first_name: "Sarah",
-      last_name: "Wilson",
-      email: "sarah.wilson@company.com",
-      department: "Marketing",
-      position: "Marketing Specialist",
-    },
-    {
-      id: "5",
-      employee_id: "EMP005",
-      first_name: "David",
-      last_name: "Brown",
-      email: "david.brown@company.com",
-      department: "Engineering",
-      position: "DevOps Engineer",
-    },
-  ];
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
-    // Simulate loading delay
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const fetchEmployees = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('employees')
+          .select('id, employee_id, first_name, last_name, email, department, position')
+          .order('first_name', { ascending: true });
 
-    return () => clearTimeout(timer);
-  }, []);
+        if (error) {
+          console.error('Error fetching employees:', error);
+        } else {
+          setEmployees(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAdmin) {
+      fetchEmployees();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAdmin]);
 
   if (isLoading) {
     return (
@@ -102,9 +84,9 @@ const Documents = () => {
     <AppLayout>
       <div className="space-y-6">
         {isAdmin ? (
-          <DocumentManagement employees={mockEmployees} />
+          <AdminDocumentManagement employees={employees} />
         ) : (
-          <DocumentViewer 
+          <DocumentViewer
             employeeId={employee?.employee_id || "EMP001"}
           />
         )}

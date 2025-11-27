@@ -48,7 +48,7 @@ export const LeaveReport = () => {
             employees(first_name, last_name)
           `)
           .order('created_at', { ascending: false });
-        
+
         if (error) {
           throw error;
         }
@@ -143,6 +143,7 @@ export const LeaveReport = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px] text-center">S.No</TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('employee_name')}>
                 <div className="flex items-center">
                   Employee Name {sortKey === 'employee_name' && <ArrowUpDown className="ml-2 h-4 w-4" />}
@@ -177,8 +178,9 @@ export const LeaveReport = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedLeaveRequests.map((request) => (
+            {filteredAndSortedLeaveRequests.map((request, index) => (
               <TableRow key={request.id}>
+                <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                 <TableCell className="font-medium">{request.employee_name}</TableCell>
                 <TableCell>{request.leave_type}</TableCell>
                 <TableCell>{request.start_date}</TableCell>

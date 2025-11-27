@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Table,
@@ -29,19 +28,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  FileText, 
-  Download, 
-  Send, 
-  Edit, 
-  Eye,
+import {
+  Plus,
+  Search,
+  FileText,
+  Download,
+  Trash2,
+  Upload,
   Calendar,
-  Users
+  Users,
+  Loader2
 } from "lucide-react";
-import { Form16Data, Form16CreateRequest } from "@/types/form16";
+import {
+  fetchAllForm16Documents,
+  uploadForm16Document,
+  deleteForm16Document,
+  downloadForm16Document,
+  getForm16Statistics,
+  Form16Document
+} from "@/api/form16";
+import { useToast } from "@/hooks/use-toast";
 
 interface Form16ManagementProps {
   employees?: Array<{
@@ -56,180 +62,207 @@ interface Form16ManagementProps {
 }
 
 export function Form16Management({ employees = [] }: Form16ManagementProps) {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [formData, setFormData] = useState<Partial<Form16CreateRequest>>({
-    assessment_year: "2024-25",
-    financial_year: "2023-24",
-    salary_details: {
-      basic_salary: 0,
-      hra: 0,
-      special_allowance: 0,
-      other_allowances: 0,
-    },
-    deductions: {
-      pf_employee: 0,
-      pf_employer: 0,
-      esi_employee: 0,
-      esi_employer: 0,
-      professional_tax: 0,
-      other_deductions: 0,
-    },
-    tax_details: {
-      exemptions_claimed: 0,
-      standard_deduction: 50000,
-      previous_employer_details: "",
-    },
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [financialYear, setFinancialYear] = useState("2024-25");
+  const [quarter, setQuarter] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [form16Documents, setForm16Documents] = useState<Form16Document[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    employees: 0,
+    years: [] as string[],
   });
 
-  // Mock data for demonstration
-  const mockForm16Data: Form16Data[] = [
-    {
-      id: "1",
-      employee_id: "EMP001",
-      employee_name: "John Doe",
-      employee_email: "john.doe@company.com",
-      pan_number: "ABCDE1234F",
-      assessment_year: "2024-25",
-      financial_year: "2023-24",
-      employer_name: "Tech Solutions Pvt Ltd",
-      employer_address: "123 Business Park, Tech City",
-      employer_tan: "ABCD12345E",
-      basic_salary: 600000,
-      hra: 240000,
-      special_allowance: 120000,
-      other_allowances: 40000,
-      gross_salary: 1000000,
-      pf_employee: 21600,
-      pf_employer: 21600,
-      esi_employee: 0,
-      esi_employer: 0,
-      professional_tax: 2400,
-      other_deductions: 0,
-      total_deductions: 24000,
-      taxable_income: 926000,
-      income_tax: 112500,
-      education_cess: 4500,
-      total_tax: 117000,
-      tds_deducted: 117000,
-      exemptions_claimed: 0,
-      standard_deduction: 50000,
-      status: "issued",
-      generated_date: "2024-03-15T10:00:00Z",
-      issued_date: "2024-03-16T10:00:00Z",
-      created_at: "2024-03-10T10:00:00Z",
-      updated_at: "2024-03-16T10:00:00Z",
-    },
-    {
-      id: "2",
-      employee_id: "EMP002",
-      employee_name: "Jane Smith",
-      employee_email: "jane.smith@company.com",
-      pan_number: "FGHIJ5678K",
-      assessment_year: "2024-25",
-      financial_year: "2023-24",
-      employer_name: "Tech Solutions Pvt Ltd",
-      employer_address: "123 Business Park, Tech City",
-      employer_tan: "ABCD12345E",
-      basic_salary: 800000,
-      hra: 320000,
-      special_allowance: 160000,
-      other_allowances: 20000,
-      gross_salary: 1300000,
-      pf_employee: 21600,
-      pf_employer: 21600,
-      esi_employee: 0,
-      esi_employer: 0,
-      professional_tax: 2400,
-      other_deductions: 5000,
-      total_deductions: 29000,
-      taxable_income: 1221000,
-      income_tax: 187500,
-      education_cess: 7500,
-      total_tax: 195000,
-      tds_deducted: 195000,
-      exemptions_claimed: 0,
-      standard_deduction: 50000,
-      status: "generated",
-      generated_date: "2024-03-15T10:00:00Z",
-      created_at: "2024-03-10T10:00:00Z",
-      updated_at: "2024-03-15T10:00:00Z",
-    },
-  ];
+  // Fetch Form 16 documents on mount
+  useEffect(() => {
+    loadForm16Documents();
+    loadStatistics();
+  }, []);
 
-  const filteredData = mockForm16Data.filter((item) => {
-    const matchesSearch = 
-      item.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.employee_email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === "all" || item.status === filterStatus;
-    const matchesYear = filterYear === "all" || item.assessment_year === filterYear;
-    
-    return matchesSearch && matchesStatus && matchesYear;
-  });
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const getStatusColor = (status: Form16Data['status']) => {
-    switch (status) {
-      case 'issued':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'generated':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'draft':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+  const loadForm16Documents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchAllForm16Documents();
+      setForm16Documents(data);
+    } catch (error) {
+      console.error('Error loading Form 16 documents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load Form 16 documents",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleCreateForm16 = () => {
-    // Mock creation logic
-    console.log("Creating Form 16 with data:", { ...formData, employee_id: selectedEmployee });
-    setIsCreateDialogOpen(false);
+  const loadStatistics = async () => {
+    try {
+      const statistics = await getForm16Statistics();
+      setStats(statistics);
+    } catch (error) {
+      console.error('Error loading statistics:', error);
+    }
+  };
+
+  const filteredData = form16Documents.filter((item) => {
+    const employee = employees.find(e => e.id === item.employee_id);
+    const employeeName = employee ? `${employee.first_name} ${employee.last_name}` : '';
+
+    const matchesSearch =
+      employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.financial_year.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesYear = filterYear === "all" || item.financial_year === filterYear;
+
+    return matchesSearch && matchesYear;
+  });
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF or DOCX file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "File size must be less than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUploadForm16 = async () => {
+    if (!selectedEmployee || !selectedFile) {
+      toast({
+        title: "Error",
+        description: "Please select an employee and a file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      await uploadForm16Document({
+        employee_id: selectedEmployee,
+        file: selectedFile,
+        financial_year: financialYear,
+        quarter: quarter || undefined,
+      });
+
+      toast({
+        title: "Success",
+        description: "Form 16 uploaded successfully",
+      });
+
+      setIsUploadDialogOpen(false);
+      resetForm();
+
+      // Reload data
+      await loadForm16Documents();
+      await loadStatistics();
+    } catch (error) {
+      console.error('Error uploading Form 16:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload Form 16",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const resetForm = () => {
     setSelectedEmployee("");
-    setFormData({
-      assessment_year: "2024-25",
-      financial_year: "2023-24",
-      salary_details: {
-        basic_salary: 0,
-        hra: 0,
-        special_allowance: 0,
-        other_allowances: 0,
-      },
-      deductions: {
-        pf_employee: 0,
-        pf_employer: 0,
-        esi_employee: 0,
-        esi_employer: 0,
-        professional_tax: 0,
-        other_deductions: 0,
-      },
-      tax_details: {
-        exemptions_claimed: 0,
-        standard_deduction: 50000,
-        previous_employer_details: "",
-      },
+    setSelectedFile(null);
+    setFinancialYear("2024-25");
+    setQuarter("");
+  };
+
+  const handleDeleteForm16 = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this Form 16?")) {
+      return;
+    }
+
+    try {
+      await deleteForm16Document(id);
+      toast({
+        title: "Success",
+        description: "Form 16 deleted successfully",
+      });
+
+      // Reload data
+      await loadForm16Documents();
+      await loadStatistics();
+    } catch (error) {
+      console.error('Error deleting Form 16:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete Form 16",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadForm16 = async (id: string) => {
+    try {
+      await downloadForm16Document(id);
+    } catch (error) {
+      console.error('Error downloading Form 16:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download Form 16",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getEmployeeName = (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId);
+    return employee ? `${employee.first_name} ${employee.last_name}` : 'Unknown';
+  };
+
+  const getEmployeeDetails = (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId);
+    return employee ? `${employee.employee_id} - ${employee.department}` : '';
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return 'N/A';
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
-  };
-
-  const handleIssueForm16 = (id: string) => {
-    console.log("Issuing Form 16 with ID:", id);
-  };
-
-  const handleDownloadForm16 = (id: string) => {
-    console.log("Downloading Form 16 with ID:", id);
   };
 
   return (
@@ -239,25 +272,25 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
         <div>
           <h1 className="text-3xl font-bold">Form 16 Management</h1>
           <p className="text-muted-foreground">
-            Generate and manage tax certificates for employees
+            Upload and manage Form 16 tax certificates for employees
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Generate Form 16
+              <Upload className="h-4 w-4" />
+              Upload Form 16
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Generate New Form 16</DialogTitle>
+              <DialogTitle>Upload Form 16</DialogTitle>
               <DialogDescription>
-                Create a new Form 16 certificate for an employee
+                Upload a Form 16 certificate for an employee
               </DialogDescription>
             </DialogHeader>
-            
-            <div className="space-y-6">
+
+            <div className="space-y-4">
               {/* Employee Selection */}
               <div className="space-y-2">
                 <Label htmlFor="employee">Select Employee</Label>
@@ -267,7 +300,7 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.employee_id}>
+                      <SelectItem key={employee.id} value={employee.id}>
                         {employee.first_name} {employee.last_name} ({employee.employee_id})
                       </SelectItem>
                     ))}
@@ -275,153 +308,65 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                 </Select>
               </div>
 
-              {/* Year Selection */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="assessment_year">Assessment Year</Label>
-                  <Select 
-                    value={formData.assessment_year} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, assessment_year: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2024-25">2024-25</SelectItem>
-                      <SelectItem value="2023-24">2023-24</SelectItem>
-                      <SelectItem value="2022-23">2022-23</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="financial_year">Financial Year</Label>
-                  <Select 
-                    value={formData.financial_year} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, financial_year: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2023-24">2023-24</SelectItem>
-                      <SelectItem value="2022-23">2022-23</SelectItem>
-                      <SelectItem value="2021-22">2021-22</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Financial Year */}
+              <div className="space-y-2">
+                <Label htmlFor="financial_year">Financial Year</Label>
+                <Select value={financialYear} onValueChange={setFinancialYear}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2024-25">2024-25</SelectItem>
+                    <SelectItem value="2023-24">2023-24</SelectItem>
+                    <SelectItem value="2022-23">2022-23</SelectItem>
+                    <SelectItem value="2021-22">2021-22</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Salary Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Salary Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="basic_salary">Basic Salary</Label>
-                    <Input
-                      id="basic_salary"
-                      type="number"
-                      value={formData.salary_details?.basic_salary || 0}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        salary_details: {
-                          ...prev.salary_details!,
-                          basic_salary: Number(e.target.value)
-                        }
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="hra">House Rent Allowance</Label>
-                    <Input
-                      id="hra"
-                      type="number"
-                      value={formData.salary_details?.hra || 0}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        salary_details: {
-                          ...prev.salary_details!,
-                          hra: Number(e.target.value)
-                        }
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="special_allowance">Special Allowance</Label>
-                    <Input
-                      id="special_allowance"
-                      type="number"
-                      value={formData.salary_details?.special_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        salary_details: {
-                          ...prev.salary_details!,
-                          special_allowance: Number(e.target.value)
-                        }
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="other_allowances">Other Allowances</Label>
-                    <Input
-                      id="other_allowances"
-                      type="number"
-                      value={formData.salary_details?.other_allowances || 0}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        salary_details: {
-                          ...prev.salary_details!,
-                          other_allowances: Number(e.target.value)
-                        }
-                      }))}
-                    />
-                  </div>
-                </div>
+              {/* Quarter (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="quarter">Quarter (Optional)</Label>
+                <Select value={quarter} onValueChange={setQuarter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select quarter (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Q1">Q1 (Apr-Jun)</SelectItem>
+                    <SelectItem value="Q2">Q2 (Jul-Sep)</SelectItem>
+                    <SelectItem value="Q3">Q3 (Oct-Dec)</SelectItem>
+                    <SelectItem value="Q4">Q4 (Jan-Mar)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Deductions */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Deductions</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pf_employee">PF (Employee)</Label>
-                    <Input
-                      id="pf_employee"
-                      type="number"
-                      value={formData.deductions?.pf_employee || 0}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        deductions: {
-                          ...prev.deductions!,
-                          pf_employee: Number(e.target.value)
-                        }
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="professional_tax">Professional Tax</Label>
-                    <Input
-                      id="professional_tax"
-                      type="number"
-                      value={formData.deductions?.professional_tax || 0}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        deductions: {
-                          ...prev.deductions!,
-                          professional_tax: Number(e.target.value)
-                        }
-                      }))}
-                    />
-                  </div>
-                </div>
+              {/* File Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="file">Form 16 Document</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  accept=".pdf,.docx"
+                  onChange={handleFileSelect}
+                />
+                {selectedFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Accepted formats: PDF, DOCX (Max 10MB)
+                </p>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateForm16} disabled={!selectedEmployee}>
-                Generate Form 16
+              <Button onClick={handleUploadForm16} disabled={!selectedEmployee || !selectedFile || isUploading}>
+                {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Upload
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -435,8 +380,8 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-2xl font-bold">24</p>
-                <p className="text-sm text-muted-foreground">Total Forms</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">Total Documents</p>
               </div>
             </div>
           </CardContent>
@@ -444,10 +389,10 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-green-600" />
+              <Users className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-2xl font-bold">18</p>
-                <p className="text-sm text-muted-foreground">Issued</p>
+                <p className="text-2xl font-bold">{stats.employees}</p>
+                <p className="text-sm text-muted-foreground">Employees</p>
               </div>
             </div>
           </CardContent>
@@ -457,8 +402,8 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-yellow-600" />
               <div>
-                <p className="text-2xl font-bold">4</p>
-                <p className="text-sm text-muted-foreground">Generated</p>
+                <p className="text-2xl font-bold">{stats.years.length}</p>
+                <p className="text-sm text-muted-foreground">Financial Years</p>
               </div>
             </div>
           </CardContent>
@@ -466,10 +411,10 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-purple-600" />
+              <FileText className="h-5 w-5 text-purple-600" />
               <div>
-                <p className="text-2xl font-bold">2</p>
-                <p className="text-sm text-muted-foreground">Draft</p>
+                <p className="text-2xl font-bold">{filteredData.length}</p>
+                <p className="text-sm text-muted-foreground">Filtered Results</p>
               </div>
             </div>
           </CardContent>
@@ -484,24 +429,13 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by employee name, ID, or email..."
+                  placeholder="Search by employee name or file name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="generated">Generated</SelectItem>
-                <SelectItem value="issued">Issued</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={filterYear} onValueChange={setFilterYear}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by year" />
@@ -517,72 +451,72 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
         </CardContent>
       </Card>
 
-      {/* Form 16 Table */}
+      {/* Form 16 Documents Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Form 16 Records</CardTitle>
+          <CardTitle>Form 16 Documents</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Assessment Year</TableHead>
-                <TableHead>Gross Salary</TableHead>
-                <TableHead>Tax Deducted</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.map((form16) => (
-                <TableRow key={form16.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{form16.employee_name}</p>
-                      <p className="text-sm text-muted-foreground">{form16.employee_id}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{form16.assessment_year}</TableCell>
-                  <TableCell>{formatCurrency(form16.gross_salary)}</TableCell>
-                  <TableCell>{formatCurrency(form16.tds_deducted)}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(form16.status)}>
-                      {form16.status.charAt(0).toUpperCase() + form16.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      {form16.status === 'issued' && (
-                        <Button 
-                          variant="ghost" 
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No Form 16 documents found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>File Name</TableHead>
+                  <TableHead>Financial Year</TableHead>
+                  <TableHead>Quarter</TableHead>
+                  <TableHead>File Size</TableHead>
+                  <TableHead>Uploaded Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredData.map((doc) => (
+                  <TableRow key={doc.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{getEmployeeName(doc.employee_id)}</p>
+                        <p className="text-sm text-muted-foreground">{getEmployeeDetails(doc.employee_id)}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{doc.file_name}</TableCell>
+                    <TableCell>{doc.financial_year}</TableCell>
+                    <TableCell>{doc.quarter || '-'}</TableCell>
+                    <TableCell>{formatFileSize(doc.file_size)}</TableCell>
+                    <TableCell>{formatDate(doc.uploaded_at)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
                           size="sm"
-                          onClick={() => handleDownloadForm16(form16.id)}
+                          onClick={() => handleDownloadForm16(doc.id)}
+                          title="Download"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                      )}
-                      {form16.status === 'generated' && (
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
-                          onClick={() => handleIssueForm16(form16.id)}
+                          onClick={() => handleDeleteForm16(doc.id)}
+                          title="Delete"
                         >
-                          <Send className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

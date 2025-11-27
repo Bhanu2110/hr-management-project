@@ -2,36 +2,60 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { Form16Management } from "@/components/form16/Form16Management";
 import { Form16Download } from "@/components/form16/Form16Download";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Employee {
+  id: string;
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department: string;
+  position: string;
+}
 
 const Form16 = () => {
   const { isAdmin } = useAuth();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock employee data for admin view
-  const mockEmployees = [
-    {
-      id: "1",
-      employee_id: "EMP001",
-      first_name: "John",
-      last_name: "Doe",
-      email: "john.doe@company.com",
-      department: "Engineering",
-      position: "Software Developer",
-    },
-    {
-      id: "2",
-      employee_id: "EMP002",
-      first_name: "Jane",
-      last_name: "Smith",
-      email: "jane.smith@company.com",
-      department: "Marketing",
-      position: "Marketing Manager",
-    },
-  ];
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('employees')
+          .select('id, employee_id, first_name, last_name, email, department, position')
+          .order('first_name', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching employees:', error);
+        } else {
+          setEmployees(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAdmin) {
+      fetchEmployees();
+    }
+  }, [isAdmin]);
 
   if (isAdmin) {
     return (
       <AppLayout>
-        <Form16Management employees={mockEmployees} />
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <p>Loading employees...</p>
+          </div>
+        ) : (
+          <Form16Management employees={employees} />
+        )}
       </AppLayout>
     );
   }

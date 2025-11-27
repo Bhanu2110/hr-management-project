@@ -559,6 +559,42 @@ export type Database = {
         }
         Relationships: []
       }
+      holidays: {
+        Row: {
+          id: string;
+          name: string;
+          date: string;
+          day: string;
+          type: string;
+          location: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          created_by: string | null;
+        }
+        Insert: {
+          id?: string;
+          name: string;
+          date: string;
+          day: string;
+          type: string;
+          location?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          created_by?: string | null;
+        }
+        Update: {
+          id?: string;
+          name?: string;
+          date?: string;
+          day?: string;
+          type?: string;
+          location?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          created_by?: string | null;
+        }
+        Relationships: []
+      }
       salary_structures: {
         Row: {
           basic_salary: number

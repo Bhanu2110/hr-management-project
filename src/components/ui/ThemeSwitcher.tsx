@@ -15,27 +15,25 @@ export function ThemeSwitcher() {
     Black: '#000000',
     Red: '#EF4444',
     Pink: '#EC4899',
-    Grey: '#6B7280',
+
     Indigo: '#6366F1',
     Teal: '#14B8A6',
     Cyan: '#06B6D4',
-    Lime: '#84CC16',
-    Amber: '#F59E0B',
+
+
     Rose: '#F43F5E',
     Slate: '#64748B',
     "Deep Teal": '#008080',
-    "Earth Brown": '#8B4513',
-     // Placeholder green
+
+    // Placeholder green
     Practipago: '#2196F3',   // Placeholder blue
     YouEngage: '#FF9800',    // Placeholder orange
     KeyNest: '#BF3436',
-    
+    "Lime Green": '#8AA624',
     "Melyssa Griffin": '#FF6B6B',
-    "Lemon Tree Editorial": '#7CB342', // Placeholder green
-    "Katie Lemon": '#FFD700',      // Placeholder gold
-      // Placeholder purple
-    Scarlet: '#FF2400',            // Placeholder scarlet red
-    CitrusAd: '#FFA500',           // Placeholder orange
+
+
+
   };
 
   return (

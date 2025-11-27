@@ -76,9 +76,9 @@ const Employees = () => {
       employee.department.toLowerCase().includes(searchLower) ||
       employee.position.toLowerCase().includes(searchLower)
     );
-    
+
     const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -86,10 +86,10 @@ const Employees = () => {
     let comparison = 0;
     const aValue = a[sortField]?.toString() || '';
     const bValue = b[sortField]?.toString() || '';
-    
+
     if (aValue < bValue) comparison = -1;
     if (aValue > bValue) comparison = 1;
-    
+
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
@@ -132,7 +132,15 @@ const Employees = () => {
               {loading ? 'Loading...' : `Showing ${filteredEmployees.length} employees`}
             </p>
           </div>
-          <AddEmployeeDialog onEmployeeAdded={() => setRefreshKey(prev => prev + 1)} />
+          <AddEmployeeDialog
+            onEmployeeAdded={() => setRefreshKey(prev => prev + 1)}
+            trigger={
+              <Button style={{ backgroundColor: themeColor, borderColor: themeColor }} className="text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Employee
+              </Button>
+            }
+          />
         </div>
 
         {/* Search and Filters */}
@@ -141,8 +149,8 @@ const Employees = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search employees by name, email, or department..." 
+                <Input
+                  placeholder="Search employees by name, email, or department..."
                   className="pl-10 bg-background"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -182,7 +190,8 @@ const Employees = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead 
+                  <TableHead className="w-[60px]">S.No</TableHead>
+                  <TableHead
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('first_name')}
                   >
@@ -192,7 +201,7 @@ const Employees = () => {
                     </div>
                   </TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('department')}
                   >
@@ -201,7 +210,7 @@ const Employees = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('position')}
                   >
@@ -210,7 +219,7 @@ const Employees = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('hire_date')}
                   >
@@ -226,24 +235,27 @@ const Employees = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       Loading employees...
                     </TableCell>
                   </TableRow>
                 ) : paginatedEmployees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       No employees found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedEmployees.map((employee) => (
+                  paginatedEmployees.map((employee, index) => (
                     <TableRow key={employee.id}>
+                      <TableCell className="text-center text-muted-foreground">
+                        {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                      </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: themeColor }}>
-                          {employee.first_name[0]}{employee.last_name[0]}
-                        </div>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: themeColor }}>
+                            {employee.first_name[0]}{employee.last_name[0]}
+                          </div>
                           <div>
                             <div>{`${employee.first_name} ${employee.last_name}`}</div>
                             <div className="text-xs text-muted-foreground">{employee.email}</div>
@@ -273,8 +285,8 @@ const Employees = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <EditEmployeeDialog 
-                                employee={employee} 
+                              <EditEmployeeDialog
+                                employee={employee}
                                 onEmployeeUpdated={() => setRefreshKey(prev => prev + 1)}
                                 trigger={
                                   <div className="flex items-center w-full cursor-pointer">
@@ -285,8 +297,8 @@ const Employees = () => {
                               />
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <DeleteEmployeeDialog 
-                                employee={employee} 
+                              <DeleteEmployeeDialog
+                                employee={employee}
                                 onEmployeeDeleted={() => setRefreshKey(prev => prev + 1)}
                                 trigger={
                                   <div className="flex items-center w-full cursor-pointer text-destructive">
@@ -305,7 +317,7 @@ const Employees = () => {
               </TableBody>
             </Table>
           </div>
-          
+
           {/* Pagination */}
           {!loading && totalPages > 1 && (
             <CardFooter className="flex items-center justify-between px-6 py-4 border-t">

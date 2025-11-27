@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from 'lucide-react';
 import EmployeeSalarySlip from "@/components/salary/EmployeeSalarySlip";
-import AdminSalaryDashboard from "@/components/salary/AdminSalaryDashboard";
+import { SalaryManagement } from "@/components/salary/SalaryManagement";
 import { Card, CardContent } from "@/components/ui/card";
 
 const SalarySlips = () => {
@@ -25,8 +25,8 @@ const SalarySlips = () => {
   return (
     <AppLayout>
       <div className="container mx-auto py-8">
-        <Tabs 
-          value={activeTab} 
+        <Tabs
+          value={activeTab}
           onValueChange={setActiveTab}
           className="space-y-6"
         >
@@ -42,7 +42,7 @@ const SalarySlips = () => {
 
           <TabsContent value="my-slip" className="space-y-4">
             {employee ? (
-              <EmployeeSalarySlip 
+              <EmployeeSalarySlip
                 employeeData={{
                   id: employee.employee_id || employee.id || 'N/A',
                   name: `${employee.first_name} ${employee.last_name}`.trim(),
@@ -60,10 +60,10 @@ const SalarySlips = () => {
               </Card>
             )}
           </TabsContent>
-          
+
           {isAdmin && (
             <TabsContent value="manage">
-              <AdminSalaryDashboard />
+              <SalaryManagement />
             </TabsContent>
           )}
         </Tabs>

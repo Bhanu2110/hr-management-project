@@ -66,11 +66,22 @@ export function Form16Download() {
   const handleDownload = async (document: Form16Document) => {
     try {
       setDownloadingId(document.id);
-      
+
+      // Extract the file path from the public URL
+      const pathMatch = document.file_path.match(/form16\/.+/);
+      if (!pathMatch) {
+        toast({
+          title: "Download Failed",
+          description: "Invalid file path",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Get signed URL for download
       const { data, error } = await supabase.storage
         .from('documents')
-        .createSignedUrl(document.file_path, 60); // URL valid for 1 minute
+        .createSignedUrl(pathMatch[0], 60);
 
       if (error) {
         console.error('Error creating signed URL:', error);
@@ -82,66 +93,21 @@ export function Form16Download() {
         return;
       }
 
-      // Try direct download with proper headers
-      try {
-        const response = await fetch(data.signedUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/octet-stream',
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch file');
-        }
-        
-        const blob = await response.blob();
-        
-        // Use modern download API if available
-        if ('showSaveFilePicker' in window) {
-          // Modern File System Access API (Chrome 86+)
-          try {
-            const fileHandle = await (window as any).showSaveFilePicker({
-              suggestedName: document.file_name,
-              types: [{
-                description: 'PDF files',
-                accept: { 'application/pdf': ['.pdf'] },
-              }],
-            });
-            const writable = await fileHandle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-            return;
-          } catch (err) {
-            // Fall back to traditional method if user cancels or API fails
-          }
-        }
-        
-        // Traditional download method
-        const blobUrl = URL.createObjectURL(blob);
-        const link = window.document.createElement('a');
-        link.href = blobUrl;
-        link.download = document.file_name;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        
-        // Trigger download
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-        
-        // Clean up
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-        
-      } catch (fetchError) {
-        // Fallback: open in new tab with download headers
-        const link = window.document.createElement('a');
-        link.href = data.signedUrl;
-        link.download = document.file_name;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.click();
-      }
+      // Fetch the file and force download
+      const response = await fetch(data.signedUrl);
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.file_name;
+      window.document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Download Started",

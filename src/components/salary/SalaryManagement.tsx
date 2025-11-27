@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Table,
@@ -35,14 +35,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  DollarSign, 
-  Download, 
-  Send, 
-  Edit, 
+import {
+  Plus,
+  Search,
+  Filter,
+  DollarSign,
+  Download,
+  Send,
+  Edit,
   Eye,
   Calendar,
   Users,
@@ -119,7 +119,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
           .select('*')
           .eq('status', 'active')
           .order('first_name', { ascending: true });
-        
+
         if (error) throw error;
         setDbEmployees(data || []);
       } catch (error) {
@@ -142,13 +142,13 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         .from('salary_slips')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-     const mappedData: SalarySlip[] = (data || []).map((item: any) => ({
+      const mappedData: SalarySlip[] = (data || []).map((item: any) => ({
         ...item,
         medical_insurance: item.medical_insurance ?? 0,
       }));
-      
+
       setSalarySlips(mappedData);
     } catch (error) {
       console.error('Error fetching salary slips:', error);
@@ -314,24 +314,24 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   ];
 
   const filteredSalarySlips = salarySlips.filter((slip) => {
-    const matchesSearch = 
+    const matchesSearch =
       slip.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       slip.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       slip.department.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = filterStatus === "all" || slip.status === filterStatus;
     const matchesMonth = filterMonth === "all" || slip.month.toString() === filterMonth;
     const matchesYear = slip.year.toString() === filterYear;
-    
+
     return matchesSearch && matchesStatus && matchesMonth && matchesYear;
   });
 
   const filteredSalaryStructures = mockSalaryStructures.filter((structure) => {
-    const matchesSearch = 
+    const matchesSearch =
       structure.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       structure.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       structure.department.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesSearch;
   });
 
@@ -362,7 +362,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       const overtime_amount = (formData.overtime_hours || 0) * (formData.overtime_rate || 0);
 
       // Calculate gross earnings
-      const gross_earnings = 
+      const gross_earnings =
         (formData.basic_salary || 0) +
         (formData.hra || 0) +
         (formData.transport_allowance || 0) +
@@ -373,7 +373,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         (formData.other_allowances || 0);
 
       // Calculate total deductions
-      const total_deductions = 
+      const total_deductions =
         (formData.pf_employee || 0) +
         (formData.esi_employee || 0) +
         (formData.professional_tax || 0) +
@@ -430,7 +430,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         net_salary,
         pf_employer: formData.pf_employee || 0, // Usually same as employee PF
         esi_employer: formData.esi_employee || 0, // Usually same as employee ESI
-        status: 'draft' as const,
+        status: 'processed' as const,
         generated_date: new Date().toISOString(),
         paid_date: formData.paid_date || null,
       };
@@ -516,7 +516,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       try {
         const html2pdf = (await import('html2pdf.js')).default;
         const element = document.getElementById('salary-slip-preview');
-        
+
         if (!element) {
           toast.error('Unable to find salary slip content');
           return;
@@ -552,7 +552,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       const overtime_amount = (formData.overtime_hours || 0) * (formData.overtime_rate || 0);
 
       // Calculate gross earnings
-      const gross_earnings = 
+      const gross_earnings =
         (formData.basic_salary || 0) +
         (formData.hra || 0) +
         (formData.transport_allowance || 0) +
@@ -563,7 +563,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         (formData.other_allowances || 0);
 
       // Calculate total deductions
-      const total_deductions = 
+      const total_deductions =
         (formData.pf_employee || 0) +
         (formData.esi_employee || 0) +
         (formData.professional_tax || 0) +
@@ -688,7 +688,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                   Create a new salary slip for an employee
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -708,8 +708,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="month">Month</Label>
-                    <Select 
-                      value={formData.month?.toString()} 
+                    <Select
+                      value={formData.month?.toString()}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, month: Number(value) }))}
                     >
                       <SelectTrigger>
@@ -987,13 +987,13 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                   Update salary slip for {editingSlip?.employee_name}
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit_month">Month</Label>
-                    <Select 
-                      value={formData.month?.toString()} 
+                    <Select
+                      value={formData.month?.toString()}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, month: Number(value) }))}
                     >
                       <SelectTrigger>
@@ -1235,12 +1235,12 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
               </div>
 
               <DialogFooter>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setIsEditDialogOpen(false);
                     setEditingSlip(null);
-                  }} 
+                  }}
                   disabled={isLoading}
                 >
                   Cancel
@@ -1438,17 +1438,17 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       <TableCell>
                         {slip.paid_date ? new Date(slip.paid_date).toLocaleDateString() : 'N/A'}
                       </TableCell>
-                       <TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleViewSalarySlip(slip)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
                               setEditingSlip(slip);
@@ -1481,8 +1481,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteSalarySlip(slip.id)}
                           >

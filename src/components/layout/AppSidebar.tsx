@@ -1,11 +1,11 @@
-import { 
-  Users, 
-  Clock, 
-  DollarSign, 
-  Calendar, 
-  BarChart3, 
-  FileText, 
-  FolderOpen, 
+import {
+  Users,
+  Clock,
+  DollarSign,
+  Calendar,
+  BarChart3,
+  FileText,
+  FolderOpen,
   Bell,
   Home,
   User,
@@ -39,8 +39,14 @@ const navigationItems = [
   { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
   { title: "Salary Slips", url: "/salary-slips", icon: FileSpreadsheet, roles: ['admin', 'employee'] },
-  { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] }, 
-  { title: "Holidays", url: "/holidays", icon: Briefcase, roles: ['admin', 'employee'] },
+  { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] },
+  {
+    title: "Holidays",
+    url: "/holidays",
+    adminUrl: "/admin/holidays", // Admin-specific URL
+    icon: Briefcase,
+    roles: ['admin', 'employee']
+  },
   { title: "Documents", url: "/documents", icon: FolderOpen, roles: ['admin', 'employee'] },
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ['admin', 'employee'] },
   { title: "Profile", url: "/profile", icon: User, roles: ['admin', 'employee'] },
@@ -54,22 +60,30 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const filteredNavItems = navigationItems.filter(item => 
+  const filteredNavItems = navigationItems.filter(item =>
     item.roles.includes(employee?.role || 'employee')
   );
 
-  const isActive = (path: string) => {
-    if (path === "/") return currentPath === "/";
-    return currentPath.startsWith(path);
+  // Helper function to get the correct URL based on role
+  const getUrlForRole = (item: any) => {
+    if (item.adminUrl && employee?.role === 'admin') {
+      return item.adminUrl;
+    }
+    return item.url;
   };
 
-  const getNavClassName = (path: string) => {
-    const active = isActive(path);
-    return `${
-      active 
-        ? "text-white font-medium shadow-sm" 
-        : "text-foreground hover:text-[var(--theme-color)]"
-    } transition-all duration-200`;
+  const isActive = (item: any) => {
+    const itemUrl = getUrlForRole(item);
+    if (itemUrl === "/") return currentPath === "/";
+    return currentPath.startsWith(itemUrl);
+  };
+
+  const getNavClassName = (item: any) => {
+    const active = isActive(item);
+    return `${active
+      ? "text-white font-medium shadow-sm"
+      : "text-foreground hover:text-[var(--theme-color)]"
+      } transition-all duration-200`;
   };
 
   return (
@@ -81,9 +95,8 @@ export function AppSidebar() {
           <img
             src={logo}
             alt="Company Logo"
-            className={`transition-all duration-200 object-contain ${
-              collapsed ? "w-12 h-12" : "w-36 h-14"
-            }`}
+            className={`transition-all duration-200 object-contain ${collapsed ? "w-12 h-12" : "w-36 h-14"
+              }`}
           />
         </div>
 
@@ -91,24 +104,27 @@ export function AppSidebar() {
           <SidebarGroupLabel className={collapsed ? "sr-only" : "text-muted-foreground text-xs font-medium mb-2"}>
             Main Navigation
           </SidebarGroupLabel>
-          
+
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild size="lg">
-                    <NavLink 
-                      to={item.url}
-                      end={item.url === "/"}
-                      className={getNavClassName(item.url)}
-                      style={isActive(item.url) ? { backgroundColor: themeColor } : {}}
-                    >
-                      <item.icon className={`h-5 w-5 ${collapsed ? "mx-auto" : "mr-3"}`} />
-                      {!collapsed && <span className="font-medium">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {filteredNavItems.map((item) => {
+                const itemUrl = getUrlForRole(item);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild size="lg">
+                      <NavLink
+                        to={itemUrl}
+                        end={itemUrl === "/"}
+                        className={getNavClassName(item)}
+                        style={isActive(item) ? { backgroundColor: themeColor } : {}}
+                      >
+                        <item.icon className={`h-5 w-5 ${collapsed ? "mx-auto" : "mr-3"}`} />
+                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

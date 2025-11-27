@@ -34,7 +34,7 @@ export const AdminAttendance = () => {
   const fetchAttendanceData = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       // Fetch today's attendance with employee names
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('attendance')
@@ -59,7 +59,7 @@ export const AdminAttendance = () => {
         const intervals = record.intervals as any[] || [];
         const firstInterval = intervals[0];
         const lastInterval = intervals[intervals.length - 1];
-        
+
         return {
           id: record.id,
           employee_name: `${record.employees.first_name} ${record.employees.last_name}`,
@@ -169,7 +169,7 @@ export const AdminAttendance = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="shadow-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -223,6 +223,7 @@ export const AdminAttendance = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
+                  <th className="text-center py-3 px-4 font-medium text-muted-foreground w-[60px]">S.No</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Employee</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Check In</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Check Out</th>
@@ -232,8 +233,9 @@ export const AdminAttendance = () => {
               </thead>
               <tbody>
                 {attendanceRecords.length > 0 ? (
-                  attendanceRecords.map((record) => (
+                  attendanceRecords.map((record, index) => (
                     <tr key={record.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                      <td className="py-3 px-4 text-center text-muted-foreground">{index + 1}</td>
                       <td className="py-3 px-4 font-medium">{record.employee_name}</td>
                       <td className="py-3 px-4 text-muted-foreground">{formatTime(record.check_in)}</td>
                       <td className="py-3 px-4 text-muted-foreground">{formatTime(record.check_out)}</td>
@@ -245,7 +247,7 @@ export const AdminAttendance = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
                       No attendance records found for today
                     </td>
                   </tr>

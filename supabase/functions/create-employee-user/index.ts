@@ -61,9 +61,8 @@ serve(async (req) => {
       { status: 200, headers: corsHeaders }
     );
   } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : "Unexpected error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: e?.message ?? "Unexpected error" }),
       { status: 400, headers: corsHeaders }
     );
   }
