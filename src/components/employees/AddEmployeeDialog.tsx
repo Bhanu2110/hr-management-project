@@ -39,7 +39,7 @@ export function AddEmployeeDialog({ onEmployeeAdded, trigger }: AddEmployeeDialo
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[90vw] max-w-[1400px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Employee</DialogTitle>
           <DialogDescription>
@@ -47,7 +47,7 @@ export function AddEmployeeDialog({ onEmployeeAdded, trigger }: AddEmployeeDialo
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <AddEmployeeForm 
+          <AddEmployeeForm
             onSuccess={handleSuccess}
             onCancel={() => setOpen(false)}
           />

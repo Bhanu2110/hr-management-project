@@ -14,7 +14,9 @@ import { Calendar, Clock, X, CheckCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useLeaveNotifications } from "@/hooks/useLeaveNotifications";
 import { useForm16Notifications } from "@/hooks/useForm16Notifications";
+import { useDocumentNotifications } from "@/hooks/useDocumentNotifications";
 import { useState, useMemo } from "react";
+
 
 export function RealTimeNotificationBell() {
   const [open, setOpen] = useState(false);
@@ -39,21 +41,36 @@ export function RealTimeNotificationBell() {
     dismissNotification: dismissForm16Notification
   } = useForm16Notifications();
 
+  // Get Document notifications (only for employees)
+  const {
+    notifications: documentNotifications,
+    unreadCount: documentUnreadCount,
+    markAsRead: markDocumentAsRead,
+    markAllAsRead: markAllDocumentAsRead,
+    dismissNotification: dismissDocumentNotification
+  } = useDocumentNotifications();
+
   // Combine notifications
   const allNotifications = useMemo(() => {
-    const combined = [...leaveNotifications, ...(isEmployee ? form16Notifications : [])];
+    const combined = [
+      ...leaveNotifications,
+      ...(isEmployee ? form16Notifications : []),
+      ...(isEmployee ? documentNotifications : [])
+    ];
     return combined.sort((a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [leaveNotifications, form16Notifications, isEmployee]);
+  }, [leaveNotifications, form16Notifications, documentNotifications, isEmployee]);
 
-  const totalUnreadCount = leaveUnreadCount + (isEmployee ? form16UnreadCount : 0);
+  const totalUnreadCount = leaveUnreadCount + (isEmployee ? form16UnreadCount : 0) + (isEmployee ? documentUnreadCount : 0);
 
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) {
       // Mark as read based on type
       if (notification.type === 'form16') {
         markForm16AsRead(notification.id);
+      } else if (notification.type === 'document') {
+        markDocumentAsRead(notification.id);
       } else {
         markLeaveAsRead(notification.id);
       }
@@ -64,6 +81,8 @@ export function RealTimeNotificationBell() {
       // Dismiss based on type
       if (notification.type === 'form16') {
         dismissForm16Notification(notification.id);
+      } else if (notification.type === 'document') {
+        dismissDocumentNotification(notification.id);
       } else {
         dismissLeaveNotification(notification.id);
       }
@@ -75,6 +94,7 @@ export function RealTimeNotificationBell() {
     markAllLeaveAsRead();
     if (isEmployee) {
       markAllForm16AsRead();
+      markAllDocumentAsRead();
     }
   };
 
@@ -84,6 +104,8 @@ export function RealTimeNotificationBell() {
         return <Calendar className="h-4 w-4 text-warning" />;
       case 'form16':
         return <FileText className="h-4 w-4 text-blue-600" />;
+      case 'document':
+        return <FileText className="h-4 w-4 text-green-600" />;
       default:
         return <Bell className="h-4 w-4 text-primary" />;
     }
@@ -95,6 +117,8 @@ export function RealTimeNotificationBell() {
         return 'bg-warning/10 border-warning/20';
       case 'form16':
         return 'bg-blue-50 border-blue-200';
+      case 'document':
+        return 'bg-green-50 border-green-200';
       default:
         return 'bg-primary/10 border-primary/20';
     }
@@ -158,7 +182,7 @@ export function RealTimeNotificationBell() {
                 <Bell className="h-12 w-12 text-muted-foreground/50 mb-2" />
                 <p className="text-sm text-muted-foreground">No notifications</p>
                 <p className="text-xs text-muted-foreground">
-                  You'll see notifications here for leave requests and Form 16 documents
+                  You'll see notifications here for leave requests, Form 16, and document uploads
                 </p>
               </div>
             ) : (

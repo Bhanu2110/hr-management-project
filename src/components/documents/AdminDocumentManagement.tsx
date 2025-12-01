@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,8 @@ import {
     FileCheck,
     FilePlus,
     LayoutGrid,
-    List
+    List,
+    Loader2
 } from "lucide-react";
 import {
     Document,
@@ -85,6 +86,17 @@ import {
     formatFileSize,
     getFileIcon
 } from "@/types/documents";
+import {
+    fetchAllDocuments,
+    uploadDocument,
+    updateDocument,
+    deleteDocument,
+    downloadDocument,
+    approveDocument,
+    rejectDocument,
+    getDocumentStatistics
+} from "@/api/documents";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminDocumentManagementProps {
     employees?: Array<{
@@ -98,9 +110,46 @@ interface AdminDocumentManagementProps {
     }>;
 }
 
+
 type ViewMode = 'grid' | 'list';
 
 export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagementProps) {
+    const [hasError, setHasError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    // Error boundary
+    useEffect(() => {
+        const handleError = (event: ErrorEvent) => {
+            console.error('Component error:', event.error);
+            setHasError(true);
+            setErrorMessage(event.error?.message || 'Unknown error');
+        };
+
+        window.addEventListener('error', handleError);
+        return () => window.removeEventListener('error', handleError);
+    }, []);
+
+    if (hasError) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Card className="max-w-md">
+                    <CardContent className="p-6">
+                        <div className="text-center space-y-4">
+                            <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+                            <h2 className="text-xl font-semibold">Error Loading Documents</h2>
+                            <p className="text-muted-foreground">{errorMessage}</p>
+                            <Button onClick={() => window.location.reload()}>
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Reload Page
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    const { toast } = useToast();
     const [activeTab, setActiveTab] = useState("all-documents");
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [searchTerm, setSearchTerm] = useState("");
@@ -111,6 +160,17 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isUploading, setIsUploading] = useState(false);
+    const [documents, setDocuments] = useState<Document[]>([]);
+    const [stats, setStats] = useState({
+        total: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        confidential: 0,
+        byCategory: {} as Record<string, number>,
+    });
     const [uploadData, setUploadData] = useState<Partial<DocumentUploadRequest>>({
         title: "",
         description: "",
@@ -124,245 +184,40 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
         is_confidential: false,
     });
 
-    // Mock document data for admin view
-    const mockDocuments: Document[] = [
-        {
-            id: "1",
-            title: "Appointment Letter - John Doe",
-            description: "Official appointment letter for John Doe",
-            file_name: "appointment_letter_john_doe.pdf",
-            file_size: 245760,
-            file_type: "application/pdf",
-            file_url: "/documents/appointment_letter_john_doe.pdf",
-            category: "employment",
-            subcategory: "Appointment Letter",
-            tags: ["appointment", "employment", "john_doe"],
-            visibility: "private",
-            accessible_roles: ["employee"],
-            accessible_departments: [],
-            accessible_employees: ["EMP001"],
-            employee_id: "EMP001",
-            employee_name: "John Doe",
-            version: 1,
-            is_active: true,
-            is_confidential: false,
-            approval_status: "approved",
-            approved_by: "HR Manager",
-            approved_date: "2024-01-15T10:00:00Z",
-            uploaded_by: "hr_admin",
-            uploaded_by_name: "HR Admin",
-            uploaded_date: "2024-01-10T10:00:00Z",
-            access_count: 5,
-            created_at: "2024-01-10T10:00:00Z",
-            updated_at: "2024-01-15T10:00:00Z",
-        },
-        {
-            id: "2",
-            title: "Offer Letter - Jane Smith",
-            description: "Job offer letter for Jane Smith",
-            file_name: "offer_letter_jane_smith.pdf",
-            file_size: 198450,
-            file_type: "application/pdf",
-            file_url: "/documents/offer_letter_jane_smith.pdf",
-            category: "employment",
-            subcategory: "Offer Letter",
-            tags: ["offer", "employment", "jane_smith"],
-            visibility: "private",
-            accessible_roles: ["employee"],
-            accessible_departments: [],
-            accessible_employees: ["EMP002"],
-            employee_id: "EMP002",
-            employee_name: "Jane Smith",
-            version: 1,
-            is_active: true,
-            is_confidential: false,
-            approval_status: "approved",
-            approved_by: "HR Manager",
-            approved_date: "2024-02-20T10:00:00Z",
-            uploaded_by: "hr_admin",
-            uploaded_by_name: "HR Admin",
-            uploaded_date: "2024-02-15T10:00:00Z",
-            access_count: 3,
-            created_at: "2024-02-15T10:00:00Z",
-            updated_at: "2024-02-20T10:00:00Z",
-        },
-        {
-            id: "3",
-            title: "Salary Slip - November 2024 - John Doe",
-            description: "Monthly salary slip for November 2024",
-            file_name: "salary_slip_nov_2024_john.pdf",
-            file_size: 156780,
-            file_type: "application/pdf",
-            file_url: "/documents/salary_slip_nov_2024_john.pdf",
-            category: "payroll",
-            subcategory: "Salary Slips",
-            tags: ["salary", "payroll", "november", "2024"],
-            visibility: "private",
-            accessible_roles: ["employee"],
-            accessible_departments: [],
-            accessible_employees: ["EMP001"],
-            employee_id: "EMP001",
-            employee_name: "John Doe",
-            version: 1,
-            is_active: true,
-            is_confidential: true,
-            approval_status: "not_required",
-            uploaded_by: "payroll_admin",
-            uploaded_by_name: "Payroll Admin",
-            uploaded_date: "2024-11-30T10:00:00Z",
-            access_count: 2,
-            created_at: "2024-11-30T10:00:00Z",
-            updated_at: "2024-11-30T10:00:00Z",
-        },
-        {
-            id: "4",
-            title: "Form 16 - FY 2023-24 - Mike Johnson",
-            description: "Tax certificate for financial year 2023-24",
-            file_name: "form16_fy2023_24_mike.pdf",
-            file_size: 234560,
-            file_type: "application/pdf",
-            file_url: "/documents/form16_fy2023_24_mike.pdf",
-            category: "payroll",
-            subcategory: "Form 16",
-            tags: ["tax", "form16", "2023-24"],
-            visibility: "private",
-            accessible_roles: ["employee"],
-            accessible_departments: [],
-            accessible_employees: ["EMP003"],
-            employee_id: "EMP003",
-            employee_name: "Mike Johnson",
-            version: 1,
-            is_active: true,
-            is_confidential: true,
-            approval_status: "approved",
-            approved_by: "Finance Manager",
-            approved_date: "2024-06-15T10:00:00Z",
-            uploaded_by: "finance_admin",
-            uploaded_by_name: "Finance Admin",
-            uploaded_date: "2024-06-10T10:00:00Z",
-            access_count: 4,
-            created_at: "2024-06-10T10:00:00Z",
-            updated_at: "2024-06-15T10:00:00Z",
-        },
-        {
-            id: "5",
-            title: "Aadhaar Card - Sarah Wilson",
-            description: "Aadhaar card copy for verification",
-            file_name: "aadhaar_sarah_wilson.pdf",
-            file_size: 89450,
-            file_type: "application/pdf",
-            file_url: "/documents/aadhaar_sarah_wilson.pdf",
-            category: "personal",
-            subcategory: "ID Proof",
-            tags: ["aadhaar", "id_proof", "kyc"],
-            visibility: "private",
-            accessible_roles: ["admin"],
-            accessible_departments: [],
-            accessible_employees: ["EMP004"],
-            employee_id: "EMP004",
-            employee_name: "Sarah Wilson",
-            version: 1,
-            is_active: true,
-            is_confidential: true,
-            approval_status: "pending",
-            uploaded_by: "EMP004",
-            uploaded_by_name: "Sarah Wilson",
-            uploaded_date: "2024-11-20T10:00:00Z",
-            access_count: 1,
-            created_at: "2024-11-20T10:00:00Z",
-            updated_at: "2024-11-20T10:00:00Z",
-        },
-        {
-            id: "6",
-            title: "PAN Card - David Brown",
-            description: "PAN card for tax purposes",
-            file_name: "pan_david_brown.pdf",
-            file_size: 67890,
-            file_type: "application/pdf",
-            file_url: "/documents/pan_david_brown.pdf",
-            category: "personal",
-            subcategory: "ID Proof",
-            tags: ["pan", "id_proof", "tax"],
-            visibility: "private",
-            accessible_roles: ["admin"],
-            accessible_departments: [],
-            accessible_employees: ["EMP005"],
-            employee_id: "EMP005",
-            employee_name: "David Brown",
-            version: 1,
-            is_active: true,
-            is_confidential: true,
-            approval_status: "approved",
-            approved_by: "HR Manager",
-            approved_date: "2024-03-10T10:00:00Z",
-            uploaded_by: "EMP005",
-            uploaded_by_name: "David Brown",
-            uploaded_date: "2024-03-05T10:00:00Z",
-            access_count: 2,
-            created_at: "2024-03-05T10:00:00Z",
-            updated_at: "2024-03-10T10:00:00Z",
-        },
-        {
-            id: "7",
-            title: "Company Handbook 2024",
-            description: "Employee handbook with policies and procedures",
-            file_name: "company_handbook_2024.pdf",
-            file_size: 2345678,
-            file_type: "application/pdf",
-            file_url: "/documents/company_handbook_2024.pdf",
-            category: "policies",
-            subcategory: "Employee Handbook",
-            tags: ["handbook", "policies", "2024"],
-            visibility: "public",
-            accessible_roles: ["employee", "admin"],
-            accessible_departments: [],
-            accessible_employees: [],
-            version: 2,
-            is_active: true,
-            is_confidential: false,
-            approval_status: "approved",
-            approved_by: "CEO",
-            approved_date: "2024-01-05T10:00:00Z",
-            uploaded_by: "hr_admin",
-            uploaded_by_name: "HR Admin",
-            uploaded_date: "2024-01-01T10:00:00Z",
-            access_count: 45,
-            created_at: "2024-01-01T10:00:00Z",
-            updated_at: "2024-01-05T10:00:00Z",
-        },
-        {
-            id: "8",
-            title: "NDA Agreement - John Doe",
-            description: "Non-disclosure agreement",
-            file_name: "nda_john_doe.pdf",
-            file_size: 178900,
-            file_type: "application/pdf",
-            file_url: "/documents/nda_john_doe.pdf",
-            category: "employment",
-            subcategory: "NDA / Agreements",
-            tags: ["nda", "agreement", "confidential"],
-            visibility: "private",
-            accessible_roles: ["admin"],
-            accessible_departments: [],
-            accessible_employees: ["EMP001"],
-            employee_id: "EMP001",
-            employee_name: "John Doe",
-            version: 1,
-            is_active: true,
-            is_confidential: true,
-            approval_status: "approved",
-            approved_by: "Legal Team",
-            approved_date: "2024-01-12T10:00:00Z",
-            uploaded_by: "hr_admin",
-            uploaded_by_name: "HR Admin",
-            uploaded_date: "2024-01-10T10:00:00Z",
-            access_count: 3,
-            created_at: "2024-01-10T10:00:00Z",
-            updated_at: "2024-01-12T10:00:00Z",
-        },
-    ];
+    // Fetch documents on mount
+    useEffect(() => {
+        loadDocuments();
+        loadStatistics();
+    }, []);
 
-    const filteredDocuments = mockDocuments.filter((doc) => {
+    const loadDocuments = async () => {
+        try {
+            setIsLoading(true);
+            const data = await fetchAllDocuments();
+            setDocuments(data);
+        } catch (error: any) {
+            console.error('Error loading documents:', error);
+            setDocuments([]); // Set empty array on error
+            toast({
+                title: "Error",
+                description: error?.message || "Failed to load documents",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const loadStatistics = async () => {
+        try {
+            const statistics = await getDocumentStatistics();
+            setStats(statistics);
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+        }
+    };
+
+    const filteredDocuments = documents.filter((doc) => {
         const matchesSearch =
             doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -396,10 +251,41 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
         });
     };
 
-    const handleUpload = () => {
-        console.log("Uploading document with data:", uploadData);
-        setIsUploadDialogOpen(false);
-        resetUploadData();
+    const handleUpload = async () => {
+        if (!uploadData.title || !uploadData.file) {
+            toast({
+                title: "Error",
+                description: "Please fill in all required fields",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+            await uploadDocument(uploadData as DocumentUploadRequest);
+
+            toast({
+                title: "Success",
+                description: "Document uploaded successfully",
+            });
+
+            setIsUploadDialogOpen(false);
+            resetUploadData();
+
+            // Reload data
+            await loadDocuments();
+            await loadStatistics();
+        } catch (error) {
+            console.error('Error uploading document:', error);
+            toast({
+                title: "Error",
+                description: "Failed to upload document",
+                variant: "destructive",
+            });
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const resetUploadData = () => {
@@ -417,43 +303,160 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
         });
     };
 
-    const handleApprove = (id: string) => {
-        console.log("Approving document:", id);
+    const handleApprove = async (id: string) => {
+        try {
+            await approveDocument(id, "Admin");
+            toast({
+                title: "Success",
+                description: "Document approved successfully",
+            });
+            await loadDocuments();
+            await loadStatistics();
+        } catch (error) {
+            console.error('Error approving document:', error);
+            toast({
+                title: "Error",
+                description: "Failed to approve document",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleReject = (id: string) => {
-        console.log("Rejecting document:", id);
+    const handleReject = async (id: string) => {
+        try {
+            await rejectDocument(id, "Admin");
+            toast({
+                title: "Success",
+                description: "Document rejected successfully",
+            });
+            await loadDocuments();
+            await loadStatistics();
+        } catch (error) {
+            console.error('Error rejecting document:', error);
+            toast({
+                title: "Error",
+                description: "Failed to reject document",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleDelete = (id: string) => {
-        console.log("Deleting document:", id);
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this document?")) {
+            return;
+        }
+
+        try {
+            await deleteDocument(id);
+            toast({
+                title: "Success",
+                description: "Document deleted successfully",
+            });
+            await loadDocuments();
+            await loadStatistics();
+        } catch (error) {
+            console.error('Error deleting document:', error);
+            toast({
+                title: "Error",
+                description: "Failed to delete document",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleDownload = (document: Document) => {
-        console.log("Downloading document:", document.file_name);
+    const handleDownload = async (document: Document) => {
+        try {
+            await downloadDocument(document.id);
+        } catch (error) {
+            console.error('Error downloading document:', error);
+            toast({
+                title: "Error",
+                description: "Failed to download document",
+                variant: "destructive",
+            });
+        }
     };
 
     const handleEdit = (document: Document) => {
         setSelectedDocument(document);
+        setUploadData({
+            title: document.title,
+            description: document.description || "",
+            category: document.category,
+            subcategory: document.subcategory || "",
+            tags: document.tags || [],
+            visibility: document.visibility,
+            accessible_roles: document.accessible_roles || [],
+            accessible_departments: document.accessible_departments || [],
+            accessible_employees: document.accessible_employees || [],
+            employee_id: document.employee_id || undefined,
+            is_confidential: document.is_confidential,
+        });
         setIsEditDialogOpen(true);
     };
 
-    const handleView = (document: Document) => {
-        console.log("Viewing document:", document);
+    const handleUpdate = async () => {
+        if (!selectedDocument || !uploadData.title) {
+            toast({
+                title: "Error",
+                description: "Please fill in all required fields",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+            await updateDocument(selectedDocument.id, uploadData as DocumentUploadRequest);
+
+            toast({
+                title: "Success",
+                description: "Document updated successfully",
+            });
+
+            setIsEditDialogOpen(false);
+            setSelectedDocument(null);
+            resetUploadData();
+
+            // Reload data
+            await loadDocuments();
+            await loadStatistics();
+        } catch (error) {
+            console.error('Error updating document:', error);
+            toast({
+                title: "Error",
+                description: "Failed to update document",
+                variant: "destructive",
+            });
+        } finally {
+            setIsUploading(false);
+        }
     };
 
-    // Calculate statistics
-    const stats = {
-        total: mockDocuments.length,
-        pending: mockDocuments.filter(d => d.approval_status === 'pending').length,
-        approved: mockDocuments.filter(d => d.approval_status === 'approved').length,
-        rejected: mockDocuments.filter(d => d.approval_status === 'rejected').length,
-        confidential: mockDocuments.filter(d => d.is_confidential).length,
-        byCategory: Object.keys(DOCUMENT_CATEGORIES).reduce((acc, cat) => {
-            acc[cat] = mockDocuments.filter(d => d.category === cat).length;
-            return acc;
-        }, {} as Record<string, number>),
+    const handleView = (document: Document) => {
+        // Open document in new tab
+        if (document.file_url) {
+            window.open(document.file_url, '_blank');
+        } else {
+            toast({
+                title: "Error",
+                description: "Document URL not found",
+                variant: "destructive",
+            });
+        }
     };
+
+    // Early return for loading state
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="flex items-center gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span>Loading documents...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -567,7 +570,11 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                                 <Label htmlFor="employee-select">Assign to Employee (Optional)</Label>
                                 <Select
                                     value={uploadData.employee_id || undefined}
-                                    onValueChange={(value) => setUploadData(prev => ({ ...prev, employee_id: value || undefined }))}
+                                    onValueChange={(value) => setUploadData(prev => ({
+                                        ...prev,
+                                        employee_id: value || undefined,
+                                        visibility: value ? 'private' : prev.visibility
+                                    }))}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select employee" />
@@ -618,14 +625,189 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                             <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpload} disabled={!uploadData.title || !uploadData.file}>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Upload Document
+                            <Button onClick={handleUpload} disabled={!uploadData.title || !uploadData.file || isUploading}>
+                                {isUploading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Upload Document
+                                    </>
+                                )}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
+
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Document</DialogTitle>
+                        <DialogDescription>
+                            Update document details and permissions
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-title">Document Title *</Label>
+                                <Input
+                                    id="edit-title"
+                                    value={uploadData.title}
+                                    onChange={(e) => setUploadData(prev => ({ ...prev, title: e.target.value }))}
+                                    placeholder="Enter document title"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-category">Category *</Label>
+                                <Select
+                                    value={uploadData.category}
+                                    onValueChange={(value) => setUploadData(prev => ({ ...prev, category: value as DocumentCategory }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(DOCUMENT_CATEGORIES).map(([key, category]) => (
+                                            <SelectItem key={key} value={key}>
+                                                {category.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-description">Description</Label>
+                            <Textarea
+                                id="edit-description"
+                                value={uploadData.description}
+                                onChange={(e) => setUploadData(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Enter document description"
+                                rows={2}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-subcategory">Subcategory</Label>
+                                <Select
+                                    value={uploadData.subcategory || undefined}
+                                    onValueChange={(value) => setUploadData(prev => ({ ...prev, subcategory: value }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select subcategory" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {uploadData.category && DOCUMENT_CATEGORIES[uploadData.category as DocumentCategory]?.subcategories.map((sub) => (
+                                            <SelectItem key={sub} value={sub}>
+                                                {sub}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-visibility">Visibility *</Label>
+                                <Select
+                                    value={uploadData.visibility}
+                                    onValueChange={(value) => setUploadData(prev => ({ ...prev, visibility: value as any }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {VISIBILITY_OPTIONS.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-employee-select">Assign to Employee (Optional)</Label>
+                            <Select
+                                value={uploadData.employee_id || undefined}
+                                onValueChange={(value) => setUploadData(prev => ({
+                                    ...prev,
+                                    employee_id: value || undefined,
+                                    visibility: value ? 'private' : prev.visibility
+                                }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select employee" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {employees.map((employee) => (
+                                        <SelectItem key={employee.id} value={employee.employee_id}>
+                                            {employee.first_name} {employee.last_name} ({employee.employee_id})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="edit-confidential"
+                                checked={uploadData.is_confidential}
+                                onCheckedChange={(checked) =>
+                                    setUploadData(prev => ({ ...prev, is_confidential: !!checked }))
+                                }
+                            />
+                            <Label htmlFor="edit-confidential" className="text-sm font-medium">
+                                Mark as confidential
+                            </Label>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-file">Replace File (Optional)</Label>
+                            <Input
+                                id="edit-file"
+                                type="file"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setUploadData(prev => ({ ...prev, file }));
+                                    }
+                                }}
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Upload a new file to replace the existing one. Supported formats: PDF, Word, Excel, Images, etc.
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleUpdate} disabled={!uploadData.title || isUploading}>
+                            {isUploading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Updating...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Update Document
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1029,7 +1211,7 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {mockDocuments.filter(d => d.approval_status === 'pending').map((document) => {
+                                {documents.filter(d => d.approval_status === 'pending').map((document) => {
                                     const IconComponent = getIconComponent(document.file_type);
                                     return (
                                         <Card key={document.id} className="border-l-4 border-l-yellow-500">
@@ -1093,7 +1275,7 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                                         </Card>
                                     );
                                 })}
-                                {mockDocuments.filter(d => d.approval_status === 'pending').length === 0 && (
+                                {documents.filter(d => d.approval_status === 'pending').length === 0 && (
                                     <div className="text-center py-12">
                                         <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
                                         <h3 className="text-lg font-semibold">All Caught Up!</h3>
@@ -1144,7 +1326,7 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                         <CardContent>
                             <div className="space-y-4">
                                 {employees.map((employee) => {
-                                    const employeeDocs = mockDocuments.filter(d => d.employee_id === employee.employee_id);
+                                    const employeeDocs = documents.filter(d => d.employee_id === employee.employee_id);
                                     return (
                                         <Card key={employee.id} className="border-l-4 border-l-blue-500">
                                             <CardContent className="p-4">

@@ -89,24 +89,24 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     year: new Date().getFullYear(),
     working_days: 22,
     present_days: 22,
-    basic_salary: 0,
-    hra: 0,
-    transport_allowance: 0,
-    medical_allowance: 0,
-    special_allowance: 0,
-    performance_bonus: 0,
-    overtime_hours: 0,
-    overtime_rate: 0,
-    other_allowances: 0,
-    pf_employee: 0,
-    esi_employee: 0,
-    professional_tax: 0,
-    income_tax: 0,
-    medical_insurance: 0,
-    loan_deduction: 0,
-    advance_deduction: 0,
-    late_deduction: 0,
-    other_deductions: 0,
+    basic_salary: undefined,
+    hra: undefined,
+    transport_allowance: undefined,
+    medical_allowance: undefined,
+    special_allowance: undefined,
+    performance_bonus: undefined,
+    overtime_hours: undefined,
+    overtime_rate: undefined,
+    other_allowances: undefined,
+    pf_employee: undefined,
+    esi_employee: undefined,
+    professional_tax: undefined,
+    income_tax: undefined,
+    medical_insurance: undefined,
+    loan_deduction: undefined,
+    advance_deduction: undefined,
+    late_deduction: undefined,
+    other_deductions: undefined,
     paid_date: undefined,
   });
 
@@ -451,24 +451,24 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         year: new Date().getFullYear(),
         working_days: 22,
         present_days: 22,
-        basic_salary: 0,
-        hra: 0,
-        transport_allowance: 0,
-        medical_allowance: 0,
-        special_allowance: 0,
-        performance_bonus: 0,
-        overtime_hours: 0,
-        overtime_rate: 0,
-        other_allowances: 0,
-        pf_employee: 0,
-        esi_employee: 0,
-        professional_tax: 0,
-        income_tax: 0,
-        medical_insurance: 0,
-        loan_deduction: 0,
-        advance_deduction: 0,
-        late_deduction: 0,
-        other_deductions: 0,
+        basic_salary: undefined,
+        hra: undefined,
+        transport_allowance: undefined,
+        medical_allowance: undefined,
+        special_allowance: undefined,
+        performance_bonus: undefined,
+        overtime_hours: undefined,
+        overtime_rate: undefined,
+        other_allowances: undefined,
+        pf_employee: undefined,
+        esi_employee: undefined,
+        professional_tax: undefined,
+        income_tax: undefined,
+        medical_insurance: undefined,
+        loan_deduction: undefined,
+        advance_deduction: undefined,
+        late_deduction: undefined,
+        other_deductions: undefined,
         paid_date: undefined,
       });
     } catch (error: any) {
@@ -632,24 +632,24 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         year: new Date().getFullYear(),
         working_days: 22,
         present_days: 22,
-        basic_salary: 0,
-        hra: 0,
-        transport_allowance: 0,
-        medical_allowance: 0,
-        special_allowance: 0,
-        performance_bonus: 0,
-        overtime_hours: 0,
-        overtime_rate: 0,
-        other_allowances: 0,
-        pf_employee: 0,
-        esi_employee: 0,
-        professional_tax: 0,
-        income_tax: 0,
-        medical_insurance: 0,
-        loan_deduction: 0,
-        advance_deduction: 0,
-        late_deduction: 0,
-        other_deductions: 0,
+        basic_salary: undefined,
+        hra: undefined,
+        transport_allowance: undefined,
+        medical_allowance: undefined,
+        special_allowance: undefined,
+        performance_bonus: undefined,
+        overtime_hours: undefined,
+        overtime_rate: undefined,
+        other_allowances: undefined,
+        pf_employee: undefined,
+        esi_employee: undefined,
+        professional_tax: undefined,
+        income_tax: undefined,
+        medical_insurance: undefined,
+        loan_deduction: undefined,
+        advance_deduction: undefined,
+        late_deduction: undefined,
+        other_deductions: undefined,
         paid_date: undefined,
       });
     } catch (error: any) {
@@ -762,8 +762,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="basic_salary"
                       type="number"
-                      value={formData.basic_salary || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: Number(e.target.value) }))}
+                      value={formData.basic_salary ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -771,8 +771,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="hra"
                       type="number"
-                      value={formData.hra || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, hra: Number(e.target.value) }))}
+                      value={formData.hra ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hra: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -783,8 +783,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="transport_allowance"
                       type="number"
-                      value={formData.transport_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: Number(e.target.value) }))}
+                      value={formData.transport_allowance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -792,8 +792,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="medical_allowance"
                       type="number"
-                      value={formData.medical_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: Number(e.target.value) }))}
+                      value={formData.medical_allowance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -804,8 +804,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="special_allowance"
                       type="number"
-                      value={formData.special_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: Number(e.target.value) }))}
+                      value={formData.special_allowance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -813,8 +813,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="performance_bonus"
                       type="number"
-                      value={formData.performance_bonus || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, performance_bonus: Number(e.target.value) }))}
+                      value={formData.performance_bonus ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, performance_bonus: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -825,8 +825,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="overtime_hours"
                       type="number"
-                      value={formData.overtime_hours || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: Number(e.target.value) }))}
+                      value={formData.overtime_hours ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -834,8 +834,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="overtime_rate"
                       type="number"
-                      value={formData.overtime_rate || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: Number(e.target.value) }))}
+                      value={formData.overtime_rate ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -846,8 +846,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="other_allowances"
                       type="number"
-                      value={formData.other_allowances || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
+                      value={formData.other_allowances ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -861,8 +861,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="pf_employee"
                       type="number"
-                      value={formData.pf_employee || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: Number(e.target.value) }))}
+                      value={formData.pf_employee ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -870,8 +870,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="professional_tax"
                       type="number"
-                      value={formData.professional_tax || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: Number(e.target.value) }))}
+                      value={formData.professional_tax ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -882,8 +882,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="esi_employee"
                       type="number"
-                      value={formData.esi_employee || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: Number(e.target.value) }))}
+                      value={formData.esi_employee ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -891,8 +891,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="medical_insurance"
                       type="number"
-                      value={formData.medical_insurance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: Number(e.target.value) }))}
+                      value={formData.medical_insurance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -903,8 +903,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="income_tax"
                       type="number"
-                      value={formData.income_tax || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: Number(e.target.value) }))}
+                      value={formData.income_tax ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -912,8 +912,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="loan_deduction"
                       type="number"
-                      value={formData.loan_deduction || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: Number(e.target.value) }))}
+                      value={formData.loan_deduction ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -924,8 +924,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="advance_deduction"
                       type="number"
-                      value={formData.advance_deduction || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: Number(e.target.value) }))}
+                      value={formData.advance_deduction ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -933,8 +933,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="late_deduction"
                       type="number"
-                      value={formData.late_deduction || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: Number(e.target.value) }))}
+                      value={formData.late_deduction ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -945,8 +945,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="other_deductions"
                       type="number"
-                      value={formData.other_deductions || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
+                      value={formData.other_deductions ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1048,8 +1048,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_basic_salary"
                       type="number"
-                      value={formData.basic_salary || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: Number(e.target.value) }))}
+                      value={formData.basic_salary ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, basic_salary: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1057,8 +1057,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_hra"
                       type="number"
-                      value={formData.hra || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, hra: Number(e.target.value) }))}
+                      value={formData.hra ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hra: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1069,8 +1069,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_transport_allowance"
                       type="number"
-                      value={formData.transport_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: Number(e.target.value) }))}
+                      value={formData.transport_allowance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transport_allowance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1078,8 +1078,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_medical_allowance"
                       type="number"
-                      value={formData.medical_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: Number(e.target.value) }))}
+                      value={formData.medical_allowance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_allowance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1090,8 +1090,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_special_allowance"
                       type="number"
-                      value={formData.special_allowance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: Number(e.target.value) }))}
+                      value={formData.special_allowance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, special_allowance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1099,8 +1099,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_performance_bonus"
                       type="number"
-                      value={formData.performance_bonus || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, performance_bonus: Number(e.target.value) }))}
+                      value={formData.performance_bonus ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, performance_bonus: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1111,8 +1111,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_overtime_hours"
                       type="number"
-                      value={formData.overtime_hours || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: Number(e.target.value) }))}
+                      value={formData.overtime_hours ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_hours: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1120,8 +1120,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_overtime_rate"
                       type="number"
-                      value={formData.overtime_rate || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: Number(e.target.value) }))}
+                      value={formData.overtime_rate ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overtime_rate: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1129,8 +1129,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_other_allowances"
                       type="number"
-                      value={formData.other_allowances || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: Number(e.target.value) }))}
+                      value={formData.other_allowances ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_allowances: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1143,8 +1143,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_pf_employee"
                       type="number"
-                      value={formData.pf_employee || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: Number(e.target.value) }))}
+                      value={formData.pf_employee ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pf_employee: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1152,8 +1152,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_professional_tax"
                       type="number"
-                      value={formData.professional_tax || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: Number(e.target.value) }))}
+                      value={formData.professional_tax ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, professional_tax: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1164,8 +1164,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_esi_employee"
                       type="number"
-                      value={formData.esi_employee || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: Number(e.target.value) }))}
+                      value={formData.esi_employee ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, esi_employee: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1173,8 +1173,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_medical_insurance"
                       type="number"
-                      value={formData.medical_insurance || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: Number(e.target.value) }))}
+                      value={formData.medical_insurance ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, medical_insurance: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1185,8 +1185,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_income_tax"
                       type="number"
-                      value={formData.income_tax || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: Number(e.target.value) }))}
+                      value={formData.income_tax ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, income_tax: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1194,8 +1194,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_loan_deduction"
                       type="number"
-                      value={formData.loan_deduction || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: Number(e.target.value) }))}
+                      value={formData.loan_deduction ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, loan_deduction: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1206,8 +1206,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_advance_deduction"
                       type="number"
-                      value={formData.advance_deduction || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: Number(e.target.value) }))}
+                      value={formData.advance_deduction ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, advance_deduction: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1215,8 +1215,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_late_deduction"
                       type="number"
-                      value={formData.late_deduction || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: Number(e.target.value) }))}
+                      value={formData.late_deduction ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, late_deduction: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1227,8 +1227,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                     <Input
                       id="edit_other_deductions"
                       type="number"
-                      value={formData.other_deductions || 0}
-                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: Number(e.target.value) }))}
+                      value={formData.other_deductions ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, other_deductions: e.target.value === '' ? undefined : Number(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -1376,6 +1376,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[60px]">S.No</TableHead>
                     <TableHead>Employee</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Basic Salary</TableHead>
@@ -1389,8 +1390,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSalarySlips.map((slip) => (
+                  {filteredSalarySlips.map((slip, index) => (
                     <TableRow key={slip.id}>
+                      <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{slip.employee_name}</p>

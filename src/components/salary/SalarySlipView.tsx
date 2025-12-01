@@ -1,8 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Download, FileText, Calendar, User, Building2, CreditCard, Clock } from "lucide-react";
+import { Download } from "lucide-react";
 import { SalarySlip, MONTHS } from "@/types/salary";
 
 interface SalarySlipViewProps {
@@ -17,10 +14,11 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount).replace('₹', '');
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'long',
@@ -28,295 +26,215 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
     });
   };
 
-  const getStatusColor = (status: SalarySlip['status']) => {
-    switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'processed':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'draft':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   const monthName = MONTHS.find(m => m.value === salarySlip.month)?.label || 'Unknown';
 
+  // Calculate LOP (Loss of Pay)
+  const lopDays = Math.max(0, salarySlip.working_days - salarySlip.present_days);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl">Salary Slip</CardTitle>
-                <p className="text-muted-foreground">
-                  {monthName} {salarySlip.year} | Pay Period: {formatDate(salarySlip.pay_period_start)} - {formatDate(salarySlip.pay_period_end)}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge className={getStatusColor(salarySlip.status)}>
-                {salarySlip.status.charAt(0).toUpperCase() + salarySlip.status.slice(1)}
-              </Badge>
-              {onDownload && salarySlip.status === 'paid' && (
-                <Button onClick={onDownload} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Employee & Company Details */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Employee Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="font-medium">{salarySlip.employee_name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Employee ID</p>
-              <p className="font-medium">{salarySlip.employee_id}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
-              <p className="font-medium">{salarySlip.employee_email}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Department</p>
-              <p className="font-medium">{salarySlip.department}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Position</p>
-              <p className="font-medium">{salarySlip.position}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Attendance Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Working Days</p>
-              <p className="font-medium">{salarySlip.working_days} days</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Present Days</p>
-              <p className="font-medium">{salarySlip.present_days} days</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Overtime Hours</p>
-              <p className="font-medium">{salarySlip.overtime_hours} hours</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Overtime Rate</p>
-              <p className="font-medium">{formatCurrency(salarySlip.overtime_rate)}/hour</p>
-            </div>
-            {salarySlip.paid_date && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Paid Date</p>
-                <p className="font-medium">{formatDate(salarySlip.paid_date)}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="max-w-[210mm] mx-auto bg-white text-black p-8 font-sans text-sm">
+      {/* Action Buttons (Hidden in Print/PDF) */}
+      <div className="flex justify-end mb-6 print:hidden" data-html2canvas-ignore="true">
+        {onDownload && (
+          <Button onClick={onDownload} className="gap-2">
+            <Download className="h-4 w-4" />
+            Download PDF
+          </Button>
+        )}
       </div>
 
-      {/* Earnings & Deductions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Salary Breakdown
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Earnings */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-lg text-green-700">Earnings</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Basic Salary</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.basic_salary)}</span>
+      <div id="salary-slip-content">
+        {/* Header Section - Normal Text (No Border) */}
+        <div className="text-center mb-4">
+          <div className="font-bold py-1 text-lg">
+            SYNCALL TECHNOLOGY SOLUTIONS PRIVATE LIMITED
+          </div>
+          <div className="py-1 text-xs font-medium">
+            U72200TG2014PTC093379
+          </div>
+          <div className="py-1 text-xs">
+            H No 4-86, Plot No 8,Road No 2, Ganesh Nagar<br />
+            Narapally, K.V Rangareddy<br />
+            Hyderabad,Telangana-500088
+          </div>
+        </div>
+
+        {/* Table 1: Payslip Month & Employee Details */}
+        <div className="border border-black mb-[-1px]"> {/* Negative margin to merge borders if needed, or just separate */}
+          {/* Payslip Month Header */}
+          <div className="text-center font-bold py-2 border-b border-black text-base">
+            Payslip for the month of {monthName} - {salarySlip.year}
+          </div>
+
+          {/* Employee Details Grid */}
+          <div className="grid grid-cols-2">
+            {/* Left Column */}
+            <div className="border-r border-black">
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Name:</div>
+                <div>{salarySlip.employee_name}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Join Date:</div>
+                <div>{formatDate(salarySlip.joining_date || '')}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Designation:</div>
+                <div>{salarySlip.position}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Department:</div>
+                <div>{salarySlip.department}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Location:</div>
+                <div>Hyderabad</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2 mt-4">
+                <div className="font-semibold">Effective Work Days:</div>
+                <div>{salarySlip.present_days}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Days In Month:</div>
+                <div>{salarySlip.working_days}</div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Bank Name:</div>
+                <div>{salarySlip.bank_name || ''}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">Bank Account No.:</div>
+                <div>{salarySlip.bank_account_no || ''}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">PF No.:</div>
+                <div>{salarySlip.pf_number || ''}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">PF UAN:</div>
+                <div>{salarySlip.uan_number || ''}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">ESI No.:</div>
+                <div>{salarySlip.esi_number || ''}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2 mt-4">
+                <div className="font-semibold">PAN No.:</div>
+                <div>{salarySlip.pan_number || ''}</div>
+              </div>
+              <div className="grid grid-cols-[120px_1fr] p-2">
+                <div className="font-semibold">LOP:</div>
+                <div>{lopDays}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table 2: Salary Details */}
+        <div className="border border-black mt-4">
+          <div className="grid grid-cols-2 border-b border-black">
+            {/* Earnings Header */}
+            <div className="border-r border-black">
+              <div className="grid grid-cols-[1fr_100px] border-b border-black font-bold p-2">
+                <div>Earnings</div>
+                <div className="text-right">Amount Rs.</div>
+              </div>
+              {/* Earnings List */}
+              <div className="p-2 space-y-2">
+                <div className="grid grid-cols-[1fr_100px] font-semibold">
+                  <div>CTC (Cost to the Company)</div>
+                  <div className="text-right">{formatCurrency(salarySlip.gross_earnings + (salarySlip.pf_employer || 0) + (salarySlip.esi_employer || 0))}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span>House Rent Allowance</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.hra)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>BASIC</div>
+                  <div className="text-right">{formatCurrency(salarySlip.basic_salary)}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Transport Allowance</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.transport_allowance)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>HRA</div>
+                  <div className="text-right">{formatCurrency(salarySlip.hra)}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Medical Allowance</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.medical_allowance)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>CONVEYANCE</div>
+                  <div className="text-right">{formatCurrency(salarySlip.transport_allowance)}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Special Allowance</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.special_allowance)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>MEDICAL ALLOWANCE</div>
+                  <div className="text-right">{formatCurrency(salarySlip.medical_allowance)}</div>
                 </div>
-                {salarySlip.performance_bonus > 0 && (
-                  <div className="flex justify-between">
-                    <span>Performance Bonus</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.performance_bonus)}</span>
-                  </div>
-                )}
-                {salarySlip.overtime_amount > 0 && (
-                  <div className="flex justify-between">
-                    <span>Overtime Payment</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.overtime_amount)}</span>
-                  </div>
-                )}
-                {salarySlip.other_allowances > 0 && (
-                  <div className="flex justify-between">
-                    <span>Other Allowances</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.other_allowances)}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between font-semibold text-lg text-green-700">
-                  <span>Gross Earnings</span>
-                  <span>{formatCurrency(salarySlip.gross_earnings)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>LTA</div>
+                  <div className="text-right">{formatCurrency(0)}</div>
+                </div>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>STATUTORY BONUS</div>
+                  <div className="text-right">{formatCurrency(0)}</div>
+                </div>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>SPECIAL ALLOWANCE</div>
+                  <div className="text-right">{formatCurrency(salarySlip.special_allowance)}</div>
+                </div>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>VARIABLE PAY</div>
+                  <div className="text-right">{formatCurrency(salarySlip.performance_bonus)}</div>
+                </div>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>INCENTIVES</div>
+                  <div className="text-right">{formatCurrency(salarySlip.other_allowances)}</div>
                 </div>
               </div>
             </div>
 
-            {/* Deductions */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-lg text-red-700">Deductions</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Provident Fund (Employee)</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.pf_employee)}</span>
+            {/* Deductions Header */}
+            <div>
+              <div className="grid grid-cols-[1fr_100px] border-b border-black font-bold p-2">
+                <div>Deductions</div>
+                <div className="text-right">Amount Rs.</div>
+              </div>
+              {/* Deductions List */}
+              <div className="p-2 space-y-2">
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>PROF TAX</div>
+                  <div className="text-right">{formatCurrency(salarySlip.professional_tax)}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span>ESI (Employee)</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.esi_employee)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>PROVIDENT FUND</div>
+                  <div className="text-right">{formatCurrency(salarySlip.pf_employee)}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Professional Tax</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.professional_tax)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Income Tax (TDS)</span>
-                  <span className="font-medium">{formatCurrency(salarySlip.income_tax)}</span>
-                </div>
-                {salarySlip.loan_deduction > 0 && (
-                  <div className="flex justify-between">
-                    <span>Loan Deduction</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.loan_deduction)}</span>
-                  </div>
-                )}
-                {salarySlip.advance_deduction > 0 && (
-                  <div className="flex justify-between">
-                    <span>Advance Deduction</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.advance_deduction)}</span>
-                  </div>
-                )}
-                {salarySlip.late_deduction > 0 && (
-                  <div className="flex justify-between">
-                    <span>Late/Absence Deduction</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.late_deduction)}</span>
-                  </div>
-                )}
-                {salarySlip.other_deductions > 0 && (
-                  <div className="flex justify-between">
-                    <span>Other Deductions</span>
-                    <span className="font-medium">{formatCurrency(salarySlip.other_deductions)}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between font-semibold text-lg text-red-700">
-                  <span>Total Deductions</span>
-                  <span>{formatCurrency(salarySlip.total_deductions)}</span>
+                <div className="grid grid-cols-[1fr_100px]">
+                  <div>INCOME TAX</div>
+                  <div className="text-right">{formatCurrency(salarySlip.income_tax)}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Net Salary */}
-          <div className="mt-8 p-6 bg-primary/5 rounded-lg border-2 border-primary/20">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-primary">Net Salary</h3>
-                <p className="text-sm text-muted-foreground">
-                  Gross Earnings - Total Deductions
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold text-primary">
-                  {formatCurrency(salarySlip.net_salary)}
-                </p>
-              </div>
+          {/* Totals Row */}
+          <div className="grid grid-cols-2 border-b border-black font-bold">
+            <div className="border-r border-black p-2 grid grid-cols-[1fr_100px]">
+              <div>Total Earnings: Rs.</div>
+              <div className="text-right">{formatCurrency(salarySlip.gross_earnings)}</div>
+            </div>
+            <div className="p-2 grid grid-cols-[1fr_100px]">
+              <div>Total Deductions: Rs.</div>
+              <div className="text-right">{formatCurrency(salarySlip.total_deductions)}</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Company Contributions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Employer Contributions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span>Provident Fund (Employer)</span>
-                <span className="font-medium">{formatCurrency(salarySlip.pf_employer)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>ESI (Employer)</span>
-                <span className="font-medium">{formatCurrency(salarySlip.esi_employer)}</span>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <p>These contributions are made by your employer on your behalf and are not deducted from your salary.</p>
-            </div>
+          {/* Net Pay Row */}
+          <div className="p-2 font-bold">
+            Net Pay for the month (Total Earnings - Total Deductions): <span className="float-right">{formatCurrency(salarySlip.net_salary)}</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Footer */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>This is a computer-generated salary slip and does not require a signature.</p>
-            <p className="mt-2">
-              Generated on: {formatDate(salarySlip.generated_date)}
-            </p>
-            {salarySlip.paid_date && (
-              <p>Salary paid on: {formatDate(salarySlip.paid_date)}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        {/* Footer */}
+        <div className="text-center py-8 text-xs">
+          This is a system generated pay slip and does not require signature.
+        </div>
+      </div>
     </div>
   );
 }

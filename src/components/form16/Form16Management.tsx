@@ -37,11 +37,13 @@ import {
   Upload,
   Calendar,
   Users,
-  Loader2
+  Loader2,
+  Edit
 } from "lucide-react";
 import {
   fetchAllForm16Documents,
   uploadForm16Document,
+  updateForm16Document,
   deleteForm16Document,
   downloadForm16Document,
   getForm16Statistics,
@@ -66,12 +68,16 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterYear, setFilterYear] = useState<string>("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [financialYear, setFinancialYear] = useState("2024-25");
   const [quarter, setQuarter] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editingDocument, setEditingDocument] = useState<Form16Document | null>(null);
+  const [editFile, setEditFile] = useState<File | null>(null);
   const [form16Documents, setForm16Documents] = useState<Form16Document[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -200,6 +206,81 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
     setSelectedFile(null);
     setFinancialYear("2024-25");
     setQuarter("");
+  };
+
+  const handleEditForm16 = (doc: Form16Document) => {
+    setEditingDocument(doc);
+    setFinancialYear(doc.financial_year);
+    setQuarter(doc.quarter || "");
+    setEditFile(null); // Reset file selection
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF or DOCX file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "File size must be less than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setEditFile(file);
+    }
+  };
+
+  const handleUpdateForm16 = async () => {
+    if (!editingDocument) return;
+
+    try {
+      setIsUpdating(true);
+      await updateForm16Document(editingDocument.id, {
+        financial_year: financialYear,
+        quarter: quarter || null,
+        file: editFile || undefined,
+        employee_id: editingDocument.employee_id,
+      });
+
+      toast({
+        title: "Success",
+        description: editFile
+          ? "Form 16 document and metadata updated successfully"
+          : "Form 16 metadata updated successfully",
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingDocument(null);
+      setEditFile(null);
+      resetForm();
+
+      // Reload data
+      await loadForm16Documents();
+      await loadStatistics();
+    } catch (error) {
+      console.error('Error updating Form 16:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update Form 16",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleDeleteForm16 = async (id: string) => {
@@ -469,6 +550,7 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[60px]">S.No</TableHead>
                   <TableHead>Employee</TableHead>
                   <TableHead>File Name</TableHead>
                   <TableHead>Financial Year</TableHead>
@@ -479,8 +561,9 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.map((doc) => (
+                {filteredData.map((doc, index) => (
                   <TableRow key={doc.id}>
+                    <TableCell className="font-medium">{index + 1}</TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium">{getEmployeeName(doc.employee_id)}</p>
@@ -494,6 +577,14 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                     <TableCell>{formatDate(doc.uploaded_at)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditForm16(doc)}
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -519,6 +610,109 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Form 16 Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Form 16</DialogTitle>
+            <DialogDescription>
+              Update the financial year and quarter for this Form 16 document
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Display Employee Info */}
+            {editingDocument && (
+              <div className="p-3 bg-muted rounded-md">
+                <p className="text-sm font-medium">
+                  Employee: {getEmployeeName(editingDocument.employee_id)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {getEmployeeDetails(editingDocument.employee_id)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  File: {editingDocument.file_name}
+                </p>
+              </div>
+            )}
+
+            {/* Financial Year */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_financial_year">Financial Year</Label>
+              <Select value={financialYear} onValueChange={setFinancialYear}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2024-25">2024-25</SelectItem>
+                  <SelectItem value="2023-24">2023-24</SelectItem>
+                  <SelectItem value="2022-23">2022-23</SelectItem>
+                  <SelectItem value="2021-22">2021-22</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Quarter (Optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_quarter">Quarter (Optional)</Label>
+              <Select value={quarter} onValueChange={setQuarter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select quarter (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Q1">Q1 (Apr-Jun)</SelectItem>
+                  <SelectItem value="Q2">Q2 (Jul-Sep)</SelectItem>
+                  <SelectItem value="Q3">Q3 (Oct-Dec)</SelectItem>
+                  <SelectItem value="Q4">Q4 (Jan-Mar)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* File Upload (Optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_file">Replace Document (Optional)</Label>
+              <Input
+                id="edit_file"
+                type="file"
+                accept=".pdf,.docx"
+                onChange={handleEditFileSelect}
+              />
+              {editFile && (
+                <p className="text-sm text-muted-foreground">
+                  New file: {editFile.name} ({formatFileSize(editFile.size)})
+                </p>
+              )}
+              {!editFile && editingDocument && (
+                <p className="text-xs text-muted-foreground">
+                  Current file: {editingDocument.file_name}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Leave empty to keep the current file. Accepted formats: PDF, DOCX (Max 10MB)
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setEditingDocument(null);
+                setEditFile(null);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateForm16} disabled={isUpdating}>
+              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

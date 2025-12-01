@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Dialog,
@@ -18,10 +18,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
-  Search, 
-  Download, 
-  Eye, 
+import {
+  Search,
+  Download,
+  Eye,
   Filter,
   FileText,
   Image,
@@ -35,14 +35,15 @@ import {
   Clock,
   AlertTriangle
 } from "lucide-react";
-import { 
-  Document, 
-  DocumentCategory, 
-  DOCUMENT_CATEGORIES, 
+import {
+  Document,
+  DocumentCategory,
+  DOCUMENT_CATEGORIES,
   DOCUMENT_STATUS_COLORS,
   formatFileSize,
   getFileIcon
 } from "@/types/documents";
+import { fetchEmployeeDocuments, downloadDocument } from "@/api/documents";
 
 interface DocumentViewerProps {
   employeeId?: string;
@@ -54,189 +55,38 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Mock document data for employee view
-  const mockDocuments: Document[] = [
-    {
-      id: "1",
-      title: "Employment Contract",
-      description: "Official employment contract document",
-      file_name: "employment_contract_2024.pdf",
-      file_size: 245760,
-      file_type: "application/pdf",
-      file_url: "/documents/employment_contract_2024.pdf",
-      category: "employment",
-      subcategory: "Employment Contract",
-      tags: ["contract", "employment", "official"],
-      visibility: "private",
-      accessible_roles: ["employee"],
-      accessible_departments: [],
-      accessible_employees: [employeeId || "EMP001"],
-      employee_id: employeeId || "EMP001",
-      employee_name: "John Doe",
-      version: 1,
-      is_active: true,
-      is_confidential: false,
-      approval_status: "approved",
-      approved_by: "HR Manager",
-      approved_date: "2024-01-15T10:00:00Z",
-      uploaded_by: "hr_admin",
-      uploaded_by_name: "HR Admin",
-      uploaded_date: "2024-01-10T10:00:00Z",
-      access_count: 5,
-      created_at: "2024-01-10T10:00:00Z",
-      updated_at: "2024-01-15T10:00:00Z",
-    },
-    {
-      id: "2",
-      title: "Salary Slip - November 2024",
-      description: "Monthly salary slip for November 2024",
-      file_name: "salary_slip_nov_2024.pdf",
-      file_size: 156432,
-      file_type: "application/pdf",
-      file_url: "/documents/salary_slip_nov_2024.pdf",
-      category: "payroll",
-      subcategory: "Salary Slips",
-      tags: ["salary", "payroll", "november"],
-      visibility: "private",
-      accessible_roles: ["employee"],
-      accessible_departments: [],
-      accessible_employees: [employeeId || "EMP001"],
-      employee_id: employeeId || "EMP001",
-      employee_name: "John Doe",
-      version: 1,
-      is_active: true,
-      is_confidential: true,
-      approval_status: "not_required",
-      uploaded_by: "payroll_system",
-      uploaded_by_name: "Payroll System",
-      uploaded_date: "2024-11-30T10:00:00Z",
-      access_count: 3,
-      created_at: "2024-11-30T10:00:00Z",
-      updated_at: "2024-11-30T10:00:00Z",
-    },
-    {
-      id: "3",
-      title: "Health Insurance Policy",
-      description: "Company health insurance policy document",
-      file_name: "health_insurance_policy_2024.pdf",
-      file_size: 892456,
-      file_type: "application/pdf",
-      file_url: "/documents/health_insurance_policy_2024.pdf",
-      category: "benefits",
-      subcategory: "Health Insurance",
-      tags: ["insurance", "health", "benefits"],
-      visibility: "public",
-      accessible_roles: ["employee", "admin"],
-      accessible_departments: [],
-      accessible_employees: [],
-      version: 2,
-      is_active: true,
-      is_confidential: false,
-      approval_status: "approved",
-      approved_by: "Benefits Manager",
-      approved_date: "2024-01-01T10:00:00Z",
-      uploaded_by: "benefits_admin",
-      uploaded_by_name: "Benefits Admin",
-      uploaded_date: "2024-01-01T10:00:00Z",
-      access_count: 45,
-      created_at: "2024-01-01T10:00:00Z",
-      updated_at: "2024-06-01T10:00:00Z",
-    },
-    {
-      id: "4",
-      title: "Training Certificate - React Development",
-      description: "Certificate for completing React development training",
-      file_name: "react_training_certificate.pdf",
-      file_size: 324567,
-      file_type: "application/pdf",
-      file_url: "/documents/react_training_certificate.pdf",
-      category: "training",
-      subcategory: "Certificates",
-      tags: ["training", "react", "development", "certificate"],
-      visibility: "private",
-      accessible_roles: ["employee"],
-      accessible_departments: [],
-      accessible_employees: [employeeId || "EMP001"],
-      employee_id: employeeId || "EMP001",
-      employee_name: "John Doe",
-      version: 1,
-      is_active: true,
-      is_confidential: false,
-      approval_status: "approved",
-      approved_by: "Training Manager",
-      approved_date: "2024-10-15T10:00:00Z",
-      uploaded_by: employeeId || "EMP001",
-      uploaded_by_name: "John Doe",
-      uploaded_date: "2024-10-10T10:00:00Z",
-      access_count: 2,
-      created_at: "2024-10-10T10:00:00Z",
-      updated_at: "2024-10-15T10:00:00Z",
-    },
-    {
-      id: "5",
-      title: "Leave Application Form",
-      description: "Downloadable leave application form template",
-      file_name: "leave_application_form.docx",
-      file_size: 45678,
-      file_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      file_url: "/documents/leave_application_form.docx",
-      category: "forms",
-      subcategory: "Leave Forms",
-      tags: ["form", "leave", "template"],
-      visibility: "public",
-      accessible_roles: ["employee", "admin"],
-      accessible_departments: [],
-      accessible_employees: [],
-      version: 1,
-      is_active: true,
-      is_confidential: false,
-      approval_status: "not_required",
-      uploaded_by: "hr_admin",
-      uploaded_by_name: "HR Admin",
-      uploaded_date: "2024-01-01T10:00:00Z",
-      access_count: 78,
-      created_at: "2024-01-01T10:00:00Z",
-      updated_at: "2024-01-01T10:00:00Z",
-    },
-    {
-      id: "6",
-      title: "Employee Handbook",
-      description: "Complete employee handbook with policies and procedures",
-      file_name: "employee_handbook_2024.pdf",
-      file_size: 1234567,
-      file_type: "application/pdf",
-      file_url: "/documents/employee_handbook_2024.pdf",
-      category: "policies",
-      subcategory: "HR Policies",
-      tags: ["handbook", "policies", "procedures"],
-      visibility: "public",
-      accessible_roles: ["employee", "admin"],
-      accessible_departments: [],
-      accessible_employees: [],
-      version: 3,
-      is_active: true,
-      is_confidential: false,
-      expiry_date: "2024-12-31T23:59:59Z",
-      approval_status: "approved",
-      approved_by: "CEO",
-      approved_date: "2024-01-01T10:00:00Z",
-      uploaded_by: "hr_admin",
-      uploaded_by_name: "HR Admin",
-      uploaded_date: "2024-01-01T10:00:00Z",
-      access_count: 156,
-      created_at: "2024-01-01T10:00:00Z",
-      updated_at: "2024-07-01T10:00:00Z",
-    },
-  ];
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredDocuments = mockDocuments.filter((doc) => {
-    const matchesSearch = 
+  useEffect(() => {
+    const loadDocuments = async () => {
+      if (!employeeId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const data = await fetchEmployeeDocuments(employeeId);
+        setDocuments(data);
+      } catch (error) {
+        console.error("Failed to load documents:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDocuments();
+  }, [employeeId]);
+
+  const filteredDocuments = documents.filter((doc) => {
+    const matchesSearch =
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -274,9 +124,12 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
     return new Date(expiryDate) < new Date();
   };
 
-  const handleDownload = (document: Document) => {
-    console.log("Downloading document:", document.file_name);
-    // Mock download functionality
+  const handleDownload = async (document: Document) => {
+    try {
+      await downloadDocument(document.id);
+    } catch (error) {
+      console.error("Failed to download document:", error);
+    }
   };
 
   const handleView = (document: Document) => {
@@ -292,6 +145,14 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
     acc[doc.category].push(doc);
     return acc;
   }, {} as Record<string, Document[]>);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -393,13 +254,13 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                                     </Badge>
                                   )}
                                 </div>
-                                
+
                                 {document.description && (
                                   <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                                     {document.description}
                                   </p>
                                 )}
-                                
+
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                                   <span>{formatFileSize(document.file_size)}</span>
                                   <span>•</span>
@@ -454,7 +315,7 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                                 <div className="p-2 bg-muted rounded-lg">
                                   <IconComponent className="h-5 w-5 text-muted-foreground" />
                                 </div>
-                                
+
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-medium truncate">{document.title}</h3>
@@ -470,13 +331,13 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                                       </Badge>
                                     )}
                                   </div>
-                                  
+
                                   {document.description && (
                                     <p className="text-sm text-muted-foreground mb-2">
                                       {document.description}
                                     </p>
                                   )}
-                                  
+
                                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                     <span>{formatFileSize(document.file_size)}</span>
                                     <span>•</span>
@@ -485,7 +346,7 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                                     <span>{document.access_count} views</span>
                                   </div>
                                 </div>
-                                
+
                                 <div className="flex items-center gap-2">
                                   <Button
                                     size="sm"
@@ -537,13 +398,13 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                               </Badge>
                             )}
                           </div>
-                          
+
                           {document.description && (
                             <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                               {document.description}
                             </p>
                           )}
-                          
+
                           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                             <span>{formatFileSize(document.file_size)}</span>
                             <span>•</span>
@@ -589,7 +450,7 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                           <div className="p-2 bg-muted rounded-lg">
                             <IconComponent className="h-5 w-5 text-muted-foreground" />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-medium truncate">{document.title}</h3>
@@ -599,13 +460,13 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                                 </Badge>
                               )}
                             </div>
-                            
+
                             {document.description && (
                               <p className="text-sm text-muted-foreground mb-2">
                                 {document.description}
                               </p>
                             )}
-                            
+
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               <span>{formatFileSize(document.file_size)}</span>
                               <span>•</span>
@@ -614,7 +475,7 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                               <span>{document.access_count} views</span>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
@@ -658,7 +519,7 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
                 {selectedDocument.description}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -709,7 +570,7 @@ export function DocumentViewer({ employeeId }: DocumentViewerProps) {
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Documents Found</h3>
             <p className="text-muted-foreground">
-              {searchTerm || selectedCategory !== "all" 
+              {searchTerm || selectedCategory !== "all"
                 ? "Try adjusting your search or filters to find documents."
                 : "You don't have any documents yet. Documents will appear here when they are uploaded."}
             </p>

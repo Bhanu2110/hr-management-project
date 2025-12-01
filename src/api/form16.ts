@@ -174,6 +174,111 @@ export async function uploadForm16Document(request: Form16UploadRequest): Promis
 }
 
 /**
+ * Update Form 16 document metadata and optionally replace the file
+ */
+export async function updateForm16Document(
+    id: string,
+    updates: {
+        financial_year?: string;
+        quarter?: string | null;
+        file?: File;
+        employee_id?: string;
+    }
+): Promise<Form16Document> {
+    try {
+        // First, get the current document details
+        const { data: currentDoc, error: fetchError } = await supabase
+            .from('form16_documents')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            console.error('Error fetching current document:', fetchError);
+            throw fetchError;
+        }
+
+        let fileUpdates = {};
+
+        // If a new file is provided, upload it and delete the old one
+        if (updates.file) {
+            const file = updates.file;
+            const employee_id = updates.employee_id || currentDoc.employee_id;
+            const financial_year = updates.financial_year || currentDoc.financial_year;
+
+            // Create a unique file name
+            const timestamp = new Date().getTime();
+            const fileExt = file.name.split('.').pop();
+            const fileName = `form16_${employee_id}_${financial_year.replace('/', '-')}_${timestamp}.${fileExt}`;
+            const filePath = `form16/${employee_id}/${fileName}`;
+
+            console.log('Uploading new file:', { fileName, filePath, size: file.size });
+
+            // Upload new file to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('documents')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) {
+                console.error('Storage upload error:', uploadError);
+                throw new Error(`File upload failed: ${uploadError.message}`);
+            }
+
+            console.log('New file uploaded successfully:', uploadData);
+
+            // Get public URL for new file
+            const { data: { publicUrl } } = supabase.storage
+                .from('documents')
+                .getPublicUrl(filePath);
+
+            // Delete old file from storage
+            if (currentDoc.file_path) {
+                const oldPathMatch = currentDoc.file_path.match(/form16\/.+/);
+                if (oldPathMatch) {
+                    await supabase.storage
+                        .from('documents')
+                        .remove([oldPathMatch[0]]);
+                    console.log('Old file deleted from storage');
+                }
+            }
+
+            fileUpdates = {
+                file_name: file.name,
+                file_path: publicUrl,
+                file_size: file.size,
+            };
+        }
+
+        // Update database record
+        const { data, error } = await supabase
+            .from('form16_documents')
+            .update({
+                financial_year: updates.financial_year,
+                quarter: updates.quarter,
+                ...fileUpdates,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating Form 16 document:', error);
+            throw error;
+        }
+
+        console.log('Form 16 document updated successfully:', data);
+        return data;
+    } catch (error: any) {
+        console.error('Update Form 16 error:', error);
+        throw error;
+    }
+}
+
+/**
  * Delete a Form 16 document
  */
 export async function deleteForm16Document(id: string): Promise<void> {

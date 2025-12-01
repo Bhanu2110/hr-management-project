@@ -36,7 +36,7 @@ export function EditEmployeeDialog({ employee, onEmployeeUpdated, trigger }: Edi
       <div onClick={() => setOpen(true)} className="cursor-pointer">
         {trigger || defaultTrigger}
       </div>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="w-[90vw] max-w-[1400px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Employee</DialogTitle>
           <DialogDescription>
@@ -44,7 +44,7 @@ export function EditEmployeeDialog({ employee, onEmployeeUpdated, trigger }: Edi
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <EditEmployeeForm 
+          <EditEmployeeForm
             employee={employee}
             onSuccess={handleSuccess}
             onCancel={() => setOpen(false)}

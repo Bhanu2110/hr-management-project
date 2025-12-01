@@ -5,7 +5,7 @@ export interface SalaryStructure {
   employee_email: string;
   department: string;
   position: string;
-  
+
   // Basic Salary Components
   basic_salary: number;
   hra: number;
@@ -15,7 +15,7 @@ export interface SalaryStructure {
   performance_bonus: number;
   overtime_amount: number;
   other_allowances: number;
-  
+
   // Deductions
   pf_employee: number;
   pf_employer: number;
@@ -26,12 +26,12 @@ export interface SalaryStructure {
   medical_insurance: number;
   loan_deduction: number;
   other_deductions: number;
-  
+
   // Calculated Fields
   gross_salary: number;
   total_deductions: number;
   net_salary: number;
-  
+
   // Metadata
   effective_date: string;
   status: 'active' | 'inactive' | 'pending';
@@ -46,7 +46,14 @@ export interface SalarySlip {
   employee_email: string;
   department: string;
   position: string;
-  
+  pan_number?: string;
+  joining_date?: string;
+  bank_name?: string;
+  bank_account_no?: string;
+  pf_number?: string;
+  uan_number?: string;
+  esi_number?: string;
+
   // Pay Period
   month: number;
   year: number;
@@ -54,7 +61,7 @@ export interface SalarySlip {
   pay_period_end: string;
   working_days: number;
   present_days: number;
-  
+
   // Earnings
   basic_salary: number;
   hra: number;
@@ -67,7 +74,7 @@ export interface SalarySlip {
   overtime_amount: number;
   other_allowances: number;
   gross_earnings: number;
-  
+
   // Deductions
   pf_employee: number;
   esi_employee: number;
@@ -79,14 +86,14 @@ export interface SalarySlip {
   late_deduction: number;
   other_deductions: number;
   total_deductions: number;
-  
+
   // Net Pay
   net_salary: number;
-  
+
   // Company Contributions (for reference)
   pf_employer: number;
   esi_employer: number;
-  
+
   // Status and Metadata
   status: 'draft' | 'processed' | 'paid' | 'cancelled';
   generated_date: string;

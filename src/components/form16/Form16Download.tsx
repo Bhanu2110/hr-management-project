@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, FileText, Calendar, AlertCircle } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Download, FileText, AlertCircle, RotateCcw } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface Form16Document {
@@ -22,14 +23,22 @@ interface Form16Document {
 export function Form16Download() {
   const { employee, isEmployee } = useAuth();
   const [documents, setDocuments] = useState<Form16Document[]>([]);
+  const [filteredDocuments, setFilteredDocuments] = useState<Form16Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // Filter states
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (isEmployee && employee?.id) {
       fetchForm16Documents();
     }
   }, [isEmployee, employee?.id]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [documents, selectedDate]);
 
   const fetchForm16Documents = async () => {
     try {
@@ -61,6 +70,22 @@ export function Form16Download() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...documents];
+
+    if (selectedDate) {
+      const filterYear = selectedDate.getFullYear();
+      const filterMonth = selectedDate.getMonth(); // 0-indexed
+
+      filtered = filtered.filter(doc => {
+        const docDate = new Date(doc.uploaded_at);
+        return docDate.getFullYear() === filterYear && docDate.getMonth() === filterMonth;
+      });
+    }
+
+    setFilteredDocuments(filtered);
   };
 
   const handleDownload = async (document: Form16Document) => {
@@ -202,18 +227,42 @@ export function Form16Download() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {documents.length === 0 ? (
+            {/* Filters */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-[240px]">
+                <DatePicker
+                  date={selectedDate}
+                  setDate={setSelectedDate}
+                  className="w-full"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSelectedDate(undefined)}
+                title="Reset Filter"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {filteredDocuments.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Form 16 documents available</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {documents.length === 0 ? 'No Form 16 documents available' : 'No documents match the selected date'}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Contact your HR administrator to upload your Form 16 documents.
+                  {documents.length === 0
+                    ? 'Contact your HR administrator to upload your Form 16 documents.'
+                    : 'Try selecting a different date or reset the filter.'}
                 </p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[60px]">S.No</TableHead>
                     <TableHead>Financial Year</TableHead>
                     <TableHead>Quarter</TableHead>
                     <TableHead>File Name</TableHead>
@@ -224,8 +273,9 @@ export function Form16Download() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {documents.map((document) => (
+                  {filteredDocuments.map((document, index) => (
                     <TableRow key={document.id}>
+                      <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="font-medium">
                           {document.financial_year}
