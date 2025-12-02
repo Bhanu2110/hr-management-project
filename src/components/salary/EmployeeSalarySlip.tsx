@@ -69,7 +69,7 @@ interface EmployeeSalarySlipProps {
   employeeData?: EmployeeSalaryData;
 }
 
-const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({ 
+const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
   isAdmin = false,
   employeeData
 }) => {
@@ -109,16 +109,16 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
     const da = Math.round(basic * 0.1);
     const specialAllowance = Math.round(netSalary * 0.2);
     const overtime = 0; // Can be calculated based on attendance if available
-    
+
     const pf = Math.round(basic * 0.12);
     const professionalTax = 200;
     const incomeTax = Math.max(0, Math.round((netSalary - 500000) * 0.05));
     const loan = 0;
     const insurance = 1000;
-    
+
     const gross = basic + hra + da + specialAllowance + overtime;
     const totalDeductions = pf + professionalTax + incomeTax + loan + insurance;
-    
+
     return {
       basic,
       hra,
@@ -180,7 +180,7 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
       accountLastFour: employeeInfo.bankAccount.slice(-4),
       creditDate: new Date().toLocaleDateString('en-GB'),
     },
-    approvalStatus: employeeInfo.approvalStatus,
+    approvalStatus: employeeInfo.approvalStatus as "Approved" | "Generated" | "Sent",
   };
 
   const handleDownload = () => {
@@ -205,7 +205,7 @@ const EmployeeSalarySlip: React.FC<EmployeeSalarySlipProps> = ({
           Download PDF
         </Button>
       </div>
-      
+
       <CardContent className="p-0">
         {/* Employee Information */}
         <div className="mb-8">

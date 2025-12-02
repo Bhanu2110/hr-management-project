@@ -29,12 +29,12 @@ export function DeleteEmployeeDialog({ employee, onEmployeeDeleted, trigger }: D
     try {
       setIsDeleting(true);
       await employeeService.deleteEmployee(employee.id);
-      
+
       toast({
         title: "Success",
         description: `Employee ${employee.first_name} ${employee.last_name} has been deleted.`,
       });
-      
+
       setOpen(false);
       onEmployeeDeleted();
     } catch (error) {
@@ -64,8 +64,15 @@ export function DeleteEmployeeDialog({ employee, onEmployeeDeleted, trigger }: D
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Employee</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>{employee.first_name} {employee.last_name}</strong>? 
-            This action cannot be undone and will permanently remove the employee from the system.
+            Are you sure you want to delete <strong>{employee.first_name} {employee.last_name}</strong>?
+            This action cannot be undone and will permanently remove:
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Employee record and account</li>
+              <li>All salary slips</li>
+              <li>All salary structures</li>
+              <li>Employee-specific documents</li>
+              <li>All other related records</li>
+            </ul>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

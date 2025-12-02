@@ -68,7 +68,7 @@ export const employeeService = {
   async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'status'> & { user_id: string }): Promise<Employee | null> {
     try {
       console.log('Creating employee with data:', employeeData);
-      
+
       const currentTime = new Date().toISOString();
       const employeeDataToInsert = {
         employee_id: employeeData.employee_id,
@@ -84,9 +84,9 @@ export const employeeService = {
         updated_at: currentTime,
         password_hash: '',
       };
-      
+
       console.log('Inserting employee with data:', employeeDataToInsert);
-      
+
       const { data, error } = await supabase
         .from('employees')
         .insert(employeeDataToInsert)
@@ -151,7 +151,70 @@ export const employeeService = {
 
   async deleteEmployee(id: string): Promise<boolean> {
     try {
-      // Delete the employee record - the database trigger will handle auth user deletion
+      // First, get the employee record to access the employee_id string
+      const { data: employee, error: fetchError } = await supabase
+        .from('employees')
+        .select('employee_id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching employee for deletion:', fetchError);
+        throw fetchError;
+      }
+
+      if (!employee) {
+        throw new Error('Employee not found');
+      }
+
+      console.log(`Deleting employee and related records for employee_id: ${employee.employee_id}`);
+
+      // Delete related records from tables that use string employee_id
+      // These tables don't have CASCADE DELETE foreign keys, so we need to delete manually
+
+      // 1. Delete salary slips
+      const { error: slipsError } = await supabase
+        .from('salary_slips')
+        .delete()
+        .eq('employee_id', employee.employee_id);
+
+      if (slipsError) {
+        console.error('Error deleting salary slips:', slipsError);
+        // Continue with deletion even if this fails
+      } else {
+        console.log('Successfully deleted salary slips');
+      }
+
+      // 2. Delete salary structures
+      const { error: structuresError } = await supabase
+        .from('salary_structures')
+        .delete()
+        .eq('employee_id', employee.employee_id);
+
+      if (structuresError) {
+        console.error('Error deleting salary structures:', structuresError);
+        // Continue with deletion even if this fails
+      } else {
+        console.log('Successfully deleted salary structures');
+      }
+
+      // 3. Delete employee-specific documents
+      const { error: docsError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('employee_id', employee.employee_id);
+
+      if (docsError) {
+        console.error('Error deleting employee documents:', docsError);
+        // Continue with deletion even if this fails
+      } else {
+        console.log('Successfully deleted employee documents');
+      }
+
+      // 4. Finally, delete the employee record
+      // The database trigger will handle auth user deletion
+      // Tables with UUID foreign keys (attendance, employee_compensation, form16_documents, leave_requests)
+      // will be automatically handled by CASCADE DELETE constraints
       const { error } = await supabase
         .from('employees')
         .delete()
@@ -162,6 +225,7 @@ export const employeeService = {
         throw error;
       }
 
+      console.log('Successfully deleted employee and all related records');
       return true;
     } catch (error) {
       console.error('Error in deleteEmployee:', error);

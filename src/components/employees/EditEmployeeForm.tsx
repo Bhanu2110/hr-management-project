@@ -212,6 +212,79 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
 
       await employeeService.updateEmployee(employee.id, updateData);
 
+      // IMPORTANT: If employee_id has changed, update all existing salary slips with the new employee_id
+      if (formValues.employee_id !== employee.employee_id) {
+        console.log(`Employee ID changed from ${employee.employee_id} to ${formValues.employee_id}, updating related records...`);
+        try {
+          // Update salary_slips
+          const { error: updateSlipsError } = await supabase
+            .from('salary_slips')
+            .update({
+              employee_id: formValues.employee_id,
+              employee_name: `${formValues.first_name} ${formValues.last_name}`,
+              employee_email: formValues.email,
+              department: formValues.department || '',
+              position: formValues.position || '',
+            })
+            .eq('employee_id', employee.employee_id);
+
+          if (updateSlipsError) {
+            console.error('Error updating salary slips employee_id:', updateSlipsError);
+          } else {
+            console.log('Successfully updated salary slips with new employee_id');
+          }
+
+          // Update salary_structures
+          const { error: updateStructuresError } = await supabase
+            .from('salary_structures')
+            .update({
+              employee_id: formValues.employee_id,
+              employee_name: `${formValues.first_name} ${formValues.last_name}`,
+              employee_email: formValues.email,
+              department: formValues.department || '',
+              position: formValues.position || '',
+            })
+            .eq('employee_id', employee.employee_id);
+
+          if (updateStructuresError) {
+            console.error('Error updating salary structures employee_id:', updateStructuresError);
+          } else {
+            console.log('Successfully updated salary structures with new employee_id');
+          }
+
+          // Update documents (if any are assigned to this employee)
+          const { error: updateDocsError } = await supabase
+            .from('documents')
+            .update({
+              employee_id: formValues.employee_id,
+              employee_name: `${formValues.first_name} ${formValues.last_name}`,
+            })
+            .eq('employee_id', employee.employee_id);
+
+          if (updateDocsError) {
+            console.error('Error updating documents employee_id:', updateDocsError);
+          } else {
+            console.log('Successfully updated documents with new employee_id');
+          }
+
+          // Show warning if any updates failed
+          if (updateSlipsError || updateStructuresError || updateDocsError) {
+            toast({
+              title: "Warning",
+              description: "Employee ID updated but some related records may not have been updated completely.",
+              variant: "default",
+            });
+          }
+        } catch (updateError) {
+          console.error('Error updating related records:', updateError);
+          toast({
+            title: "Warning",
+            description: "Employee ID updated but some related records may not have been updated.",
+            variant: "default",
+          });
+        }
+      }
+
       // Sync compensation records to database
       if (compensationRecords.length > 0) {
         // 1. Get original compensation records to identify deletions
@@ -266,18 +339,11 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
               console.log('Deleting salary slips for:', slipsToDelete);
               for (const key of slipsToDelete) {
                 const [year, month] = key.split('-').map(Number);
+                // Use formValues.employee_id since we've already updated all slips with the new ID
                 await supabase
                   .from('salary_slips')
                   .delete()
-                  .eq('employee_id', (employee as any).employee_id || employee.id) // Try both ID formats just in case
-                  .eq('month', month)
-                  .eq('year', year);
-
-                // Also try deleting by UUID if the above didn't catch it (legacy data issues)
-                await supabase
-                  .from('salary_slips')
-                  .delete()
-                  .eq('employee_id', employee.id)
+                  .eq('employee_id', formValues.employee_id)
                   .eq('month', month)
                   .eq('year', year);
               }
@@ -335,16 +401,16 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
               const total_deductions = pf_employee + professional_tax + income_tax;
               const net_salary = gross_earnings - total_deductions;
 
-              // Check if slip exists
+              // Check if slip exists (use the NEW employee_id from formValues)
               const { data: existingSlips } = await supabase
                 .from('salary_slips')
                 .select('id')
-                .eq('employee_id', employee.employee_id) // Assuming salary_slips uses string ID
+                .eq('employee_id', formValues.employee_id) // Use the updated employee_id
                 .eq('month', slipMonth)
                 .eq('year', slipYear);
 
               const slipData = {
-                employee_id: employee.employee_id,
+                employee_id: formValues.employee_id, // Use the updated employee_id
                 employee_name: `${formValues.first_name} ${formValues.last_name}`,
                 employee_email: formValues.email,
                 department: formValues.department || '',
