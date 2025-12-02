@@ -536,9 +536,37 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     }
   };
 
-  const handleViewSalarySlip = (slip: SalarySlip) => {
-    setViewingSlip(slip);
-    setIsViewDialogOpen(true);
+  const handleViewSalarySlip = async (slip: SalarySlip) => {
+    try {
+      // Fetch employee details to get bank info, PAN, etc.
+      const { data: employee, error } = await supabase
+        .from('employees')
+        .select('hire_date, pan_number, bank_name, account_number, ifsc_code')
+        .eq('employee_id', slip.employee_id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching employee details:', error);
+        // Still show the slip, but without the extra details
+        setViewingSlip(slip);
+      } else {
+        // Merge employee details into the slip
+        setViewingSlip({
+          ...slip,
+          joining_date: employee?.hire_date || '',
+          pan_number: employee?.pan_number || '',
+          bank_name: employee?.bank_name || '',
+          bank_account_no: employee?.account_number || '',
+          pf_number: '', // These fields don't exist in employees table
+          uan_number: '',
+          esi_number: '',
+        } as any);
+      }
+      setIsViewDialogOpen(true);
+    } catch (error) {
+      console.error('Error in handleViewSalarySlip:', error);
+      toast.error('Failed to load salary slip details');
+    }
   };
 
   const handleDownloadSlip = async () => {

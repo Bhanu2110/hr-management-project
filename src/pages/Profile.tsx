@@ -16,15 +16,13 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { themeColor } = useTheme();
   const [employeeDetails, setEmployeeDetails] = useState<Partial<Employee>>({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
-    address: "",
     department: "",
     position: "",
     hire_date: "",
-    role: "",
   });
 
   useEffect(() => {
@@ -40,7 +38,6 @@ const Profile = () => {
         department: employee.department,
         position: employee.position,
         hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : "dd-mm-yyyy",
-        role: employee.role,
       });
     }
   }, [employee]);
@@ -112,7 +109,7 @@ const Profile = () => {
           <h2 className="text-xl font-semibold mb-1">{employeeDetails.first_name} {employeeDetails.last_name}</h2>
           <p className="text-muted-foreground mb-4">{employeeDetails.position}</p>
           <Badge className="text-green-800 px-3 py-1 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: themeColor ? `${themeColor}1A` : '' }}>
-            {employeeDetails.role}
+            {employee?.role || 'employee'}
           </Badge>
 
           <div className="space-y-3 w-full text-left">
@@ -157,10 +154,6 @@ const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" type="tel" value={employeeDetails.phone || ''} onChange={handleInputChange} disabled={!isEditing} />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" value={employeeDetails.address || ''} onChange={handleInputChange} disabled={!isEditing} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
