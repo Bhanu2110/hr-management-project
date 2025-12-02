@@ -342,6 +342,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       if (employeeRecord && compensationRecords.length > 0) {
         try {
           console.log(`Generating ${compensationRecords.length} salary slips for new employee`);
+          console.log('Employee record ID:', employeeRecord.id);
+          console.log('Employee record employee_id:', employeeRecord.employee_id);
+          console.log('Compensation records:', compensationRecords);
 
           // Create a salary slip for each compensation record
           const salarySlipsToInsert = compensationRecords.map((compensation, index) => {
@@ -390,7 +393,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
             const pf_employee = 1800;
 
             // 9. Professional Tax = ₹150
-            const professional_tax = 200;
+            const professional_tax = 150;
 
             // 10. Income Tax = 0 (shown as "As applicable")
             const income_tax = 0;
@@ -399,7 +402,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
             const net_salary = gross_earnings - total_deductions;
 
             return {
-              employee_id: formValues.employee_id,
+              employee_id: employeeRecord.employee_id,
               employee_name: `${formValues.first_name} ${formValues.last_name}`,
               employee_email: formValues.email,
               department: formValues.department || '',
@@ -450,22 +453,25 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
           console.log('Employee record:', employeeRecord);
           console.log(`Salary slips data to insert (${salarySlipsToInsert.length} slips):`, salarySlipsToInsert);
 
-          const { error: salarySlipError } = await supabase
+          const { data: insertedSlips, error: salarySlipError } = await supabase
             .from('salary_slips')
-            .insert(salarySlipsToInsert);
+            .insert(salarySlipsToInsert)
+            .select();
 
           if (salarySlipError) {
             console.error('Error creating salary slips:', salarySlipError);
+            console.error('Error details:', JSON.stringify(salarySlipError, null, 2));
             toast({
               title: "Warning",
-              description: "Employee created but salary slip generation failed. Please generate manually.",
+              description: `Employee created but salary slip generation failed: ${salarySlipError.message}`,
               variant: "default",
             });
           } else {
-            console.log(`Successfully created ${salarySlipsToInsert.length} salary slips for employee:`, employeeRecord.employee_id);
+            console.log(`Successfully created ${insertedSlips?.length || 0} salary slips for employee:`, employeeRecord.employee_id);
+            console.log('Inserted slips:', insertedSlips);
             toast({
               title: "Salary Slips Generated",
-              description: `${salarySlipsToInsert.length} salary slip(s) created successfully based on compensation effective dates.`,
+              description: `${insertedSlips?.length || 0} salary slip(s) created successfully based on compensation effective dates.`,
               variant: "default",
             });
           }
