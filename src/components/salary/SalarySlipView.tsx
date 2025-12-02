@@ -145,10 +145,6 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
               </div>
               {/* Earnings List */}
               <div className="p-2 space-y-2">
-                <div className="grid grid-cols-[1fr_100px] font-semibold">
-                  <div>CTC (Cost to the Company)</div>
-                  <div className="text-right">{formatCurrency(salarySlip.gross_earnings + (salarySlip.pf_employer || 0) + (salarySlip.esi_employer || 0))}</div>
-                </div>
                 <div className="grid grid-cols-[1fr_100px]">
                   <div>BASIC</div>
                   <div className="text-right">{formatCurrency(salarySlip.basic_salary)}</div>
@@ -206,25 +202,23 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
                 </div>
                 <div className="grid grid-cols-[1fr_100px]">
                   <div>INCOME TAX</div>
-                  <div className="text-right">{formatCurrency(salarySlip.income_tax)}</div>
+                  <div className="text-right">{salarySlip.income_tax === 0 ? 'As applicable' : formatCurrency(salarySlip.income_tax)}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Totals Row */}
+          {/* Totals Row - Side by Side */}
           <div className="grid grid-cols-2 border-b border-black font-bold">
-            <div className="border-r border-black p-2 grid grid-cols-[1fr_100px]">
-              <div>Total Earnings: Rs.</div>
-              <div className="text-right">{formatCurrency(salarySlip.gross_earnings)}</div>
+            <div className="border-r border-black p-2">
+              Total Earnings: Rs. <span className="float-right">{formatCurrency(salarySlip.gross_earnings)}</span>
             </div>
-            <div className="p-2 grid grid-cols-[1fr_100px]">
-              <div>Total Deductions: Rs.</div>
-              <div className="text-right">{formatCurrency(salarySlip.total_deductions)}</div>
+            <div className="p-2">
+              Total Deductions: Rs. <span className="float-right">{formatCurrency(salarySlip.total_deductions)}</span>
             </div>
           </div>
 
-          {/* Net Pay Row */}
+          {/* Net Pay Row - Full Width */}
           <div className="p-2 font-bold">
             Net Pay for the month (Total Earnings - Total Deductions): <span className="float-right">{formatCurrency(salarySlip.net_salary)}</span>
           </div>

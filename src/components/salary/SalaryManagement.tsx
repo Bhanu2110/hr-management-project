@@ -144,10 +144,33 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      const mappedData: SalarySlip[] = (data || []).map((item: any) => ({
-        ...item,
-        medical_insurance: item.medical_insurance ?? 0,
-      }));
+
+      // Fetch all employees to get their details
+      const { data: employeesData } = await supabase
+        .from('employees')
+        .select('employee_id, pan_number, hire_date, bank_name, account_number, pf_number, uan_number, esi_number');
+
+      // Create a map of employee_id to employee details for quick lookup
+      const employeeDetailsMap = new Map(
+        (employeesData || []).map((emp: any) => [emp.employee_id, emp])
+      );
+
+      // Map data to ensure medical_insurance field exists and add employee details
+      const mappedData: SalarySlip[] = (data || []).map((item: any) => {
+        const employeeDetails = employeeDetailsMap.get(item.employee_id);
+        return {
+          ...item,
+          medical_insurance: item.medical_insurance ?? 0,
+          // If the salary slip doesn't have these fields, fetch from employee record
+          pan_number: item.pan_number || employeeDetails?.pan_number || null,
+          joining_date: item.joining_date || employeeDetails?.hire_date || null,
+          bank_name: item.bank_name || employeeDetails?.bank_name || null,
+          bank_account_no: item.bank_account_no || employeeDetails?.account_number || null,
+          pf_number: item.pf_number || employeeDetails?.pf_number || null,
+          uan_number: item.uan_number || employeeDetails?.uan_number || null,
+          esi_number: item.esi_number || employeeDetails?.esi_number || null,
+        };
+      });
 
       setSalarySlips(mappedData);
     } catch (error) {
@@ -400,6 +423,13 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
         employee_email: employee.email,
         department: employee.department || '',
         position: employee.position || '',
+        joining_date: employee.hire_date || null,
+        pan_number: employee.pan_number || null,
+        bank_name: employee.bank_name || null,
+        bank_account_no: employee.account_number || null,
+        pf_number: employee.pf_number || null,
+        uan_number: employee.uan_number || null,
+        esi_number: employee.esi_number || null,
         month: formData.month || new Date().getMonth() + 1,
         year: formData.year || new Date().getFullYear(),
         pay_period_start,

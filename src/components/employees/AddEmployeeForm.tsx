@@ -167,12 +167,40 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         });
 
         if (fnError) {
+          console.error('Edge Function Error:', fnError);
+
+          // Check if it's a duplicate email error from Edge Function
+          const errorMessage = fnError.message || JSON.stringify(fnError);
+          console.log('Error message:', errorMessage);
+
+          if ((errorMessage.toLowerCase().includes('user') && errorMessage.toLowerCase().includes('already')) ||
+            (errorMessage.toLowerCase().includes('duplicate') && errorMessage.toLowerCase().includes('email'))) {
+            toast({
+              title: "Email Already Exists",
+              description: `The email "${formValues.email}" is already registered. Please use a different email address.`,
+              variant: "destructive",
+            });
+            return; // Stop execution
+          }
+
           throw new Error(`Edge function failed: ${fnError.message ?? fnError}`);
         }
 
         userId = (fnData as any)?.user_id as string | undefined;
       } catch (edgeFunctionError) {
         console.warn('Edge function failed, trying direct signup:', edgeFunctionError);
+
+        // Check if the edge function error was a duplicate email error
+        const errorMessage = edgeFunctionError instanceof Error ? edgeFunctionError.message : String(edgeFunctionError);
+        if ((errorMessage.toLowerCase().includes('user') && errorMessage.toLowerCase().includes('already')) ||
+          (errorMessage.toLowerCase().includes('duplicate') && errorMessage.toLowerCase().includes('email'))) {
+          toast({
+            title: "Email Already Exists",
+            description: `The email "${formValues.email}" is already registered. Please use a different email address.`,
+            variant: "destructive",
+          });
+          return; // Stop execution
+        }
 
         // Fallback: Direct signup (will require admin to re-login)
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -190,7 +218,8 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         if (authError) {
           // Check if it's a duplicate email error
           if (authError.message.toLowerCase().includes('already registered') ||
-            authError.message.toLowerCase().includes('already exists')) {
+            authError.message.toLowerCase().includes('already exists') ||
+            authError.message.toLowerCase().includes('duplicate')) {
             toast({
               title: "Email Already Exists",
               description: `The email "${formValues.email}" is already registered. Please use a different email address.`,
@@ -326,19 +355,45 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
             const pay_period_start = new Date(slipYear, slipMonth - 1, 1).toISOString();
             const pay_period_end = new Date(slipYear, slipMonth, 0, 23, 59, 59).toISOString();
 
-            const ctc = parseFloat(compensation.ctc);
-            const basic_salary = Math.round(ctc * 0.4); // 40% of CTC
-            const hra = Math.round(ctc * 0.2); // 20% of CTC
-            const special_allowance = Math.round(ctc * 0.15); // 15% of CTC
-            const transport_allowance = 2000;
-            const medical_allowance = 1500;
+            // NEW CALCULATION RULES
+            const ctc_yearly = parseFloat(compensation.ctc);
 
-            const gross_earnings = basic_salary + hra + special_allowance + transport_allowance + medical_allowance;
+            // 1. Employer PF = ₹1,800 per month (₹21,600 yearly)
+            const pf_employer = 1800;
+            const employer_pf_yearly = 21600;
+
+            // 2. Gross Salary (Yearly) = CTC – 21,600
+            const gross_yearly = ctc_yearly - employer_pf_yearly;
+
+            // 3. Gross Salary (Monthly) = Gross (Yearly) / 12
+            const gross_monthly = Math.round(gross_yearly / 12);
+
+            // 4. Basic = 50% of Gross Monthly
+            const basic_salary = Math.round(gross_monthly * 0.5);
+
+            // 5. HRA = 40% of Basic
+            const hra = Math.round(basic_salary * 0.4);
+
+            // 6. Project Allowance = Gross – (Basic + HRA)
+            const special_allowance = gross_monthly - (basic_salary + hra);
+
+            // 7. Other allowances are 0
+            const transport_allowance = 0; // Conveyance
+            const medical_allowance = 0;
+            const performance_bonus = 0; // Bonus
+            const other_allowances = 0; // LTA, Meal Allowance, etc.
+
+            const gross_earnings = gross_monthly;
 
             // Calculate deductions
-            const pf_employee = Math.round(basic_salary * 0.12); // 12% of basic
+            // 8. Employee PF = ₹1,800
+            const pf_employee = 1800;
+
+            // 9. Professional Tax = ₹150
             const professional_tax = 200;
-            const income_tax = Math.round(ctc * 0.1); // 10% of CTC (simplified)
+
+            // 10. Income Tax = 0 (shown as "As applicable")
+            const income_tax = 0;
 
             const total_deductions = pf_employee + professional_tax + income_tax;
             const net_salary = gross_earnings - total_deductions;
@@ -349,6 +404,13 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               employee_email: formValues.email,
               department: formValues.department || '',
               position: formValues.position || '',
+              joining_date: formValues.hire_date || null,
+              pan_number: formValues.pan_number || null,
+              bank_name: formValues.bank_name || null,
+              bank_account_no: formValues.account_number || null,
+              pf_number: null,
+              uan_number: null,
+              esi_number: null,
               month: slipMonth,
               year: slipYear,
               pay_period_start,
@@ -360,24 +422,23 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               transport_allowance,
               medical_allowance,
               special_allowance,
-              performance_bonus: 0,
+              performance_bonus,
               overtime_hours: 0,
               overtime_rate: 0,
               overtime_amount: 0,
-              other_allowances: 0,
+              other_allowances,
               gross_earnings,
               pf_employee,
               esi_employee: 0,
               professional_tax,
               income_tax,
-              medical_insurance: 0,
               loan_deduction: 0,
               advance_deduction: 0,
               late_deduction: 0,
               other_deductions: 0,
               total_deductions,
               net_salary,
-              pf_employer: pf_employee,
+              pf_employer,
               esi_employer: 0,
               status: 'processed' as const,
               generated_date: new Date().toISOString(),
