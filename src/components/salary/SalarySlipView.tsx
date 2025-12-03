@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { SalarySlip, MONTHS } from "@/types/salary";
-
+import stsLogo from "@/assets/images/sts-logo.jpg";
 interface SalarySlipViewProps {
   salarySlip: SalarySlip;
   onDownload?: () => void;
@@ -44,19 +44,28 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
       </div>
 
       <div id="salary-slip-content">
-        {/* Header Section - Normal Text (No Border) */}
-        <div className="text-center mb-4">
-          <div className="font-bold py-1 text-lg">
-            SYNCALL TECHNOLOGY SOLUTIONS PRIVATE LIMITED
+        {/* Header Section with Logo */}
+        <div className="flex items-start mb-4">
+          {/* Logo */}
+          <div className="w-20 h-20 mr-4 flex-shrink-0">
+            <img src={stsLogo} alt="STS Logo" className="w-full h-full object-contain" />
           </div>
-          <div className="py-1 text-xs font-medium">
-            U72200TG2014PTC093379
+          {/* Company Details */}
+          <div className="text-center flex-1">
+            <div className="font-bold py-1 text-lg">
+              SYNCALL TECHNOLOGY SOLUTIONS PRIVATE LIMITED
+            </div>
+            <div className="py-1 text-xs font-medium">
+              U72200TG2014PTC093379
+            </div>
+            <div className="py-1 text-xs">
+              H No 4-86, Plot No 8,Road No 2, Ganesh Nagar<br />
+              Narapally, K.V Rangareddy<br />
+              Hyderabad,Telangana-500088
+            </div>
           </div>
-          <div className="py-1 text-xs">
-            H No 4-86, Plot No 8,Road No 2, Ganesh Nagar<br />
-            Narapally, K.V Rangareddy<br />
-            Hyderabad,Telangana-500088
-          </div>
+          {/* Spacer for balance */}
+          <div className="w-20 flex-shrink-0"></div>
         </div>
 
         {/* Table 1: Payslip Month & Employee Details */}
