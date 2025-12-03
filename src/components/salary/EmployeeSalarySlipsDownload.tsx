@@ -44,10 +44,10 @@ export function EmployeeSalarySlipsDownload() {
                 id: employee?.id
             });
 
-            // Fetch additional employee details (PAN, Joining Date, Bank Details)
+            // Fetch additional employee details (PAN, Joining Date, Bank Details, PF, UAN, ESI)
             const { data: employeeDetails } = await supabase
                 .from('employees')
-                .select('pan_number, hire_date, bank_name, account_number')
+                .select('pan_number, hire_date, bank_name, account_number, pf_number, uan_number, esi_number')
                 .eq('id', employee?.id)
                 .single();
 
@@ -94,6 +94,9 @@ export function EmployeeSalarySlipsDownload() {
                 joining_date: (employeeDetails as any)?.hire_date,
                 bank_name: (employeeDetails as any)?.bank_name,
                 bank_account_no: (employeeDetails as any)?.account_number,
+                pf_number: (employeeDetails as any)?.pf_number,
+                uan_number: (employeeDetails as any)?.uan_number,
+                esi_number: (employeeDetails as any)?.esi_number,
             }));
 
             console.log('Final mapped salary slips:', mappedData);
