@@ -539,10 +539,10 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
   const handleViewSalarySlip = async (slip: SalarySlip) => {
     try {
-      // Fetch employee details to get bank info, PAN, etc.
+      // Fetch employee details to get bank info, PAN, PF, UAN, ESI, etc.
       const { data: employee, error } = await supabase
         .from('employees')
-        .select('hire_date, pan_number, bank_name, account_number, ifsc_code')
+        .select('hire_date, pan_number, bank_name, account_number, ifsc_code, pf_number, uan_number, esi_number')
         .eq('employee_id', slip.employee_id)
         .single();
 
@@ -558,9 +558,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
           pan_number: employee?.pan_number || '',
           bank_name: employee?.bank_name || '',
           bank_account_no: employee?.account_number || '',
-          pf_number: '', // These fields don't exist in employees table
-          uan_number: '',
-          esi_number: '',
+          pf_number: employee?.pf_number || '',
+          uan_number: employee?.uan_number || '',
+          esi_number: employee?.esi_number || '',
         } as any);
       }
       setIsViewDialogOpen(true);

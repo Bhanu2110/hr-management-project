@@ -266,6 +266,7 @@ export type Database = {
           department: string | null
           email: string
           employee_id: string
+          esi_number: string | null
           first_name: string
           hire_date: string | null
           id: string
@@ -274,11 +275,13 @@ export type Database = {
           pan_document_url: string | null
           pan_number: string | null
           password_hash: string
+          pf_number: string | null
           phone: string | null
           position: string | null
           role: string
           salary_slip_url: string | null
           status: string | null
+          uan_number: string | null
           updated_at: string
           user_id: string
         }
@@ -294,6 +297,7 @@ export type Database = {
           department?: string | null
           email: string
           employee_id: string
+          esi_number?: string | null
           first_name: string
           hire_date?: string | null
           id?: string
@@ -302,11 +306,13 @@ export type Database = {
           pan_document_url?: string | null
           pan_number?: string | null
           password_hash: string
+          pf_number?: string | null
           phone?: string | null
           position?: string | null
           role?: string
           salary_slip_url?: string | null
           status?: string | null
+          uan_number?: string | null
           updated_at?: string
           user_id: string
         }
@@ -322,6 +328,7 @@ export type Database = {
           department?: string | null
           email?: string
           employee_id?: string
+          esi_number?: string | null
           first_name?: string
           hire_date?: string | null
           id?: string
@@ -330,11 +337,13 @@ export type Database = {
           pan_document_url?: string | null
           pan_number?: string | null
           password_hash?: string
+          pf_number?: string | null
           phone?: string | null
           position?: string | null
           role?: string
           salary_slip_url?: string | null
           status?: string | null
+          uan_number?: string | null
           updated_at?: string
           user_id?: string
         }
