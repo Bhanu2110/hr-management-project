@@ -79,6 +79,11 @@ const employeeFormSchema = z.object({
   ifsc_code: z.string().optional(),
   branch_name: z.string().optional(),
   account_holder_name: z.string().optional(),
+  
+  // PF, UAN, ESI Details
+  pf_number: z.string().optional(),
+  uan_number: z.string().optional(),
+  esi_number: z.string().optional(),
 });
 
 type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
@@ -119,6 +124,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       ifsc_code: "",
       branch_name: "",
       account_holder_name: "",
+      pf_number: "",
+      uan_number: "",
+      esi_number: "",
     },
   });
 
@@ -289,6 +297,10 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         ifsc_code: formValues.ifsc_code || null,
         branch_name: formValues.branch_name || null,
         account_holder_name: formValues.account_holder_name || null,
+        // PF, UAN, ESI Details
+        pf_number: formValues.pf_number || null,
+        uan_number: formValues.uan_number || null,
+        esi_number: formValues.esi_number || null,
       };
 
       console.log('Creating employee with data:', employeeData);
@@ -851,6 +863,49 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                   <FormLabel>Branch Name</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Main Branch, City Name" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* PF, UAN, ESI Details */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+            <FormField
+              control={form.control}
+              name="pf_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>PF No.</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., TN/ABC/12345/678" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="uan_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>PF UAN</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., 100012345678" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="esi_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ESI No.</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., 1234567890123456" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
