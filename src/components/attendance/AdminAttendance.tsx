@@ -5,11 +5,16 @@ import { Calendar, Clock, Users, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface AttendanceInterval {
+  check_in: string;
+  check_out?: string;
+}
+
 interface AttendanceRecord {
   id: string;
   employee_name: string;
-  check_in: string;
-  check_out: string | null;
+  employee_id: string;
+  intervals: AttendanceInterval[];
   total_hours: number | null;
   status: string;
 }
@@ -56,15 +61,13 @@ export const AdminAttendance = () => {
 
       // Transform data
       const records: AttendanceRecord[] = attendanceData?.map((record: any) => {
-        const intervals = record.intervals as any[] || [];
-        const firstInterval = intervals[0];
-        const lastInterval = intervals[intervals.length - 1];
+        const intervals = (record.intervals as AttendanceInterval[]) || [];
 
         return {
           id: record.id,
           employee_name: `${record.employees.first_name} ${record.employees.last_name}`,
-          check_in: firstInterval?.check_in || null,
-          check_out: lastInterval?.check_out || null,
+          employee_id: record.employee_id,
+          intervals: intervals,
           total_hours: record.total_hours,
           status: record.status
         };
@@ -73,10 +76,10 @@ export const AdminAttendance = () => {
       setAttendanceRecords(records);
 
       // Calculate stats
-      const present = records.filter(r => r.check_in !== null).length;
+      const present = records.filter(r => r.intervals.length > 0 && r.intervals[0]?.check_in).length;
       const late = records.filter(r => {
-        if (r.check_in) {
-          const checkInTime = new Date(r.check_in);
+        if (r.intervals.length > 0 && r.intervals[0]?.check_in) {
+          const checkInTime = new Date(r.intervals[0].check_in);
           const nineAM = new Date(checkInTime);
           nineAM.setHours(9, 0, 0, 0);
           return checkInTime > nineAM;
@@ -126,14 +129,23 @@ export const AdminAttendance = () => {
     return `${h}h ${m.toString().padStart(2, '0')}m`;
   };
 
-  const getStatusBadge = (status: string, checkOut: string | null) => {
-    if (checkOut) {
-      return <Badge className="bg-blue-600 text-white">Complete</Badge>;
-    } else if (status === 'present') {
-      return <Badge className="bg-success text-success-foreground">Checked In</Badge>;
-    } else {
+  const getStatusBadge = (intervals: AttendanceInterval[]) => {
+    if (intervals.length === 0) {
       return <Badge variant="destructive">Absent</Badge>;
     }
+    const lastInterval = intervals[intervals.length - 1];
+    if (lastInterval?.check_out) {
+      return <Badge className="bg-blue-600 text-white">Complete</Badge>;
+    } else {
+      return <Badge className="bg-success text-success-foreground">Checked In</Badge>;
+    }
+  };
+
+  const calculateIntervalHours = (interval: AttendanceInterval): number => {
+    if (!interval.check_in || !interval.check_out) return 0;
+    const checkIn = new Date(interval.check_in);
+    const checkOut = new Date(interval.check_out);
+    return (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
   };
 
   const attendanceRate = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(1) : '0';
@@ -225,29 +237,58 @@ export const AdminAttendance = () => {
                 <tr className="border-b border-border">
                   <th className="text-center py-3 px-4 font-medium text-muted-foreground w-[60px]">S.No</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Employee</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Session</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Check In</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Check Out</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Session Hours</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Total Hours</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {attendanceRecords.length > 0 ? (
-                  attendanceRecords.map((record, index) => (
-                    <tr key={record.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 text-center text-muted-foreground">{index + 1}</td>
-                      <td className="py-3 px-4 font-medium">{record.employee_name}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{formatTime(record.check_in)}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{formatTime(record.check_out)}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{formatHours(record.total_hours)}</td>
-                      <td className="py-3 px-4">
-                        {getStatusBadge(record.status, record.check_out)}
-                      </td>
-                    </tr>
+                  attendanceRecords.map((record, recordIndex) => (
+                    record.intervals.length > 0 ? (
+                      record.intervals.map((interval, intervalIndex) => (
+                        <tr key={`${record.id}-${intervalIndex}`} className="border-b border-border hover:bg-muted/30 transition-colors">
+                          {intervalIndex === 0 ? (
+                            <>
+                              <td className="py-3 px-4 text-center text-muted-foreground" rowSpan={record.intervals.length}>{recordIndex + 1}</td>
+                              <td className="py-3 px-4 font-medium" rowSpan={record.intervals.length}>{record.employee_name}</td>
+                            </>
+                          ) : null}
+                          <td className="py-3 px-4 text-muted-foreground">Session {intervalIndex + 1}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{formatTime(interval.check_in)}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{formatTime(interval.check_out || null)}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{formatHours(calculateIntervalHours(interval))}</td>
+                          {intervalIndex === 0 ? (
+                            <>
+                              <td className="py-3 px-4 text-muted-foreground" rowSpan={record.intervals.length}>{formatHours(record.total_hours)}</td>
+                              <td className="py-3 px-4" rowSpan={record.intervals.length}>
+                                {getStatusBadge(record.intervals)}
+                              </td>
+                            </>
+                          ) : null}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr key={record.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-4 text-center text-muted-foreground">{recordIndex + 1}</td>
+                        <td className="py-3 px-4 font-medium">{record.employee_name}</td>
+                        <td className="py-3 px-4 text-muted-foreground">-</td>
+                        <td className="py-3 px-4 text-muted-foreground">-</td>
+                        <td className="py-3 px-4 text-muted-foreground">-</td>
+                        <td className="py-3 px-4 text-muted-foreground">-</td>
+                        <td className="py-3 px-4 text-muted-foreground">{formatHours(record.total_hours)}</td>
+                        <td className="py-3 px-4">
+                          {getStatusBadge(record.intervals)}
+                        </td>
+                      </tr>
+                    )
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
                       No attendance records found for today
                     </td>
                   </tr>
