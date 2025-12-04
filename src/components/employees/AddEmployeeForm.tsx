@@ -405,7 +405,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
             const pf_employee = 1800;
 
             // 9. Professional Tax = ₹150
-            const professional_tax = 150;
+            const professional_tax = 200;
 
             // 10. Income Tax = 0 (shown as "As applicable")
             const income_tax = 0;
