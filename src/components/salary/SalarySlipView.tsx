@@ -47,9 +47,9 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
         {/* Header Section with Logo */}
         <div className="flex items-start mb-4">
           {/* Logo */}
-          <div className="w-20 h-20 mr-4 flex-shrink-0">
+          {/* <div className="w-20 h-20 mr-4 flex-shrink-0">
             <img src={stsLogo} alt="STS Logo" className="w-full h-full object-contain" />
-          </div>
+          </div> */}
           {/* Company Details */}
           <div className="text-center flex-1">
             <div className="font-bold py-1 text-lg">
