@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, TrendingUp } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,18 +29,21 @@ interface AttendanceStats {
 }
 
 export const AdminAttendance = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<AttendanceStats>({ present: 0, absent: 0, late: 0, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchAttendanceData();
-  }, []);
+    if (selectedDate) {
+      fetchAttendanceData();
+    }
+  }, [selectedDate]);
 
   const fetchAttendanceData = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
       // Fetch today's attendance with employee names
       const { data: attendanceData, error: attendanceError } = await supabase
@@ -52,7 +57,7 @@ export const AdminAttendance = () => {
           employee_id,
           employees!attendance_employee_id_fkey(first_name, last_name)
         `)
-        .eq('date', today);
+        .eq('date', dateStr);
 
       if (attendanceError) {
         console.error('Error fetching attendance:', attendanceError);
@@ -161,9 +166,15 @@ export const AdminAttendance = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Attendance Management</h1>
-        <p className="text-muted-foreground">Track and monitor employee attendance</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Attendance Management</h1>
+          <p className="text-muted-foreground">Track and monitor employee attendance</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Select Date:</span>
+          <DatePicker date={selectedDate} setDate={setSelectedDate} className="w-[200px]" />
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -228,7 +239,7 @@ export const AdminAttendance = () => {
       {/* Attendance Table */}
       <Card className="shadow-card">
         <CardHeader>
-          <CardTitle>Today's Attendance</CardTitle>
+          <CardTitle>Attendance - {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Today'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
