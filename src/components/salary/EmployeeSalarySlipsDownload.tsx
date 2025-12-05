@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Download, FileText, AlertCircle, Eye, RotateCcw } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { SalarySlipView } from './SalarySlipView';
-import { MONTHS, SalarySlip } from '@/types/salary';
+import { SalarySlip } from '@/types/salary';
+import { downloadSalarySlipPDF } from '@/utils/salarySlipPdfGenerator';
 
 export function EmployeeSalarySlipsDownload() {
     const { employee, isEmployee } = useAuth();
@@ -18,7 +19,6 @@ export function EmployeeSalarySlipsDownload() {
     const [filteredSlips, setFilteredSlips] = useState<SalarySlip[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewingSlip, setViewingSlip] = useState<SalarySlip | null>(null);
-    const [downloadingSlip, setDownloadingSlip] = useState<SalarySlip | null>(null);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
     // Filter states
@@ -128,47 +128,25 @@ export function EmployeeSalarySlipsDownload() {
         setFilteredSlips(filtered);
     };
 
-    const handleDirectDownload = async (slip: SalarySlip) => {
-        setDownloadingSlip(slip);
-        // We need to wait for the state to update and the hidden element to render
-        setTimeout(async () => {
-            try {
-                const html2pdf = (await import('html2pdf.js')).default;
-                const element = document.getElementById('hidden-salary-slip-print');
-
-                if (!element) {
-                    throw new Error("Element not found");
-                }
-
-                const monthName = MONTHS.find(m => m.value === slip.month)?.label || 'Unknown';
-                const opt = {
-                    margin: 10,
-                    filename: `salary-slip-${slip.employee_name}-${monthName}-${slip.year}.pdf`,
-                    image: { type: 'jpeg' as const, quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-                };
-
-                toast({
-                    title: "Generating PDF",
-                    description: "Please wait...",
-                });
-                await html2pdf().set(opt).from(element).save();
-                toast({
-                    title: "Success",
-                    description: "PDF downloaded successfully",
-                });
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                toast({
-                    title: "Error",
-                    description: "Failed to generate PDF",
-                    variant: "destructive",
-                });
-            } finally {
-                setDownloadingSlip(null);
-            }
-        }, 100);
+    const handleDirectDownload = (slip: SalarySlip) => {
+        try {
+            toast({
+                title: "Generating PDF",
+                description: "Please wait...",
+            });
+            downloadSalarySlipPDF(slip);
+            toast({
+                title: "Success",
+                description: "PDF downloaded successfully",
+            });
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            toast({
+                title: "Error",
+                description: "Failed to generate PDF",
+                variant: "destructive",
+            });
+        }
     };
 
     const handleViewSalarySlip = (slip: SalarySlip) => {
@@ -176,35 +154,14 @@ export function EmployeeSalarySlipsDownload() {
         setIsViewDialogOpen(true);
     };
 
-    const handleDownloadSlip = async () => {
+    const handleDownloadSlip = () => {
         if (viewingSlip) {
             try {
-                const html2pdf = (await import('html2pdf.js')).default;
-                const element = document.getElementById('salary-slip-preview');
-
-                if (!element) {
-                    toast({
-                        title: "Error",
-                        description: "Unable to find salary slip content",
-                        variant: "destructive",
-                    });
-                    return;
-                }
-
-                const monthName = MONTHS.find(m => m.value === viewingSlip.month)?.label || 'Unknown';
-                const opt = {
-                    margin: 10,
-                    filename: `salary-slip-${viewingSlip.employee_name}-${monthName}-${viewingSlip.year}.pdf`,
-                    image: { type: 'jpeg' as const, quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-                };
-
                 toast({
                     title: "Generating PDF",
                     description: "Please wait...",
                 });
-                await html2pdf().set(opt).from(element).save();
+                downloadSalarySlipPDF(viewingSlip);
                 toast({
                     title: "Success",
                     description: "PDF downloaded successfully",
@@ -384,12 +341,6 @@ export function EmployeeSalarySlipsDownload() {
                 </DialogContent>
             </Dialog>
 
-            {/* Hidden element for direct PDF generation */}
-            <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-                <div id="hidden-salary-slip-print">
-                    {downloadingSlip && <SalarySlipView salarySlip={downloadingSlip} />}
-                </div>
-            </div>
         </div>
     );
 }
