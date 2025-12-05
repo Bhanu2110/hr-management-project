@@ -11,7 +11,7 @@ import { Download, FileText, AlertCircle, Eye, RotateCcw } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { SalarySlipView } from './SalarySlipView';
 import { SalarySlip } from '@/types/salary';
-iimport { downloadSalarySlipPDF } from '@/utils/SalarySlipPdfGenerator';
+import { downloadSalarySlipPDF } from '@/utils/salarySlipPdfGenerator';
 
 export function EmployeeSalarySlipsDownload() {
     const { employee, isEmployee } = useAuth();
