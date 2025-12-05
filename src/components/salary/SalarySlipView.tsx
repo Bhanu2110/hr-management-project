@@ -33,16 +33,6 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
 
   return (
     <div className="max-w-[210mm] mx-auto bg-white text-black p-8 font-sans text-sm">
-      {/* Action Buttons (Hidden in Print/PDF) */}
-      <div className="flex justify-end mb-6 print:hidden" data-html2canvas-ignore="true">
-        {onDownload && (
-          <Button onClick={onDownload} className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
-        )}
-      </div>
-
       <div id="salary-slip-content">
         {/* Header Section with Logo */}
         <div className="flex items-start mb-4">
@@ -238,6 +228,16 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
           This is a system generated pay slip and does not require signature.
         </div>
       </div>
+
+      {/* Action Buttons at Bottom (Hidden in Print/PDF) */}
+      {onDownload && (
+        <div className="flex justify-center mt-6 print:hidden" data-html2canvas-ignore="true">
+          <Button onClick={onDownload} className="gap-2">
+            <Download className="h-4 w-4" />
+            Download PDF
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
