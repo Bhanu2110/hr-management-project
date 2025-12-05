@@ -48,7 +48,7 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
   doc.text('H No 4-86, Plot No 8, Road No 2, Ganesh Nagar', pageWidth / 2, y, { align: 'center' });
   y += 4;
   doc.text('Narapally, K.V Rangareddy, Hyderabad, Telangana-500088', pageWidth / 2, y, { align: 'center' });
-  y += 8;
+  y += 10;
 
   // Payslip Month Header
   const monthName = MONTHS.find(m => m.value === salarySlip.month)?.label || 'Unknown';
@@ -59,25 +59,26 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text(`Payslip for the month of ${monthName} - ${salarySlip.year}`, pageWidth / 2, y + 5.5, { align: 'center' });
-  y += 10;
+  y += 12;
 
   // Employee Details Table
   const lopDays = Math.max(0, salarySlip.working_days - salarySlip.present_days);
   const leftColWidth = contentWidth / 2;
-  const rightColWidth = contentWidth / 2;
+  const lineHeight = 7;
+  const employeeDetailsHeight = lineHeight * 7 + 6;
 
   // Draw outer border for employee details
-  const employeeDetailsHeight = 56;
+  doc.setDrawColor(0);
   doc.rect(margin, y, contentWidth, employeeDetailsHeight, 'S');
   doc.line(margin + leftColWidth, y, margin + leftColWidth, y + employeeDetailsHeight);
 
   doc.setFontSize(9);
-  let leftY = y + 6;
-  let rightY = y + 6;
-  const labelWidth = 35;
-  const lineHeight = 7;
+  let leftY = y + 7;
+  let rightY = y + 7;
+  const labelWidthLeft = 38;
+  const labelWidthRight = 38;
 
-  // Left Column
+  // Left Column Details
   const leftDetails = [
     { label: 'Name:', value: salarySlip.employee_name },
     { label: 'Join Date:', value: formatDate(salarySlip.joining_date || '') },
@@ -92,11 +93,11 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
     doc.setFont('helvetica', 'bold');
     doc.text(item.label, margin + 3, leftY);
     doc.setFont('helvetica', 'normal');
-    doc.text(item.value || '', margin + labelWidth + 5, leftY);
+    doc.text(item.value || '', margin + labelWidthLeft + 3, leftY);
     leftY += lineHeight;
   });
 
-  // Right Column
+  // Right Column Details
   const rightDetails = [
     { label: 'Bank Name:', value: salarySlip.bank_name || '' },
     { label: 'Bank Account No.:', value: salarySlip.bank_account_no || '' },
@@ -111,13 +112,13 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
     doc.setFont('helvetica', 'bold');
     doc.text(item.label, margin + leftColWidth + 3, rightY);
     doc.setFont('helvetica', 'normal');
-    doc.text(item.value || '', margin + leftColWidth + labelWidth + 5, rightY);
+    doc.text(item.value || '', margin + leftColWidth + labelWidthRight + 3, rightY);
     rightY += lineHeight;
   });
 
   y += employeeDetailsHeight + 5;
 
-  // Salary Details Table
+  // Earnings and Deductions Data
   const earnings = [
     ['BASIC', formatCurrency(salarySlip.basic_salary)],
     ['HRA', formatCurrency(salarySlip.hra)],
@@ -136,38 +137,41 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
     ['INCOME TAX', salarySlip.income_tax === 0 ? 'As applicable' : formatCurrency(salarySlip.income_tax)],
   ];
 
-  // Salary table dimensions
-  const salaryTableY = y;
+  // Table dimensions
   const colWidth = contentWidth / 2;
   const headerHeight = 8;
-  const rowHeight = 6;
-  const maxRows = Math.max(earnings.length, deductions.length);
+  const rowHeight = 7;
+  const maxRows = earnings.length;
   const dataHeight = maxRows * rowHeight;
   const totalsHeight = 8;
   const netPayHeight = 8;
   const totalTableHeight = headerHeight + dataHeight + totalsHeight + netPayHeight;
+  const salaryTableY = y;
 
-  // Outer border
+  // Draw outer border
+  doc.setDrawColor(0);
   doc.rect(margin, salaryTableY, contentWidth, totalTableHeight, 'S');
-  // Vertical divider
+
+  // Draw vertical divider between earnings and deductions (up to totals row)
   doc.line(margin + colWidth, salaryTableY, margin + colWidth, salaryTableY + headerHeight + dataHeight + totalsHeight);
 
-  // Earnings Header
+  // ===== HEADERS =====
+  // Earnings Header with gray background
   doc.setFillColor(240, 240, 240);
-  doc.rect(margin, salaryTableY, colWidth, headerHeight, 'F');
-  doc.rect(margin, salaryTableY, colWidth, headerHeight, 'S');
+  doc.rect(margin, salaryTableY, colWidth, headerHeight, 'FD');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.text('Earnings', margin + 3, salaryTableY + 5.5);
-  doc.text('Amount Rs.', margin + colWidth - 25, salaryTableY + 5.5);
+  doc.text('Amount Rs.', margin + colWidth - 5, salaryTableY + 5.5, { align: 'right' });
 
-  // Deductions Header
-  doc.rect(margin + colWidth, salaryTableY, colWidth, headerHeight, 'F');
-  doc.rect(margin + colWidth, salaryTableY, colWidth, headerHeight, 'S');
+  // Deductions Header with gray background
+  doc.setFillColor(240, 240, 240);
+  doc.rect(margin + colWidth, salaryTableY, colWidth, headerHeight, 'FD');
+  doc.setFont('helvetica', 'bold');
   doc.text('Deductions', margin + colWidth + 3, salaryTableY + 5.5);
-  doc.text('Amount Rs.', margin + contentWidth - 25, salaryTableY + 5.5);
+  doc.text('Amount Rs.', margin + contentWidth - 5, salaryTableY + 5.5, { align: 'right' });
 
-  // Earnings Data
+  // ===== EARNINGS DATA =====
   doc.setFont('helvetica', 'normal');
   let earningsY = salaryTableY + headerHeight + 5;
   earnings.forEach((row) => {
@@ -176,7 +180,7 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
     earningsY += rowHeight;
   });
 
-  // Deductions Data
+  // ===== DEDUCTIONS DATA =====
   let deductionsY = salaryTableY + headerHeight + 5;
   deductions.forEach((row) => {
     doc.text(row[0], margin + colWidth + 3, deductionsY);
@@ -184,22 +188,23 @@ export const generateSalarySlipPDF = (salarySlip: SalarySlip): jsPDF => {
     deductionsY += rowHeight;
   });
 
-  // Totals Row
+  // ===== TOTALS ROW =====
   const totalsY = salaryTableY + headerHeight + dataHeight;
   doc.line(margin, totalsY, margin + contentWidth, totalsY);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Total Earnings: Rs.`, margin + 3, totalsY + 5.5);
+  doc.text('Total Earnings: Rs.', margin + 3, totalsY + 5.5);
   doc.text(formatCurrency(salarySlip.gross_earnings), margin + colWidth - 5, totalsY + 5.5, { align: 'right' });
-  doc.text(`Total Deductions: Rs.`, margin + colWidth + 3, totalsY + 5.5);
+  doc.text('Total Deductions: Rs.', margin + colWidth + 3, totalsY + 5.5);
   doc.text(formatCurrency(salarySlip.total_deductions), margin + contentWidth - 5, totalsY + 5.5, { align: 'right' });
 
-  // Net Pay Row
+  // ===== NET PAY ROW =====
   const netPayY = totalsY + totalsHeight;
   doc.line(margin, netPayY, margin + contentWidth, netPayY);
-  doc.text(`Net Pay for the month (Total Earnings - Total Deductions):`, margin + 3, netPayY + 5.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Net Pay for the month (Total Earnings - Total Deductions):', margin + 3, netPayY + 5.5);
   doc.text(formatCurrency(salarySlip.net_salary), margin + contentWidth - 5, netPayY + 5.5, { align: 'right' });
 
-  // Footer
+  // ===== FOOTER =====
   y = salaryTableY + totalTableHeight + 15;
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
