@@ -56,7 +56,7 @@ import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SalarySlipView } from "./SalarySlipView";
-import { downloadSalarySlipPDF } from "@/utils/SalarySlipPdfGenerator";
+import { downloadSalarySlipPDF } from "@/utils/salarySlipPdfGenerator";
 
 interface SalaryManagementProps {
   employees?: Array<{
