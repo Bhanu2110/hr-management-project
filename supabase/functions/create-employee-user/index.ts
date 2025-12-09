@@ -60,9 +60,10 @@ serve(async (req) => {
       JSON.stringify({ user_id: data.user?.id }),
       { status: 200, headers: corsHeaders }
     );
-  } catch (e) {
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : "Unexpected error";
     return new Response(
-      JSON.stringify({ error: e?.message ?? "Unexpected error" }),
+      JSON.stringify({ error: errorMessage }),
       { status: 400, headers: corsHeaders }
     );
   }
