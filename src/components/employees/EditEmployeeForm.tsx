@@ -95,13 +95,17 @@ interface EditEmployeeFormProps {
 export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployeeFormProps) {
   const [aadharFile, setAadharFile] = useState<File | null>(null);
   const [panFile, setPanFile] = useState<File | null>(null);
+  
+  // Education certificate states
+  const [tenthCertFile, setTenthCertFile] = useState<File | null>(null);
+  const [interCertFile, setInterCertFile] = useState<File | null>(null);
+  const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
 
   // Compensation table state
   const [compensationRecords, setCompensationRecords] = useState<Array<{ ctc: string; effective_date: string }>>([]);
   const [compensationDialogOpen, setCompensationDialogOpen] = useState(false);
   const [compensationForm, setCompensationForm] = useState({ ctc: '', effective_date: '' });
   const [editingCompensationIndex, setEditingCompensationIndex] = useState<number | null>(null);
-
   // Load existing compensation records from database
   useEffect(() => {
     const loadCompensationRecords = async () => {
@@ -198,8 +202,21 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       // Upload new files if provided
       let aadharUrl: string | null | undefined = (employee as any).aadhar_document_url;
       let panUrl: string | null | undefined = (employee as any).pan_document_url;
+      let tenthCertUrl: string | null | undefined = (employee as any).tenth_certificate_url;
+      let interCertUrl: string | null | undefined = (employee as any).inter_certificate_url;
+      let degreeCertUrl: string | null | undefined = (employee as any).degree_certificate_url;
+      
       if (panFile) {
         panUrl = await uploadFile(panFile, 'pan', formValues.employee_id);
+      }
+      if (tenthCertFile) {
+        tenthCertUrl = await uploadFile(tenthCertFile, 'certificates/tenth', formValues.employee_id);
+      }
+      if (interCertFile) {
+        interCertUrl = await uploadFile(interCertFile, 'certificates/inter', formValues.employee_id);
+      }
+      if (degreeCertFile) {
+        degreeCertUrl = await uploadFile(degreeCertFile, 'certificates/degree', formValues.employee_id);
       }
 
       // Get the most recent compensation record (last one in the array)
@@ -212,6 +229,9 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
         ...formValues,
         aadhar_document_url: aadharUrl,
         pan_document_url: panUrl,
+        tenth_certificate_url: tenthCertUrl,
+        inter_certificate_url: interCertUrl,
+        degree_certificate_url: degreeCertUrl,
         pan_number: formValues.pan_number || null,
         // Use compensation records instead of form fields
         current_ctc: latestCompensation ? parseFloat(latestCompensation.ctc) : null,
@@ -765,6 +785,142 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                 </FormItem>
               )}
             />
+          </div>
+
+          {/* Education Certificates Section */}
+          <div className="space-y-4 pt-4">
+            <div className="flex items-center gap-2 pb-2 border-b">
+              <div className="h-8 w-1 bg-gradient-primary rounded-full" />
+              <h3 className="text-lg font-semibold">Education Certificates</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 10th Certificate */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">10th Certificate</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setTenthCertFile(e.target.files?.[0] || null)}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  {tenthCertFile && <FileText className="h-4 w-4 text-green-600" />}
+                  {!tenthCertFile && (employee as any).tenth_certificate_url && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const url = (employee as any).tenth_certificate_url;
+                          const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                          if (urlParts.length > 1) {
+                            const filePath = urlParts[1];
+                            const { data, error } = await supabase.storage
+                              .from('employee-documents')
+                              .createSignedUrl(filePath, 60);
+                            if (error) throw error;
+                            if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                          } else {
+                            window.open(url, '_blank');
+                          }
+                        } catch (error) {
+                          toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="text-sm">View</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Intermediate Certificate */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Intermediate Certificate</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setInterCertFile(e.target.files?.[0] || null)}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  {interCertFile && <FileText className="h-4 w-4 text-green-600" />}
+                  {!interCertFile && (employee as any).inter_certificate_url && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const url = (employee as any).inter_certificate_url;
+                          const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                          if (urlParts.length > 1) {
+                            const filePath = urlParts[1];
+                            const { data, error } = await supabase.storage
+                              .from('employee-documents')
+                              .createSignedUrl(filePath, 60);
+                            if (error) throw error;
+                            if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                          } else {
+                            window.open(url, '_blank');
+                          }
+                        } catch (error) {
+                          toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="text-sm">View</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Degree Certificate */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Degree Certificate</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setDegreeCertFile(e.target.files?.[0] || null)}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  {degreeCertFile && <FileText className="h-4 w-4 text-green-600" />}
+                  {!degreeCertFile && (employee as any).degree_certificate_url && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const url = (employee as any).degree_certificate_url;
+                          const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                          if (urlParts.length > 1) {
+                            const filePath = urlParts[1];
+                            const { data, error } = await supabase.storage
+                              .from('employee-documents')
+                              .createSignedUrl(filePath, 60);
+                            if (error) throw error;
+                            if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                          } else {
+                            window.open(url, '_blank');
+                          }
+                        } catch (error) {
+                          toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="text-sm">View</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
