@@ -19,12 +19,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2, Plus } from "lucide-react";
+import { Search, Filter, ChevronDown, MoreHorizontal, ArrowUpDown, Edit, Trash2, Plus, Eye } from "lucide-react";
 import { employeeService, type Employee } from "@/services/api";
 import { AddEmployeeDialog } from "@/components/employees/AddEmployeeDialog";
 import { EditEmployeeDialog } from "@/components/employees/EditEmployeeDialog";
 import { DeleteEmployeeDialog } from "@/components/employees/DeleteEmployeeDialog";
-import { useTheme } from '@/context/ThemeContext'; // Import useTheme
+import { ViewEmployeeDialog } from "@/components/employees/ViewEmployeeDialog";
+import { useTheme } from '@/context/ThemeContext';
 
 type SortDirection = 'asc' | 'desc';
 type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
@@ -39,8 +40,8 @@ const Employees = () => {
   const [sortField, setSortField] = useState<SortField>('first_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [refreshKey, setRefreshKey] = useState(0); // Add this line
-  const { themeColor } = useTheme(); // Use the themeColor
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { themeColor } = useTheme();
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -56,7 +57,7 @@ const Employees = () => {
     };
 
     loadEmployees();
-  }, [refreshKey]); // Add refreshKey to the dependency array
+  }, [refreshKey]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -284,6 +285,17 @@ const Employees = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <ViewEmployeeDialog
+                                employee={employee}
+                                trigger={
+                                  <div className="flex items-center w-full cursor-pointer">
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    <span>View</span>
+                                  </div>
+                                }
+                              />
+                            </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <EditEmployeeDialog
                                 employee={employee}
