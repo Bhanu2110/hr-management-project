@@ -6,10 +6,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
+interface AttendanceInterval {
+  check_in: string;
+  check_out?: string;
+}
+
 interface AttendanceStatus {
   has_checked_in: boolean;
   last_check_in: string | null;
   last_check_out: string | null;
+  intervals: AttendanceInterval[];
+  total_hours: number;
 }
 
 export const EmployeeAttendance = () => {
@@ -29,7 +36,7 @@ export const EmployeeAttendance = () => {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const { data, error } = await supabase
         .from('attendance')
         .select('*')
@@ -40,19 +47,23 @@ export const EmployeeAttendance = () => {
       if (error) throw error;
 
       if (data && Array.isArray(data.intervals) && data.intervals.length > 0) {
-        const intervals = data.intervals as any[];
+        const intervals = data.intervals as unknown as AttendanceInterval[];
         const lastInterval = intervals[intervals.length - 1];
-        
+
         setAttendanceStatus({
           has_checked_in: !!(lastInterval?.check_in && !lastInterval?.check_out),
           last_check_in: lastInterval?.check_in || null,
-          last_check_out: lastInterval?.check_out || null
+          last_check_out: lastInterval?.check_out || null,
+          intervals: intervals,
+          total_hours: data.total_hours || 0
         });
       } else {
         setAttendanceStatus({
           has_checked_in: false,
           last_check_in: null,
-          last_check_out: null
+          last_check_out: null,
+          intervals: [],
+          total_hours: 0
         });
       }
     } catch (error) {
@@ -72,7 +83,7 @@ export const EmployeeAttendance = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const currentTime = new Date().toISOString();
-      
+
       // Get today's attendance
       const { data: existingData, error: fetchError } = await supabase
         .from('attendance')
@@ -103,16 +114,16 @@ export const EmployeeAttendance = () => {
           description: "Successfully checked in for the day",
         });
       } else {
-        const intervals = (existingData.intervals as any[]) || [];
+        const intervals = (existingData.intervals as unknown as AttendanceInterval[]) || [];
         const lastInterval = intervals[intervals.length - 1];
 
         if (lastInterval?.check_in && !lastInterval?.check_out) {
-          // Check out
+          // Check out - update the last interval
           lastInterval.check_out = currentTime;
-          
-          // Calculate total hours
+
+          // Calculate total hours from all intervals
           let totalHours = 0;
-          intervals.forEach((interval: any) => {
+          intervals.forEach((interval) => {
             if (interval.check_in && interval.check_out) {
               const checkIn = new Date(interval.check_in);
               const checkOut = new Date(interval.check_out);
@@ -124,7 +135,7 @@ export const EmployeeAttendance = () => {
             .from('attendance')
             .update({
               check_out: currentTime,
-              intervals,
+              intervals: intervals as unknown as any,
               total_hours: Math.round(totalHours * 100) / 100
             })
             .eq('id', existingData.id);
@@ -136,15 +147,15 @@ export const EmployeeAttendance = () => {
             description: "Successfully checked out",
           });
         } else {
-          // New check-in after a previous check-out
+          // New check-in - append a new interval
           intervals.push({ check_in: currentTime });
 
           const { error: updateError } = await supabase
             .from('attendance')
-            .update({ 
+            .update({
               check_in: currentTime,
               check_out: null,
-              intervals 
+              intervals: intervals as unknown as any
             })
             .eq('id', existingData.id);
 
@@ -152,7 +163,7 @@ export const EmployeeAttendance = () => {
 
           toast({
             title: "Checked In",
-            description: "Successfully checked in",
+            description: "Successfully checked in (Session " + intervals.length + ")",
           });
         }
       }
@@ -171,7 +182,7 @@ export const EmployeeAttendance = () => {
     }
   };
 
-  const formatTime = (timeString: string | null) => {
+  const formatTime = (timeString: string | null | undefined) => {
     if (!timeString) return '-';
     return new Date(timeString).toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -187,6 +198,12 @@ export const EmployeeAttendance = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatHours = (hours: number) => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}h ${m}m`;
   };
 
   return (
@@ -217,14 +234,14 @@ export const EmployeeAttendance = () => {
                   Since {formatTime(attendanceStatus.last_check_in)}
                 </p>
               </div>
-            ) : attendanceStatus?.last_check_out ? (
+            ) : attendanceStatus?.intervals && attendanceStatus.intervals.length > 0 ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-blue-600">
                   <CheckCircle className="h-6 w-6" />
-                  <span className="font-semibold">Day Complete</span>
+                  <span className="font-semibold">Available for Check-in</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Checked out at {formatTime(attendanceStatus.last_check_out)}
+                  Last checkout at {formatTime(attendanceStatus.last_check_out)}
                 </p>
               </div>
             ) : (
@@ -242,14 +259,12 @@ export const EmployeeAttendance = () => {
 
           <Button
             onClick={handleAttendance}
-            disabled={isLoading || (attendanceStatus?.last_check_out && !attendanceStatus?.has_checked_in)}
+            disabled={isLoading}
             className="w-full bg-gradient-primary hover:opacity-90 text-white disabled:opacity-50"
             size="lg"
           >
             {isLoading ? (
               "Processing..."
-            ) : attendanceStatus?.last_check_out && !attendanceStatus?.has_checked_in ? (
-              "Day Complete"
             ) : attendanceStatus?.has_checked_in ? (
               "Check Out"
             ) : (
@@ -259,25 +274,50 @@ export const EmployeeAttendance = () => {
         </CardContent>
       </Card>
 
-      {/* Today's Summary */}
+      {/* Today's Sessions */}
       <Card className="shadow-card max-w-md mx-auto">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Today's Summary
+            Today's Sessions
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Check In</p>
-              <p className="font-semibold">{formatTime(attendanceStatus?.last_check_in)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Check Out</p>
-              <p className="font-semibold">{formatTime(attendanceStatus?.last_check_out)}</p>
-            </div>
-          </div>
+        <CardContent className="space-y-4">
+          {attendanceStatus?.intervals && attendanceStatus.intervals.length > 0 ? (
+            <>
+              <div className="space-y-3">
+                {attendanceStatus.intervals.map((interval, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Session {index + 1}
+                    </span>
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">In: </span>
+                        <span className="font-medium">{formatTime(interval.check_in)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Out: </span>
+                        <span className="font-medium">{formatTime(interval.check_out)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-3 border-t border-border">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Total Hours</span>
+                  <span className="font-semibold text-primary">
+                    {formatHours(attendanceStatus.total_hours)}
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground py-4">
+              No sessions recorded today
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

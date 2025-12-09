@@ -70,9 +70,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in delete-employee-user function:', error)
-    const err = error as Error;
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

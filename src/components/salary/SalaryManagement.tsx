@@ -56,6 +56,7 @@ import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SalarySlipView } from "./SalarySlipView";
+import { downloadSalarySlipPDF } from "@/utils/salarySlipPdfGenerator";
 
 interface SalaryManagementProps {
   employees?: Array<{
@@ -539,10 +540,10 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
   const handleViewSalarySlip = async (slip: SalarySlip) => {
     try {
-      // Fetch employee details to get bank info, PAN, etc.
+      // Fetch employee details to get bank info, PAN, PF, UAN, ESI, etc.
       const { data: employee, error } = await supabase
         .from('employees')
-        .select('hire_date, pan_number, bank_name, account_number, ifsc_code')
+        .select('hire_date, pan_number, bank_name, account_number, ifsc_code, pf_number, uan_number, esi_number')
         .eq('employee_id', slip.employee_id)
         .single();
 
@@ -558,9 +559,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
           pan_number: employee?.pan_number || '',
           bank_name: employee?.bank_name || '',
           bank_account_no: employee?.account_number || '',
-          pf_number: '', // These fields don't exist in employees table
-          uan_number: '',
-          esi_number: '',
+          pf_number: employee?.pf_number || '',
+          uan_number: employee?.uan_number || '',
+          esi_number: employee?.esi_number || '',
         } as any);
       }
       setIsViewDialogOpen(true);
@@ -570,27 +571,11 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     }
   };
 
-  const handleDownloadSlip = async () => {
+  const handleDownloadSlip = () => {
     if (viewingSlip) {
       try {
-        const html2pdf = (await import('html2pdf.js')).default;
-        const element = document.getElementById('salary-slip-preview');
-
-        if (!element) {
-          toast.error('Unable to find salary slip content');
-          return;
-        }
-
-        const opt = {
-          margin: 10,
-          filename: `salary-slip-${viewingSlip.employee_name}-${MONTHS[viewingSlip.month - 1]}-${viewingSlip.year}.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-        };
-
         toast.success('Generating PDF...');
-        await html2pdf().set(opt).from(element).save();
+        downloadSalarySlipPDF(viewingSlip);
         toast.success('PDF downloaded successfully');
       } catch (error) {
         console.error('Error generating PDF:', error);
