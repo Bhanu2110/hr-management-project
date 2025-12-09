@@ -263,6 +263,7 @@ export type Database = {
           created_at: string
           ctc_effective_date: string | null
           current_ctc: number | null
+          degree_certificate_url: string | null
           department: string | null
           email: string
           employee_id: string
@@ -271,6 +272,7 @@ export type Database = {
           hire_date: string | null
           id: string
           ifsc_code: string | null
+          inter_certificate_url: string | null
           last_name: string
           pan_document_url: string | null
           pan_number: string | null
@@ -281,6 +283,7 @@ export type Database = {
           role: string
           salary_slip_url: string | null
           status: string | null
+          tenth_certificate_url: string | null
           uan_number: string | null
           updated_at: string
           user_id: string
@@ -294,6 +297,7 @@ export type Database = {
           created_at?: string
           ctc_effective_date?: string | null
           current_ctc?: number | null
+          degree_certificate_url?: string | null
           department?: string | null
           email: string
           employee_id: string
@@ -302,6 +306,7 @@ export type Database = {
           hire_date?: string | null
           id?: string
           ifsc_code?: string | null
+          inter_certificate_url?: string | null
           last_name: string
           pan_document_url?: string | null
           pan_number?: string | null
@@ -312,6 +317,7 @@ export type Database = {
           role?: string
           salary_slip_url?: string | null
           status?: string | null
+          tenth_certificate_url?: string | null
           uan_number?: string | null
           updated_at?: string
           user_id: string
@@ -325,6 +331,7 @@ export type Database = {
           created_at?: string
           ctc_effective_date?: string | null
           current_ctc?: number | null
+          degree_certificate_url?: string | null
           department?: string | null
           email?: string
           employee_id?: string
@@ -333,6 +340,7 @@ export type Database = {
           hire_date?: string | null
           id?: string
           ifsc_code?: string | null
+          inter_certificate_url?: string | null
           last_name?: string
           pan_document_url?: string | null
           pan_number?: string | null
@@ -343,6 +351,7 @@ export type Database = {
           role?: string
           salary_slip_url?: string | null
           status?: string | null
+          tenth_certificate_url?: string | null
           uan_number?: string | null
           updated_at?: string
           user_id?: string

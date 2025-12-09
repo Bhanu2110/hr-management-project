@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Employee {
   id: string;
-  user_id: string;  // Added user_id field
+  user_id: string;
   employee_id: string;
   email: string;
   first_name: string;
@@ -13,8 +13,28 @@ export interface Employee {
   hire_date: string;
   phone?: string | null;
   status: string;
+  role?: string;
   created_at: string;
   updated_at: string;
+  // Bank details
+  bank_name?: string | null;
+  account_number?: string | null;
+  ifsc_code?: string | null;
+  branch_name?: string | null;
+  account_holder_name?: string | null;
+  // PF/ESI details
+  pf_number?: string | null;
+  uan_number?: string | null;
+  esi_number?: string | null;
+  // Document URLs
+  aadhar_document_url?: string | null;
+  pan_document_url?: string | null;
+  tenth_certificate_url?: string | null;
+  inter_certificate_url?: string | null;
+  degree_certificate_url?: string | null;
+  // CTC
+  current_ctc?: number | null;
+  ctc_effective_date?: string | null;
 }
 
 export const employeeService = {
