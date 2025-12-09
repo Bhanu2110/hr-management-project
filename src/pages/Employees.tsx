@@ -25,6 +25,9 @@ import { AddEmployeeDialog } from "@/components/employees/AddEmployeeDialog";
 import { EditEmployeeDialog } from "@/components/employees/EditEmployeeDialog";
 import { DeleteEmployeeDialog } from "@/components/employees/DeleteEmployeeDialog";
 import { ViewEmployeeDialog } from "@/components/employees/ViewEmployeeDialog";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { isWithinInterval, isSameDay } from "date-fns";
 import { useTheme } from '@/context/ThemeContext';
 
 type SortDirection = 'asc' | 'desc';
@@ -40,6 +43,7 @@ const Employees = () => {
   const [sortField, setSortField] = useState<SortField>('first_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [refreshKey, setRefreshKey] = useState(0);
   const { themeColor } = useTheme();
 
@@ -80,7 +84,20 @@ const Employees = () => {
 
     const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    let matchesDate = true;
+    if (dateRange?.from) {
+      const hireDate = new Date(employee.hire_date);
+      if (dateRange.to) {
+        matchesDate = isWithinInterval(hireDate, {
+          start: dateRange.from,
+          end: dateRange.to,
+        });
+      } else {
+        matchesDate = isSameDay(hireDate, dateRange.from);
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
@@ -157,6 +174,11 @@ const Employees = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              <DatePickerWithRange
+                date={dateRange}
+                setDate={setDateRange}
+                className="w-full sm:w-[300px]"
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
