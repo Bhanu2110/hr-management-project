@@ -154,9 +154,9 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
 
     const getFileIcon = (fileType: string) => {
         if (fileType.startsWith("image/")) {
-            return <ImageIcon className="h-8 w-8" />;
+            return <ImageIcon className="h-8 w-8" style={{ color: themeColor }} />;
         }
-        return <FileText className="h-8 w-8" />;
+        return <FileText className="h-8 w-8" style={{ color: themeColor }} />;
     };
 
     // Employee profile documents from employee table
@@ -206,12 +206,19 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                     </DialogDescription>
                 </DialogHeader>
 
+
                 <Tabs defaultValue="personal" className="w-full">
+                    <style>{`
+                        [data-theme-tab][data-state="active"] {
+                            background-color: ${themeColor} !important;
+                            color: white !important;
+                        }
+                    `}</style>
                     <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                        <TabsTrigger value="employment">Employment</TabsTrigger>
-                        <TabsTrigger value="banking">Banking & PF</TabsTrigger>
-                        <TabsTrigger value="documents">Documents</TabsTrigger>
+                        <TabsTrigger value="personal" data-theme-tab>Personal Info</TabsTrigger>
+                        <TabsTrigger value="employment" data-theme-tab>Employment</TabsTrigger>
+                        <TabsTrigger value="banking" data-theme-tab>Banking & PF</TabsTrigger>
+                        <TabsTrigger value="documents" data-theme-tab>Documents</TabsTrigger>
                     </TabsList>
 
                     {/* Personal Information Tab */}
@@ -426,7 +433,7 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                         {profileDocuments.length > 0 && (
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
+                                    <CardTitle className="flex items-center gap-2" style={{ color: themeColor }}>
                                         <FileText className="h-5 w-5" />
                                         Profile Documents
                                     </CardTitle>
@@ -439,7 +446,7 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                                                 className="border rounded-lg p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className="text-muted-foreground">
+                                                    <div>
                                                         {getFileIcon("application/pdf")}
                                                     </div>
                                                     <div>
@@ -450,7 +457,8 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                                                 <div className="flex gap-2">
                                                     <Button
                                                         size="sm"
-                                                        variant="outline"
+                                                        className="text-white"
+                                                        style={{ backgroundColor: themeColor }}
                                                         onClick={() => handleView(doc.url!)}
                                                     >
                                                         <Eye className="h-4 w-4" />
@@ -601,7 +609,7 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                         {/* Other Documents */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
+                                <CardTitle className="flex items-center gap-2" style={{ color: themeColor }}>
                                     <File className="h-5 w-5" />
                                     Other Documents
                                 </CardTitle>
@@ -625,7 +633,7 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-start gap-3 flex-1">
-                                                        <div className="text-muted-foreground mt-1">
+                                                        <div className="mt-1">
                                                             {getFileIcon(doc.file_type)}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -652,14 +660,16 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                                                     <div className="flex gap-2 ml-4">
                                                         <Button
                                                             size="sm"
-                                                            variant="outline"
+                                                            className="text-white"
+                                                            style={{ backgroundColor: themeColor }}
                                                             onClick={() => handleView(doc.file_url)}
                                                         >
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                         <Button
                                                             size="sm"
-                                                            variant="outline"
+                                                            className="text-white"
+                                                            style={{ backgroundColor: themeColor }}
                                                             onClick={() => handleDownload(doc.id)}
                                                             disabled={downloadingDoc === doc.id}
                                                         >
