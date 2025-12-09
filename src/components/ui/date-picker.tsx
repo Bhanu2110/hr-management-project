@@ -14,9 +14,11 @@ interface DatePickerProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   className?: string;
+  month?: Date;
+  onMonthChange?: (date: Date) => void;
 }
 
-export function DatePicker({ date, setDate, className }: DatePickerProps) {
+export function DatePicker({ date, setDate, className, month, onMonthChange }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -37,6 +39,8 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
           mode="single"
           selected={date}
           onSelect={setDate}
+          month={month}
+          onMonthChange={onMonthChange}
           initialFocus
         />
       </PopoverContent>

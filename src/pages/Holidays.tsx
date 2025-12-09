@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
+import { format } from "date-fns";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Calendar } from "lucide-react";
+import { Download, X } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Holiday, HOLIDAY_TYPES } from "@/types/holidays";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import jsPDF from "jspdf";
@@ -14,14 +16,16 @@ import { useTheme } from "@/context/ThemeContext";
 
 const Holidays = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
+  const selectedYear = date ? String(date.getFullYear()) : String(currentMonth.getFullYear());
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => String(currentYear - 2 + i));
+
   const locations = ["All", "New York", "London", "Bangalore"]; // These should ideally come from an API or be more dynamic
 
   useEffect(() => {
@@ -40,15 +44,22 @@ const Holidays = () => {
       }
     };
     getHolidays();
-  }, [selectedYear, selectedLocation]);
+  }, [date, currentMonth, selectedLocation]);
 
   const filteredHolidays = useMemo(() => {
     return holidays.filter((holiday) => {
       const matchesSearch = holiday.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         holiday.day.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSearch;
+
+      const matchesDate = date
+        ? holiday.date === format(date, 'yyyy-MM-dd')
+        : isMonthFiltered
+          ? holiday.date.startsWith(format(currentMonth, 'yyyy-MM'))
+          : true;
+
+      return matchesSearch && matchesDate;
     });
-  }, [searchQuery, holidays]);
+  }, [searchQuery, holidays, date, currentMonth, isMonthFiltered]);
 
   const getRowClassName = (holidayType: Holiday["type"]) => {
     switch (holidayType) {
@@ -117,18 +128,38 @@ const Holidays = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:w-[250px]"
               />
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Select Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <DatePicker
+                  date={date}
+                  setDate={(newDate) => {
+                    setDate(newDate);
+                    if (newDate) {
+                      setCurrentMonth(newDate);
+                    }
+                  }}
+                  month={currentMonth}
+                  onMonthChange={(newMonth) => {
+                    setCurrentMonth(newMonth);
+                    setDate(undefined); // Clear specific date selection when changing month
+                    setIsMonthFiltered(true); // Enable month filtering
+                  }}
+                  className="w-full sm:w-[180px]"
+                />
+                {(date || isMonthFiltered) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setDate(undefined);
+                      setIsMonthFiltered(false);
+                      setCurrentMonth(new Date()); // Optional: Reset to today
+                    }}
+                    title="Clear Filter"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Select Location" />
@@ -166,7 +197,7 @@ const Holidays = () => {
                   <TableBody>
                     {filteredHolidays.length > 0 ? (
                       filteredHolidays.map((holiday, index) => (
-                        <TableRow key={holiday.id} className={getRowClassName(holiday.type)}>
+                        <TableRow key={holiday.id} id={`holiday-${holiday.date}`} className={getRowClassName(holiday.type)}>
                           <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                           <TableCell className="font-medium">{holiday.name}</TableCell>
                           <TableCell>{holiday.date}</TableCell>
@@ -178,7 +209,7 @@ const Holidays = () => {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={6} className="h-24 text-center">
-                          No holidays found.
+                          No holidays are present.
                         </TableCell>
                       </TableRow>
                     )}
