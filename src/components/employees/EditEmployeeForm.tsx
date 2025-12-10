@@ -206,6 +206,9 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       let interCertUrl: string | null | undefined = (employee as any).inter_certificate_url;
       let degreeCertUrl: string | null | undefined = (employee as any).degree_certificate_url;
       
+      if (aadharFile) {
+        aadharUrl = await uploadFile(aadharFile, 'aadhar', formValues.employee_id);
+      }
       if (panFile) {
         panUrl = await uploadFile(panFile, 'pan', formValues.employee_id);
       }
