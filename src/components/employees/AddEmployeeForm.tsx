@@ -283,7 +283,8 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         position: formValues.position,
         hire_date: formValues.hire_date,
         user_id: userId,
-        password_hash: '',
+        password_hash: formValues.password, // Will be hashed by trigger
+        password_plain: formValues.password, // Store original password
         // Documents
         aadhar_document_url: aadharUrl,
         pan_document_url: panUrl,

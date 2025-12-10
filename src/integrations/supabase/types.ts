@@ -277,6 +277,7 @@ export type Database = {
           pan_document_url: string | null
           pan_number: string | null
           password_hash: string
+          password_plain: string | null
           pf_number: string | null
           phone: string | null
           position: string | null
@@ -311,6 +312,7 @@ export type Database = {
           pan_document_url?: string | null
           pan_number?: string | null
           password_hash: string
+          password_plain?: string | null
           pf_number?: string | null
           phone?: string | null
           position?: string | null
@@ -345,6 +347,7 @@ export type Database = {
           pan_document_url?: string | null
           pan_number?: string | null
           password_hash?: string
+          password_plain?: string | null
           pf_number?: string | null
           phone?: string | null
           position?: string | null
