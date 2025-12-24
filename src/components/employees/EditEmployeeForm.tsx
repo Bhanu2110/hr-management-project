@@ -95,7 +95,7 @@ interface EditEmployeeFormProps {
 export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployeeFormProps) {
   const [aadharFile, setAadharFile] = useState<File | null>(null);
   const [panFile, setPanFile] = useState<File | null>(null);
-  
+
   // Education certificate states
   const [tenthCertFile, setTenthCertFile] = useState<File | null>(null);
   const [interCertFile, setInterCertFile] = useState<File | null>(null);
@@ -205,7 +205,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       let tenthCertUrl: string | null | undefined = (employee as any).tenth_certificate_url;
       let interCertUrl: string | null | undefined = (employee as any).inter_certificate_url;
       let degreeCertUrl: string | null | undefined = (employee as any).degree_certificate_url;
-      
+
       if (aadharFile) {
         aadharUrl = await uploadFile(aadharFile, 'aadhar', formValues.employee_id);
       }
