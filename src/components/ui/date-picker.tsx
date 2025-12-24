@@ -16,9 +16,20 @@ interface DatePickerProps {
   className?: string;
   month?: Date;
   onMonthChange?: (date: Date) => void;
+  isMonthFiltered?: boolean;
 }
 
-export function DatePicker({ date, setDate, className, month, onMonthChange }: DatePickerProps) {
+export function DatePicker({ date, setDate, className, month, onMonthChange, isMonthFiltered }: DatePickerProps) {
+  const getDisplayText = () => {
+    if (date) {
+      return format(date, "PPP"); // Show full date when a specific date is selected
+    }
+    if (isMonthFiltered && month) {
+      return format(month, "MMMM yyyy"); // Show month name when filtering by month
+    }
+    return "Pick a date";
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -26,12 +37,12 @@ export function DatePicker({ date, setDate, className, month, onMonthChange }: D
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground",
+            !date && !isMonthFiltered && "text-muted-foreground",
             className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
+          {getDisplayText()}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -42,6 +53,7 @@ export function DatePicker({ date, setDate, className, month, onMonthChange }: D
           month={month}
           onMonthChange={onMonthChange}
           initialFocus
+          className="pointer-events-auto"
         />
       </PopoverContent>
     </Popover>

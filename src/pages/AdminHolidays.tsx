@@ -304,6 +304,7 @@ const AdminHolidays = () => {
                     setDate(newDate);
                     if (newDate) {
                       setCurrentMonth(newDate);
+                      setIsMonthFiltered(false); // Specific date selected, not month filter
                     }
                   }}
                   month={currentMonth}
@@ -312,6 +313,7 @@ const AdminHolidays = () => {
                     setDate(undefined); // Clear specific date selection when changing month
                     setIsMonthFiltered(true); // Enable month filtering
                   }}
+                  isMonthFiltered={isMonthFiltered}
                   className="w-full sm:w-[180px]"
                 />
                 {(date || isMonthFiltered) && (
