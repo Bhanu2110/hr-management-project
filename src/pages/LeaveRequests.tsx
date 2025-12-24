@@ -3,13 +3,14 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Check, X, Clock, Calendar, User, LayoutGrid, List } from "lucide-react";
+import { Check, X, Clock, Calendar, User, LayoutGrid, List } from "lucide-react";
 import { LeaveApplicationForm } from "@/components/leaves/LeaveApplicationForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from '@/context/ThemeContext';
-import { format } from "date-fns";
+import { format, isSameMonth, isSameDay, startOfMonth, endOfMonth } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -46,6 +47,9 @@ const LeaveRequests = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -103,6 +107,37 @@ const LeaveRequests = () => {
       fetchLeaveRequests();
     }
   }, [employee, isAdmin, isEmployee]);
+
+  // Filter leave requests based on date selection
+  const filteredLeaveRequests = leaveRequests.filter((request) => {
+    const startDate = new Date(request.start_date);
+    const endDate = new Date(request.end_date);
+
+    if (selectedDate) {
+      // Check if selected date falls within the leave request's date range
+      return selectedDate >= startDate && selectedDate <= endDate;
+    }
+
+    if (isMonthFiltered && currentMonth) {
+      // Check if any part of the leave request overlaps with the selected month
+      const monthStart = startOfMonth(currentMonth);
+      const monthEnd = endOfMonth(currentMonth);
+      return startDate <= monthEnd && endDate >= monthStart;
+    }
+
+    return true;
+  });
+
+  const handleMonthChange = (date: Date) => {
+    setCurrentMonth(date);
+    setIsMonthFiltered(true);
+    setSelectedDate(undefined);
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setIsMonthFiltered(false);
+  };
 
   const handleApproveReject = async (requestId: string, status: 'approved' | 'rejected') => {
     try {
@@ -221,11 +256,19 @@ const LeaveRequests = () => {
         {/* Leave Requests */}
         <Card className="shadow-[--shadow-card]">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle>
                 {isEmployee ? "My Leave Requests" : "Recent Leave Requests"}
               </CardTitle>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                <DatePicker
+                  date={selectedDate}
+                  setDate={handleDateSelect}
+                  month={currentMonth}
+                  onMonthChange={handleMonthChange}
+                  isMonthFiltered={isMonthFiltered}
+                  className="w-[200px]"
+                />
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size="sm"
@@ -254,18 +297,19 @@ const LeaveRequests = () => {
               <div className="flex items-center justify-center py-8">
                 <div className="text-muted-foreground">Loading leave requests...</div>
               </div>
-            ) : leaveRequests.length === 0 ? (
+            ) : filteredLeaveRequests.length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
                   <Calendar className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground">
                     {isEmployee ? "You haven't applied for any leaves yet" : "No leave requests found"}
+                    {(selectedDate || isMonthFiltered) && " for the selected period"}
                   </p>
                 </div>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="space-y-4">
-                {leaveRequests.map((request) => (
+                {filteredLeaveRequests.map((request) => (
                   <div key={request.id} className="p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
@@ -351,7 +395,7 @@ const LeaveRequests = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leaveRequests.map((request, index) => (
+                    {filteredLeaveRequests.map((request, index) => (
                       <TableRow key={request.id}>
                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                         {isAdmin && (
