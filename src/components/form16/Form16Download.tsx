@@ -29,6 +29,8 @@ export function Form16Download() {
 
   // Filter states
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
 
   useEffect(() => {
     if (isEmployee && employee?.id) {
@@ -38,7 +40,7 @@ export function Form16Download() {
 
   useEffect(() => {
     applyFilters();
-  }, [documents, selectedDate]);
+  }, [documents, selectedDate, isMonthFiltered, currentMonth]);
 
   const fetchForm16Documents = async () => {
     try {
@@ -76,12 +78,23 @@ export function Form16Download() {
     let filtered = [...documents];
 
     if (selectedDate) {
-      const filterYear = selectedDate.getFullYear();
-      const filterMonth = selectedDate.getMonth(); // 0-indexed
-
+      // Specific date selected - match exact date
       filtered = filtered.filter(doc => {
         const docDate = new Date(doc.uploaded_at);
-        return docDate.getFullYear() === filterYear && docDate.getMonth() === filterMonth;
+        return (
+          docDate.getFullYear() === selectedDate.getFullYear() &&
+          docDate.getMonth() === selectedDate.getMonth() &&
+          docDate.getDate() === selectedDate.getDate()
+        );
+      });
+    } else if (isMonthFiltered) {
+      // Month filter active - match month and year
+      filtered = filtered.filter(doc => {
+        const docDate = new Date(doc.uploaded_at);
+        return (
+          docDate.getFullYear() === currentMonth.getFullYear() &&
+          docDate.getMonth() === currentMonth.getMonth()
+        );
       });
     }
 
@@ -232,14 +245,31 @@ export function Form16Download() {
               <div className="w-[240px]">
                 <DatePicker
                   date={selectedDate}
-                  setDate={setSelectedDate}
+                  setDate={(newDate) => {
+                    setSelectedDate(newDate);
+                    if (newDate) {
+                      setCurrentMonth(newDate);
+                      setIsMonthFiltered(false);
+                    }
+                  }}
+                  month={currentMonth}
+                  onMonthChange={(newMonth) => {
+                    setCurrentMonth(newMonth);
+                    setSelectedDate(undefined);
+                    setIsMonthFiltered(true);
+                  }}
+                  isMonthFiltered={isMonthFiltered}
                   className="w-full"
                 />
               </div>
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setSelectedDate(undefined)}
+                onClick={() => {
+                  setSelectedDate(undefined);
+                  setIsMonthFiltered(false);
+                  setCurrentMonth(new Date());
+                }}
                 title="Reset Filter"
               >
                 <RotateCcw className="h-4 w-4" />

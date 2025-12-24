@@ -27,7 +27,7 @@ import { DeleteEmployeeDialog } from "@/components/employees/DeleteEmployeeDialo
 import { ViewEmployeeDialog } from "@/components/employees/ViewEmployeeDialog";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, isSameDay, format } from "date-fns";
+import { isWithinInterval, isSameDay, isSameMonth, format } from "date-fns";
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -46,6 +46,8 @@ const Employees = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const { themeColor } = useTheme();
 
@@ -126,6 +128,10 @@ const Employees = () => {
       } else {
         matchesDate = isSameDay(hireDate, dateRange.from);
       }
+    } else if (isMonthFiltered) {
+      // Month filter active - match month and year
+      const hireDate = new Date(employee.hire_date);
+      matchesDate = isSameMonth(hireDate, currentMonth);
     }
 
     return matchesSearch && matchesStatus && matchesDate;
@@ -207,7 +213,19 @@ const Employees = () => {
               </div>
               <DatePickerWithRange
                 date={dateRange}
-                setDate={setDateRange}
+                setDate={(newRange) => {
+                  setDateRange(newRange);
+                  if (newRange?.from) {
+                    setIsMonthFiltered(false);
+                  }
+                }}
+                month={currentMonth}
+                onMonthChange={(newMonth) => {
+                  setCurrentMonth(newMonth);
+                  setDateRange(undefined);
+                  setIsMonthFiltered(true);
+                }}
+                isMonthFiltered={isMonthFiltered}
                 className="w-full sm:w-[300px]"
               />
               <DropdownMenu>
