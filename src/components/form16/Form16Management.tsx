@@ -69,6 +69,8 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -131,10 +133,18 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
     // Date filtering based on upload date
     let matchesDate = true;
     if (selectedDate) {
-      const filterYear = selectedDate.getFullYear();
-      const filterMonth = selectedDate.getMonth(); // 0-indexed
+      // Specific date selected - match exact date
       const docDate = new Date(item.uploaded_at);
-      matchesDate = docDate.getFullYear() === filterYear && docDate.getMonth() === filterMonth;
+      matchesDate = 
+        docDate.getFullYear() === selectedDate.getFullYear() &&
+        docDate.getMonth() === selectedDate.getMonth() &&
+        docDate.getDate() === selectedDate.getDate();
+    } else if (isMonthFiltered) {
+      // Month filter active - match month and year
+      const docDate = new Date(item.uploaded_at);
+      matchesDate = 
+        docDate.getFullYear() === currentMonth.getFullYear() &&
+        docDate.getMonth() === currentMonth.getMonth();
     }
 
     return matchesSearch && matchesDate;
@@ -530,14 +540,31 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
               <div className="w-[240px]">
                 <DatePicker
                   date={selectedDate}
-                  setDate={setSelectedDate}
+                  setDate={(newDate) => {
+                    setSelectedDate(newDate);
+                    if (newDate) {
+                      setCurrentMonth(newDate);
+                      setIsMonthFiltered(false);
+                    }
+                  }}
+                  month={currentMonth}
+                  onMonthChange={(newMonth) => {
+                    setCurrentMonth(newMonth);
+                    setSelectedDate(undefined);
+                    setIsMonthFiltered(true);
+                  }}
+                  isMonthFiltered={isMonthFiltered}
                   className="w-full"
                 />
               </div>
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setSelectedDate(undefined)}
+                onClick={() => {
+                  setSelectedDate(undefined);
+                  setIsMonthFiltered(false);
+                  setCurrentMonth(new Date());
+                }}
                 title="Reset Date Filter"
               >
                 <RotateCcw className="h-4 w-4" />
