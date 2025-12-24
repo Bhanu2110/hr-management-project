@@ -36,6 +36,23 @@ const isValidDate = (dateString: string | null | undefined): boolean => {
   return isValid(date);
 };
 
+// Helper function to format hours as "Xh Ym"
+const formatHoursToHoursMinutes = (decimalHours: number): string => {
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+
+  if (hours === 0 && minutes === 0) {
+    return "0h 0m";
+  } else if (hours === 0) {
+    return `${minutes}m`;
+  } else if (minutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h ${minutes}m`;
+  }
+};
+
+
 const EmployeeDashboard = () => {
   const { employee } = useAuth();
   const { themeColor } = useTheme();
@@ -77,7 +94,7 @@ const EmployeeDashboard = () => {
           .select("first_name, last_name")
           .eq("id", checkIn.employee_id)
           .single();
-        
+
         const employeeName = employeeDetails ? `${employeeDetails.first_name} ${employeeDetails.last_name}` : "Unknown Employee";
 
         if (isValidDate(checkIn.check_in)) {
@@ -140,7 +157,7 @@ const EmployeeDashboard = () => {
       // Calculate hours today from attendance entries
       const today = new Date();
       const todayDateString = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
-      
+
       console.log("Fetching today's attendance for employee:", employee?.id, "for date", todayDateString);
       const { data: todayAttendance, error: todayAttendanceError } = await supabase
         .from("attendance")
@@ -154,7 +171,7 @@ const EmployeeDashboard = () => {
       console.log("Today's attendance data:", todayAttendance);
 
       let totalMinutes = 0;
-      
+
       // Process attendance records for today only
       (todayAttendance || []).forEach((record: any) => {
         // If the record has intervals, calculate from those (more accurate)
@@ -164,7 +181,7 @@ const EmployeeDashboard = () => {
               const checkInTime = new Date(interval.check_in);
               // For active intervals (no check_out), use current time
               const checkOutTime = interval.check_out ? new Date(interval.check_out) : new Date();
-              
+
               // Only count if the check_in is from today
               const checkInDate = checkInTime.toISOString().split('T')[0];
               if (checkInDate === todayDateString) {
@@ -172,12 +189,12 @@ const EmployeeDashboard = () => {
               }
             }
           });
-        } 
+        }
         // Fallback to record-level check_in/check_out if intervals aren't available
         else if (record.check_in) {
           const checkInTime = new Date(record.check_in);
           const checkOutTime = record.check_out ? new Date(record.check_out) : new Date(); // Use current time if not checked out
-          
+
           // Only count if the check_in is from today
           const checkInDate = checkInTime.toISOString().split('T')[0];
           if (checkInDate === todayDateString) {
@@ -263,24 +280,24 @@ const EmployeeDashboard = () => {
         {/* Welcome Header */}
         <div className="flex items-center justify-between">
           <div>
-          <h1 className="text-3xl font-bold" style={{ color: themeColor }}>
-            Welcome back, {employee?.first_name}!
-          </h1>
+            <h1 className="text-3xl font-bold" style={{ color: themeColor }}>
+              Welcome back, {employee?.first_name}!
+            </h1>
 
             <div className="flex items-center gap-2 mt-2">
-            <Badge style={{ backgroundColor: themeColor }} className="text-white">
-              Employee
-            </Badge>
+              <Badge style={{ backgroundColor: themeColor }} className="text-white">
+                Employee
+              </Badge>
 
-            <span style={{ color: themeColor }}>•</span>
-            <span style={{ color: themeColor }}>{employee?.department}</span>
-            <span style={{ color: themeColor }}>•</span>
-            <span style={{ color: themeColor }}>{employee?.position}</span>
+              <span style={{ color: themeColor }}>•</span>
+              <span style={{ color: themeColor }}>{employee?.department}</span>
+              <span style={{ color: themeColor }}>•</span>
+              <span style={{ color: themeColor }}>{employee?.position}</span>
 
             </div>
           </div>
-          <Button 
-            style={{ backgroundColor: themeColor }} 
+          <Button
+            style={{ backgroundColor: themeColor }}
             className="hover:bg-opacity-80 text-white"
             onClick={() => navigate("/attendance")}
           >
@@ -300,7 +317,7 @@ const EmployeeDashboard = () => {
           />
           <MetricCard
             title="Hours Today"
-            value={hoursToday.toFixed(2)}
+            value={formatHoursToHoursMinutes(hoursToday)}
             icon={Clock}
             change={hoursToday >= 8 ? "+ overtime" : ""}
             changeType={hoursToday >= 8 ? "positive" : "neutral"}
@@ -325,16 +342,16 @@ const EmployeeDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
-               Leave Request
-            </CardTitle>
-            <CalendarDays className="h-4 w-4" style={{ color: themeColor }} />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
+                Leave Request
+              </CardTitle>
+              <CalendarDays className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3" style={{ color: themeColor }}>
-              Submit a new leave request
-            </p>
+              <p className="text-xs mb-3" style={{ color: themeColor }}>
+                Submit a new leave request
+              </p>
 
               <Button size="sm" className="w-full text-white hover:bg-opacity-80" style={{ backgroundColor: themeColor }}
                 onClick={() => navigate("/employee/leave-requests")}>
@@ -345,19 +362,19 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
-              My Profile
-            </CardTitle>
-            <User className="h-4 w-4" style={{ color: themeColor }} />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
+                My Profile
+              </CardTitle>
+              <User className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3" style={{ color: themeColor }}>
-              Update personal information
+              <p className="text-xs mb-3" style={{ color: themeColor }}>
+                Update personal information
               </p>
-              <Button 
-                size="sm" 
-                className="w-full text-white hover:bg-opacity-80" 
+              <Button
+                size="sm"
+                className="w-full text-white hover:bg-opacity-80"
                 style={{ backgroundColor: themeColor }}
                 onClick={() => navigate("/profile")}
               >
@@ -368,17 +385,23 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
-              Download Payslip
-            </CardTitle>
-            <Download className="h-4 w-4" style={{ color: themeColor }} />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
+                Download Payslip
+              </CardTitle>
+              <Download className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3" style={{ color: themeColor }}>
-              Get latest salary slip
+              <p className="text-xs mb-3" style={{ color: themeColor }}>
+                Get latest salary slip
               </p>
-              <Button size="sm" variant="outline" className="w-full text-white hover:bg-opacity-80" style={{ backgroundColor: themeColor }}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-white hover:bg-opacity-80"
+                style={{ backgroundColor: themeColor }}
+                onClick={() => navigate("/salary-slips")}
+              >
                 Download
               </Button>
             </CardContent>
@@ -386,19 +409,19 @@ const EmployeeDashboard = () => {
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
-              Company Holidays
-            </CardTitle>
-            <CalendarDays className="h-4 w-4" style={{ color: themeColor }} />
+              <CardTitle className="text-sm font-medium" style={{ color: themeColor }}>
+                Company Holidays
+              </CardTitle>
+              <CalendarDays className="h-4 w-4" style={{ color: themeColor }} />
 
             </CardHeader>
             <CardContent>
-            <p className="text-xs mb-3" style={{ color: themeColor }}>
-              View upcoming holidays
+              <p className="text-xs mb-3" style={{ color: themeColor }}>
+                View upcoming holidays
               </p>
-              <Button 
-                size="sm" 
-                className="w-full text-white hover:bg-opacity-80" 
+              <Button
+                size="sm"
+                className="w-full text-white hover:bg-opacity-80"
                 style={{ backgroundColor: themeColor }}
                 onClick={() => navigate("/holidays")}
               >

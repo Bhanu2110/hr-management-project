@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/AdminDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import Employees from "./pages/Employees";
@@ -26,19 +27,19 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 const queryClient = new QueryClient();
 
-// Component to handle dashboard routing based on role
-function DashboardRouter() {
-  const { isAdmin, isEmployee } = useAuth();
-  
-  if (isAdmin) {
-    return <AdminDashboard />;
-  } else if (isEmployee) {
-    // Redirect employees directly to Form 16 page
-    return <EmployeeDashboard />;
+// Component to handle root redirection based on role
+function RootRedirector() {
+  const { employee } = useAuth();
+
+  // If the role is admin, redirect to the admin dashboard
+  if (employee?.role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
   }
-  
-  return <Navigate to="/auth" replace />;
+
+  // Otherwise, redirect to the employee dashboard
+  return <Navigate to="/employee/dashboard" replace />;
 }
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -48,136 +49,153 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public route */}
+            {/* Public routes */}
             <Route path="/auth" element={<Auth />} />
-            
+            <Route path="/reset-password" element={<ResetPassword />} />
+
             {/* Protected routes */}
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
                 <ProtectedRoute>
-                  <DashboardRouter />
+                  <RootRedirector />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/employees" 
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee/dashboard"
+              element={
+                <ProtectedRoute>
+                  <EmployeeDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees"
               element={
                 <ProtectedRoute requireAdmin>
                   <Employees />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/attendance" 
+            <Route
+              path="/attendance"
               element={
                 <ProtectedRoute>
                   <Attendance />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/salary" 
+            <Route
+              path="/salary"
               element={
                 <ProtectedRoute requireAdmin>
                   <Salary />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/leave-requests" 
+            <Route
+              path="/leave-requests"
               element={
                 <ProtectedRoute>
                   <LeaveRequests />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/payroll" 
+            <Route
+              path="/payroll"
               element={
                 <ProtectedRoute requireAdmin>
                   <Payroll />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/reports" 
+            <Route
+              path="/reports"
               element={
                 <ProtectedRoute requireAdmin>
                   <Reports />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/salary-slips" 
+            <Route
+              path="/salary-slips"
               element={
                 <ProtectedRoute>
                   <SalarySlips />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/employee/leave-requests" 
+            <Route
+              path="/employee/leave-requests"
               element={
                 <ProtectedRoute>
                   <LeaveRequests />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/form-16" 
+            <Route
+              path="/form-16"
               element={
                 <ProtectedRoute>
                   <Form16 />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/documents" 
+            <Route
+              path="/documents"
               element={
                 <ProtectedRoute>
                   <Documents />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/notifications" 
+            <Route
+              path="/notifications"
               element={
                 <ProtectedRoute>
                   <AppLayout>
                     <Notifications />
                   </AppLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/profile" 
+            <Route
+              path="/profile"
               element={
                 <ProtectedRoute>
                   <AppLayout>
                     <Profile />
                   </AppLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/holidays" 
+            <Route
+              path="/holidays"
               element={
                 <ProtectedRoute>
                   <Holidays />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/holidays" 
+            <Route
+              path="/admin/holidays"
               element={
                 <ProtectedRoute requireAdmin>
                   <AdminHolidays />
                 </ProtectedRoute>
-              } 
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

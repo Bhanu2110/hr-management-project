@@ -32,7 +32,7 @@ import {
 import logo from "@/assets/images/sts-logo.jpg";
 
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: Home, roles: ['admin', 'employee'] },
+  { title: "Dashboard", url: "/employee/dashboard", adminUrl: "/admin/dashboard", icon: Home, roles: ['admin', 'employee'] },
   { title: "Employees", url: "/employees", icon: Users, roles: ['admin'] },
   { title: "Attendance", url: "/attendance", icon: Clock, roles: ['admin', 'employee'] },
   { title: "Salary", url: "/salary", icon: DollarSign, roles: ['admin'] },
@@ -72,6 +72,11 @@ export function AppSidebar() {
     return item.url;
   };
 
+  const getDashboardUrl = (role: string | undefined) => {
+    if (role === 'admin') return '/admin/dashboard';
+    return '/employee/dashboard';
+  };
+
   const isActive = (item: any) => {
     const itemUrl = getUrlForRole(item);
     if (itemUrl === "/") return currentPath === "/";
@@ -92,12 +97,13 @@ export function AppSidebar() {
 
         {/* ✅ Logo Only Header — Centered & Full View */}
         <div className="p-4 border-b border-border flex justify-center">
-          <img
-            src={logo}
-            alt="Company Logo"
-            className={`transition-all duration-200 object-contain ${collapsed ? "w-12 h-12" : "w-36 h-14"
-              }`}
-          />
+          <NavLink to={getDashboardUrl(employee?.role)}>
+            <img
+              src={logo}
+              alt="Company Logo"
+              className={`transition-all duration-200 object-contain ${collapsed ? "w-12 h-12" : "w-36 h-14"}`}
+            />
+          </NavLink>
         </div>
 
         <SidebarGroup className="px-2 py-4">

@@ -39,9 +39,9 @@ serve(async (req) => {
     if (!user_id) {
       return new Response(
         JSON.stringify({ error: 'user_id is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -53,18 +53,18 @@ serve(async (req) => {
       console.error('Error deleting user from auth:', deleteError)
       return new Response(
         JSON.stringify({ error: deleteError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
 
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
 
@@ -73,9 +73,9 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : "Unexpected error";
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }

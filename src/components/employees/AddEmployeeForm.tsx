@@ -98,6 +98,11 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
   const [aadharFile, setAadharFile] = useState<File | null>(null);
   const [panFile, setPanFile] = useState<File | null>(null);
 
+  // Education certificate states
+  const [tenthCertFile, setTenthCertFile] = useState<File | null>(null);
+  const [interCertFile, setInterCertFile] = useState<File | null>(null);
+  const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
+
 
   // Compensation table state
   const [compensationRecords, setCompensationRecords] = useState<Array<{ ctc: string; effective_date: string }>>([]);
@@ -254,7 +259,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       // Upload files if provided
       let aadharUrl: string | null = null;
       let panUrl: string | null = null;
-      let salarySlipUrl: string | null = null;
+      let tenthCertUrl: string | null = null;
+      let interCertUrl: string | null = null;
+      let degreeCertUrl: string | null = null;
 
       if (aadharFile) {
         aadharUrl = await uploadFile(aadharFile, 'aadhar', formValues.employee_id);
@@ -262,8 +269,14 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       if (panFile) {
         panUrl = await uploadFile(panFile, 'pan', formValues.employee_id);
       }
-      if (panFile) {
-        panUrl = await uploadFile(panFile, 'pan', formValues.employee_id);
+      if (tenthCertFile) {
+        tenthCertUrl = await uploadFile(tenthCertFile, 'certificates/tenth', formValues.employee_id);
+      }
+      if (interCertFile) {
+        interCertUrl = await uploadFile(interCertFile, 'certificates/inter', formValues.employee_id);
+      }
+      if (degreeCertFile) {
+        degreeCertUrl = await uploadFile(degreeCertFile, 'certificates/degree', formValues.employee_id);
       }
 
       // Get the most recent compensation record (last one in the array)
@@ -283,10 +296,14 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         position: formValues.position,
         hire_date: formValues.hire_date,
         user_id: userId,
-        password_hash: '',
+        password_hash: formValues.password, // Will be hashed by trigger
+        password_plain: formValues.password, // Store original password
         // Documents
         aadhar_document_url: aadharUrl,
         pan_document_url: panUrl,
+        tenth_certificate_url: tenthCertUrl,
+        inter_certificate_url: interCertUrl,
+        degree_certificate_url: degreeCertUrl,
         pan_number: formValues.pan_number || null,
         // Compensation - use the latest from compensation records
         current_ctc: latestCompensation ? parseFloat(latestCompensation.ctc) : null,
@@ -714,6 +731,61 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               </FormItem>
             )}
           />
+        </div>
+
+        {/* Education Certificates Section */}
+        <div className="space-y-4 pt-4">
+          <div className="flex items-center gap-2 pb-2 border-b">
+            <div className="h-8 w-1 bg-gradient-primary rounded-full" />
+            <h3 className="text-lg font-semibold">Education Certificates</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 10th Certificate */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">10th Certificate</label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setTenthCertFile(e.target.files?.[0] || null)}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                {tenthCertFile && <FileText className="h-4 w-4 text-green-600" />}
+              </div>
+            </div>
+
+            {/* Intermediate Certificate */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Intermediate Certificate</label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setInterCertFile(e.target.files?.[0] || null)}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                {interCertFile && <FileText className="h-4 w-4 text-green-600" />}
+              </div>
+            </div>
+
+            {/* Degree Certificate */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Degree Certificate</label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setDegreeCertFile(e.target.files?.[0] || null)}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                {degreeCertFile && <FileText className="h-4 w-4 text-green-600" />}
+              </div>
+            </div>
+          </div>
         </div>
         {/* Section 2: Compensation Details */}
         <div className="space-y-4">

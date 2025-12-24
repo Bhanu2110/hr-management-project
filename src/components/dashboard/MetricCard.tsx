@@ -5,26 +5,30 @@ interface MetricCardProps {
   title: string;
   value: string;
   change?: string;
-  changeType?: "positive" | "negative" | "neutral";
+  changeType?: "positive" | "negative" | "neutral" | "info" | "warning";
   icon: LucideIcon;
   iconColor?: string;
 }
 
-export function MetricCard({ 
-  title, 
-  value, 
-  change, 
-  changeType = "neutral", 
+export function MetricCard({
+  title,
+  value,
+  change,
+  changeType = "neutral",
   icon: Icon,
   iconColor = "text-primary"
 }: MetricCardProps) {
   const getChangeColor = () => {
     switch (changeType) {
-      case "positive": return "text-success";
-      case "negative": return "text-destructive";
-      default: return "text-muted-foreground";
+      case "positive": return "text-green-600";
+      case "negative": return "text-red-600";
+      case "neutral": return "text-gray-500";
+      case "info": return "text-blue-600";       // <-- valid Tailwind class
+      case "warning": return "text-yellow-600";  // <-- valid Tailwind class
+      default: return "text-gray-500";
     }
   };
+
 
   return (
     <Card className="bg-metric-bg border-border shadow-card hover:shadow-elevated transition-all duration-200">

@@ -16,13 +16,15 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { themeColor } = useTheme();
-  
+
   // Document upload states
+  const [aadharFile, setAadharFile] = useState<File | null>(null);
+  const [panFile, setPanFile] = useState<File | null>(null);
   const [tenthCertFile, setTenthCertFile] = useState<File | null>(null);
   const [interCertFile, setInterCertFile] = useState<File | null>(null);
   const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
-  
+
   const [employeeDetails, setEmployeeDetails] = useState<Partial<Employee>>({
     first_name: "",
     last_name: "",
@@ -37,6 +39,8 @@ const Profile = () => {
     ifsc_code: "",
     branch_name: "",
     account_holder_name: "",
+    aadhar_document_url: "",
+    pan_document_url: "",
     tenth_certificate_url: "",
     inter_certificate_url: "",
     degree_certificate_url: "",
@@ -63,6 +67,8 @@ const Profile = () => {
         ifsc_code: emp.ifsc_code || "",
         branch_name: emp.branch_name || "",
         account_holder_name: emp.account_holder_name || "",
+        aadhar_document_url: emp.aadhar_document_url || "",
+        pan_document_url: emp.pan_document_url || "",
         tenth_certificate_url: emp.tenth_certificate_url || "",
         inter_certificate_url: emp.inter_certificate_url || "",
         degree_certificate_url: emp.degree_certificate_url || "",
@@ -101,19 +107,32 @@ const Profile = () => {
     }
   };
 
-  const handleDocumentUpload = async (docType: 'tenth' | 'inter' | 'degree', file: File) => {
+  const handleDocumentUpload = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree', file: File) => {
     if (!employeeDetails.employee_id || !employeeDetails.id) return;
-    
+
     setUploadingDoc(docType);
     try {
-      const url = await uploadFile(file, `certificates/${docType}`, employeeDetails.employee_id);
+      let folder = '';
+      let fieldName = '';
+
+      if (docType === 'aadhar') {
+        folder = 'aadhar';
+        fieldName = 'aadhar_document_url';
+      } else if (docType === 'pan') {
+        folder = 'pan';
+        fieldName = 'pan_document_url';
+      } else {
+        folder = `certificates/${docType}`;
+        fieldName = `${docType}_certificate_url`;
+      }
+
+      const url = await uploadFile(file, folder, employeeDetails.employee_id);
       if (url) {
-        const fieldName = `${docType}_certificate_url`;
         await employeeService.updateEmployee(employeeDetails.id, { [fieldName]: url } as any);
         setEmployeeDetails(prev => ({ ...prev, [fieldName]: url }));
         toast({
           title: "Success",
-          description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} certificate uploaded successfully.`,
+          description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'} uploaded successfully.`,
         });
       } else {
         throw new Error('Upload failed');
@@ -121,33 +140,43 @@ const Profile = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to upload ${docType} certificate.`,
+        description: `Failed to upload ${docType} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'}.`,
         variant: "destructive",
       });
     } finally {
       setUploadingDoc(null);
+      if (docType === 'aadhar') setAadharFile(null);
+      if (docType === 'pan') setPanFile(null);
       if (docType === 'tenth') setTenthCertFile(null);
       if (docType === 'inter') setInterCertFile(null);
       if (docType === 'degree') setDegreeCertFile(null);
     }
   };
 
-  const handleDeleteDocument = async (docType: 'tenth' | 'inter' | 'degree') => {
+  const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree') => {
     if (!employeeDetails.id) return;
-    
+
     setUploadingDoc(docType);
     try {
-      const fieldName = `${docType}_certificate_url`;
+      let fieldName = '';
+      if (docType === 'aadhar') {
+        fieldName = 'aadhar_document_url';
+      } else if (docType === 'pan') {
+        fieldName = 'pan_document_url';
+      } else {
+        fieldName = `${docType}_certificate_url`;
+      }
+
       await employeeService.updateEmployee(employeeDetails.id, { [fieldName]: null } as any);
       setEmployeeDetails(prev => ({ ...prev, [fieldName]: "" }));
       toast({
         title: "Success",
-        description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} certificate removed.`,
+        description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'} removed.`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to remove ${docType} certificate.`,
+        description: `Failed to remove ${docType} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'}.`,
         variant: "destructive",
       });
     } finally {
@@ -216,16 +245,16 @@ const Profile = () => {
     );
   }
 
-  const DocumentUploadCard = ({ 
-    title, 
-    docType, 
-    file, 
-    setFile, 
-    existingUrl 
-  }: { 
-    title: string; 
-    docType: 'tenth' | 'inter' | 'degree'; 
-    file: File | null; 
+  const DocumentUploadCard = ({
+    title,
+    docType,
+    file,
+    setFile,
+    existingUrl
+  }: {
+    title: string;
+    docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree';
+    file: File | null;
     setFile: (f: File | null) => void;
     existingUrl?: string;
   }) => (
@@ -238,7 +267,7 @@ const Profile = () => {
           </Badge>
         )}
       </div>
-      
+
       {existingUrl ? (
         <div className="flex items-center gap-2">
           <Button
@@ -441,12 +470,39 @@ const Profile = () => {
             )}
           </Card>
 
-          {/* Document Upload Section */}
+          {/* Identity Documents Section */}
           <Card className="p-6">
             <CardHeader className="px-0 pt-0">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Upload Documents
+                Identity Documents
+              </CardTitle>
+              <p className="text-muted-foreground text-sm">Upload your PAN and Aadhar cards</p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 px-0 pb-0">
+              <DocumentUploadCard
+                title="Aadhar Card"
+                docType="aadhar"
+                file={aadharFile}
+                setFile={setAadharFile}
+                existingUrl={(employeeDetails as any).aadhar_document_url}
+              />
+              <DocumentUploadCard
+                title="PAN Card"
+                docType="pan"
+                file={panFile}
+                setFile={setPanFile}
+                existingUrl={(employeeDetails as any).pan_document_url}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Educational Certificates Section */}
+          <Card className="p-6">
+            <CardHeader className="px-0 pt-0">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Educational Certificates
               </CardTitle>
               <p className="text-muted-foreground text-sm">Upload your educational certificates</p>
             </CardHeader>

@@ -41,7 +41,7 @@ export function DashboardOverview() {
       const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
         .select('*');
-      
+
       if (employeesError) {
         console.error("Error fetching total employees:", employeesError);
       } else {
@@ -54,11 +54,15 @@ export function DashboardOverview() {
         .from('attendance')
         .select('*')
         .eq('date', today);
-      
+
       if (attendanceError) {
         console.error("Error fetching attendance data:", attendanceError);
       } else {
-        const presentCount = attendanceData.filter(record => record.status === 'present').length;
+        const presentCount = attendanceData.filter(record => {
+          const intervals = Array.isArray(record.intervals) ? record.intervals : [];
+          return intervals.length > 0 && (intervals[0] as any)?.check_in;
+        }).length;
+
         const lateCount = attendanceData.filter(record => {
           const intervals = Array.isArray(record.intervals) ? record.intervals : [];
           if (intervals.length > 0) {
@@ -113,11 +117,16 @@ export function DashboardOverview() {
       // Fetch pending leave requests count
       const { data: pendingLeaves, error: pendingError } = await supabase
         .from('leave_requests')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('status', 'pending');
 
-      if (!pendingError && pendingLeaves) {
-        setPendingLeaveCount(pendingLeaves.length || 0);
+      if (pendingError) {
+        console.error("Error fetching pending leave requests:", pendingError);
+        setPendingLeaveCount(0);
+      } else {
+        const count = pendingLeaves?.length || 0;
+        console.log("Pending leave requests count:", count);
+        setPendingLeaveCount(count);
       }
 
       // Combine activities with check-in first, then leave request
@@ -159,6 +168,8 @@ export function DashboardOverview() {
     fetchDashboardData();
   }, []);
 
+  const attendanceRate = totalEmployees > 0 ? ((presentToday / totalEmployees) * 100).toFixed(1) : '0';
+
   // Show employee-specific dashboard for employees
   if (isEmployee) {
     return <EmployeeDashboard />;
@@ -169,13 +180,13 @@ export function DashboardOverview() {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="rounded-lg p-6 text-white">
-  <h1 className="text-2xl font-bold mb-2 text-black" style={{ color: themeColor }}>
-    Welcome to HR Management System
-  </h1>
-  <p className="text-black/80" style={{ color: themeColor }}>
-    Manage your workforce efficiently with our comprehensive HR tools
-  </p>
-</div>
+        <h1 className="text-2xl font-bold mb-2 text-black" style={{ color: themeColor }}>
+          Welcome to HR Management System
+        </h1>
+        <p className="text-black/80" style={{ color: themeColor }}>
+          Manage your workforce efficiently with our comprehensive HR tools
+        </p>
+      </div>
 
 
       {/* Metrics Grid */}
@@ -191,26 +202,27 @@ export function DashboardOverview() {
         <MetricCard
           title="Present Today"
           value={presentToday.toString()}
-          change="91.2% attendance"
-          changeType="positive"
+          change={`${attendanceRate}% attendance`}
+          changeType={Number(attendanceRate) < 50 ? "negative" : "positive"}
           icon={UserCheck}
-          iconColor="text-success"
+          iconColor={Number(attendanceRate) < 50 ? "text-red-500" : "text-green-500"}
         />
+
         <MetricCard
           title="On Leave"
           value={onLeave.toString()}
-          change="2 pending approvals"
-          changeType="neutral"
+          change={`${pendingLeaveCount} pending approvals`}
+          changeType="warning"
           icon={Calendar}
           iconColor="text-warning"
         />
         <MetricCard
           title="Late Check-ins"
           value={lateCheckIns.toString()}
-          
-          changeType="negative"
+          change={`${attendanceRate}% attendance`}
+          changeType={Number(attendanceRate) < 50 ? "negative" : "positive"}
           icon={Clock}
-          iconColor="text-destructive"
+          iconColor={Number(attendanceRate) < 50 ? "text-red-500" : "text-green-500"}
         />
         <MetricCard
           title="Payroll (Monthly)"
@@ -256,8 +268,8 @@ export function DashboardOverview() {
 
                 return (
                   <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                    <div 
-                      className="w-2 h-2 rounded-full mt-2" 
+                    <div
+                      className="w-2 h-2 rounded-full mt-2"
                       style={{ backgroundColor: getStatusColor() }}
                     ></div>
                     <div className="flex-1">
@@ -276,7 +288,6 @@ export function DashboardOverview() {
             )}
           </CardContent>
         </Card>
-
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Pending Actions</CardTitle>

@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -38,7 +39,8 @@ import {
   Calendar,
   Users,
   Loader2,
-  Edit
+  Edit,
+  RotateCcw
 } from "lucide-react";
 import {
   fetchAllForm16Documents,
@@ -66,7 +68,7 @@ interface Form16ManagementProps {
 export function Form16Management({ employees = [] }: Form16ManagementProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterYear, setFilterYear] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -126,9 +128,16 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
       item.file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.financial_year.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesYear = filterYear === "all" || item.financial_year === filterYear;
+    // Date filtering based on upload date
+    let matchesDate = true;
+    if (selectedDate) {
+      const filterYear = selectedDate.getFullYear();
+      const filterMonth = selectedDate.getMonth(); // 0-indexed
+      const docDate = new Date(item.uploaded_at);
+      matchesDate = docDate.getFullYear() === filterYear && docDate.getMonth() === filterMonth;
+    }
 
-    return matchesSearch && matchesYear;
+    return matchesSearch && matchesDate;
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -517,17 +526,23 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                 />
               </div>
             </div>
-            <Select value={filterYear} onValueChange={setFilterYear}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                <SelectItem value="2024-25">2024-25</SelectItem>
-                <SelectItem value="2023-24">2023-24</SelectItem>
-                <SelectItem value="2022-23">2022-23</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <div className="w-[240px]">
+                <DatePicker
+                  date={selectedDate}
+                  setDate={setSelectedDate}
+                  className="w-full"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSelectedDate(undefined)}
+                title="Reset Date Filter"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

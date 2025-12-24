@@ -18,26 +18,26 @@ const AdminDashboard = () => {
         {/* Welcome Header */}
         <div className="flex items-center justify-between">
           <div>
-          <h1 className="text-3xl font-bold" style={{ color: themeColor }}>
-            Welcome back, {employee?.first_name}!
-          </h1>
-          <div className="flex items-center gap-2 mt-2">
-  <Badge 
-    variant="default" 
-    style={{ backgroundColor: `${themeColor}20`, color: themeColor === '#E15B55' ? 'black' : 'white' }}
-  >
-    Administrator
-  </Badge>
-  <span style={{ color: themeColor }}>•</span>
-  <span style={{ color: themeColor }}>{employee?.department}</span>
-</div>
+            <h1 className="text-3xl font-bold" style={{ color: themeColor }}>
+              Welcome back, {employee?.first_name}!
+            </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge
+                variant="default"
+                style={{ backgroundColor: `${themeColor}20`, color: themeColor === '#E15B55' ? 'black' : 'white' }}
+              >
+                Administrator
+              </Badge>
+              <span style={{ color: themeColor }}>•</span>
+              <span style={{ color: themeColor }}>{employee?.department}</span>
+            </div>
 
           </div>
         </div>
 
         {/* Admin Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/employees')}
           >
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/leave-requests')}
           >
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/admin/holidays')}
           >

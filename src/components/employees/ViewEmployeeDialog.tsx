@@ -553,9 +553,10 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                                                                 // Create blob URL with the correct blob
                                                                 const blobUrl = window.URL.createObjectURL(finalBlob);
 
-                                                                // Sanitize filename
+                                                                // Sanitize filename and include employee name
                                                                 const sanitizedLabel = doc.label.replace(/[^a-zA-Z0-9\s-_]/g, '');
-                                                                const fileName = `${sanitizedLabel}.${extension}`;
+                                                                const employeeName = employee.first_name.replace(/[^a-zA-Z0-9\s-_]/g, '');
+                                                                const fileName = `${employeeName} ${sanitizedLabel}.${extension}`;
 
                                                                 // Create download link
                                                                 const link = document.createElement("a");

@@ -12,27 +12,17 @@ export function ThemeSwitcher() {
     Blue: '#3B82F6',
     Green: '#10B981',
     Purple: '#8B5CF6',
-    Black: '#000000',
+    grey: '#808080',
     Red: '#EF4444',
-    Pink: '#EC4899',
-
     Indigo: '#6366F1',
     Teal: '#14B8A6',
     Cyan: '#06B6D4',
-
-
-    Rose: '#F43F5E',
-    Slate: '#64748B',
     "Deep Teal": '#008080',
-
     // Placeholder green
     Practipago: '#2196F3',   // Placeholder blue
     YouEngage: '#FF9800',    // Placeholder orange
     KeyNest: '#BF3436',
     "Lime Green": '#8AA624',
-    "Melyssa Griffin": '#FF6B6B',
-
-
 
   };
 

@@ -20,6 +20,23 @@ interface AttendanceRecord {
   status: string;
 }
 
+// Helper function to format hours as "Xh Ym"
+const formatHoursToHoursMinutes = (decimalHours: number): string => {
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+
+  if (hours === 0 && minutes === 0) {
+    return "0h 0m";
+  } else if (hours === 0) {
+    return `${minutes}m`;
+  } else if (minutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h ${minutes}m`;
+  }
+};
+
+
 export const AttendanceReport = () => {
   const { themeColor } = useTheme();
   const { toast } = useToast();
@@ -186,7 +203,7 @@ export const AttendanceReport = () => {
                 <TableCell>{record.date}</TableCell>
                 <TableCell>{record.check_in}</TableCell>
                 <TableCell>{record.check_out}</TableCell>
-                <TableCell>{record.total_hours !== null ? `${record.total_hours}h` : '-'}</TableCell>
+                <TableCell>{record.total_hours !== null ? formatHoursToHoursMinutes(record.total_hours) : '-'}</TableCell>
                 <TableCell>{record.status}</TableCell>
               </TableRow>
             ))}

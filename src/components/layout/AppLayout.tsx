@@ -24,7 +24,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const { employee, signOut, isAdmin } = useAuth();
   const { themeColor } = useTheme();
-  
+
   const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
@@ -33,7 +33,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-dashboard-bg">
         <AppSidebar />
-        
+
         <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shadow-nav">
@@ -41,26 +41,26 @@ export function AppLayout({ children }: AppLayoutProps) {
               <SidebarTrigger className="hover:bg-muted rounded-md p-2 transition-colors" />
               <div className="hidden md:flex items-center gap-2 max-w-md">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search employees, documents..." 
+                <Input
+                  placeholder="Search employees, documents..."
                   className="border-0 bg-muted/50 focus-visible:ring-1"
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <ThemeSwitcher />
               <RealTimeNotificationBell />
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-  <Avatar className="h-9 w-9">
-    <AvatarFallback style={{ backgroundColor: themeColor }} className="text-white">
-      {getInitials(employee?.first_name, employee?.last_name)}
-    </AvatarFallback>
-  </Avatar>
-</Button>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback style={{ backgroundColor: themeColor }} className="text-white">
+                        {getInitials(employee?.first_name, employee?.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
