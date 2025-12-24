@@ -34,6 +34,7 @@ import { formatFileSize } from "@/types/documents";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface ViewEmployeeDialogProps {
     employee: Employee;
@@ -46,14 +47,42 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
     const [loadingDocuments, setLoadingDocuments] = useState(false);
     const [downloadingDoc, setDownloadingDoc] = useState<string | null>(null);
     const [viewingDoc, setViewingDoc] = useState<string | null>(null);
+    const [isOnLeaveToday, setIsOnLeaveToday] = useState(false);
     const { toast } = useToast();
     const { themeColor } = useTheme();
 
     useEffect(() => {
         if (open) {
             loadDocuments();
+            checkLeaveStatus();
         }
     }, [open, employee.id]);
+
+    const checkLeaveStatus = async () => {
+        try {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            const { data } = await supabase
+                .from('leave_requests')
+                .select('id')
+                .eq('employee_id', employee.id)
+                .eq('status', 'approved')
+                .lte('start_date', today)
+                .gte('end_date', today)
+                .limit(1);
+            
+            setIsOnLeaveToday(data && data.length > 0);
+        } catch (error) {
+            console.error("Failed to check leave status:", error);
+        }
+    };
+
+    // Get display status considering active leave
+    const getDisplayStatus = () => {
+        if (isOnLeaveToday) {
+            return 'on_leave';
+        }
+        return employee.status;
+    };
 
     const loadDocuments = async () => {
         try {
@@ -280,8 +309,8 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
                                             Status
                                         </label>
                                         <div className="mt-1">
-                                            <Badge variant={getStatusVariant(employee.status)} className="capitalize">
-                                                {employee.status.replace("_", " ")}
+                                            <Badge variant={getStatusVariant(getDisplayStatus())} className="capitalize">
+                                                {getDisplayStatus().replace("_", " ")}
                                             </Badge>
                                         </div>
                                     </div>

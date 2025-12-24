@@ -27,8 +27,9 @@ import { DeleteEmployeeDialog } from "@/components/employees/DeleteEmployeeDialo
 import { ViewEmployeeDialog } from "@/components/employees/ViewEmployeeDialog";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, isSameDay } from "date-fns";
+import { isWithinInterval, isSameDay, format } from "date-fns";
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from "@/integrations/supabase/client";
 
 type SortDirection = 'asc' | 'desc';
 type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
@@ -37,6 +38,7 @@ const ITEMS_PER_PAGE = 10;
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeesOnLeaveToday, setEmployeesOnLeaveToday] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -51,8 +53,27 @@ const Employees = () => {
     const loadEmployees = async () => {
       try {
         setLoading(true);
-        const data = await employeeService.getAllEmployees();
-        setEmployees(data);
+        
+        // Fetch employees and approved leave requests for today in parallel
+        const today = format(new Date(), 'yyyy-MM-dd');
+        
+        const [employeesData, leaveData] = await Promise.all([
+          employeeService.getAllEmployees(),
+          supabase
+            .from('leave_requests')
+            .select('employee_id')
+            .eq('status', 'approved')
+            .lte('start_date', today)
+            .gte('end_date', today)
+        ]);
+        
+        setEmployees(employeesData);
+        
+        // Create a set of employee IDs who are on leave today
+        if (leaveData.data) {
+          const onLeaveIds = new Set(leaveData.data.map(lr => lr.employee_id));
+          setEmployeesOnLeaveToday(onLeaveIds);
+        }
       } catch (error) {
         console.error('Failed to fetch employees:', error);
       } finally {
@@ -72,6 +93,14 @@ const Employees = () => {
     }
   };
 
+  // Get display status considering active leave
+  const getDisplayStatus = (employee: Employee) => {
+    if (employeesOnLeaveToday.has(employee.id)) {
+      return 'on_leave';
+    }
+    return employee.status;
+  };
+
   const filteredEmployees = employees.filter(employee => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = (
@@ -82,7 +111,9 @@ const Employees = () => {
       employee.position.toLowerCase().includes(searchLower)
     );
 
-    const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
+    // Get the display status (considering leave)
+    const displayStatus = getDisplayStatus(employee);
+    const matchesStatus = statusFilter === 'all' || displayStatus === statusFilter;
 
     let matchesDate = true;
     if (dateRange?.from) {
@@ -294,8 +325,8 @@ const Employees = () => {
                       <TableCell>{employee.position}</TableCell>
                       <TableCell>{formatDate(employee.hire_date)}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(employee.status)} className="capitalize">
-                          {employee.status.replace('_', ' ')}
+                        <Badge variant={getStatusVariant(getDisplayStatus(employee))} className="capitalize">
+                          {getDisplayStatus(employee).replace('_', ' ')}
                         </Badge>
                       </TableCell>
                       <TableCell>
