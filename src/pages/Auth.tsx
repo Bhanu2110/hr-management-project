@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Building2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import logo from '@/assets/images/sts-logo.jpg';
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,6 +27,11 @@ const Auth = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [isSendingResetLink, setIsSendingResetLink] = useState(false);
 
   // Redirect if already authenticated
   if (user) {
@@ -137,26 +143,55 @@ const Auth = () => {
     setIsChangingPassword(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!forgotPasswordEmail.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setIsSendingResetLink(true);
+
+    try {
+      // Send password reset email using Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        toast.error('Failed to send reset link: ' + error.message);
+        setIsSendingResetLink(false);
+        return;
+      }
+
+      toast.success('Password reset link sent! Please check your email.');
+
+      // Reset form and go back to login
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotPasswordEmail('');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Password reset error:', error);
+      toast.error('An error occurred while sending reset link');
+    }
+
+    setIsSendingResetLink(false);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: themeColor ? `${themeColor}0D` : '' }}>
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <div className="p-3 rounded-xl shadow-lg" style={{ backgroundColor: themeColor }}>
-              <Building2 className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold" style={{ color: themeColor }}>
-            Syncall Technology Solutions
-          </h1>
-          <p className="text-muted-foreground">Sign in to access your account</p>
-        </div>
-
         {/* Login Form */}
-        {!showChangePassword ? (
+        {!showChangePassword && !showForgotPassword ? (
           <Card>
-            <CardHeader>
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <img src={logo} alt="Company Logo" className="w-48 h-auto" />
+              </div>
+              <CardTitle className="text-2xl">Sign in to access your account</CardTitle>
               <CardDescription>
                 Enter your credentials to access your account
               </CardDescription>
@@ -189,7 +224,15 @@ const Auth = () => {
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
                   />
-                  <div className="flex justify-end">
+                  <div className="flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm hover:underline"
+                      style={{ color: themeColor }}
+                    >
+                      Forgot Password?
+                    </button>
                     <button
                       type="button"
                       onClick={() => setShowChangePassword(true)}
@@ -220,7 +263,7 @@ const Auth = () => {
               </CardFooter>
             </form>
           </Card>
-        ) : (
+        ) : showChangePassword ? (
           /* Change Password Form */
           <Card>
             <CardHeader>
@@ -300,6 +343,61 @@ const Auth = () => {
                     setCurrentPassword('');
                     setNewPassword('');
                     setConfirmPassword('');
+                  }}
+                  className="text-sm text-muted-foreground hover:underline"
+                >
+                  Back to Sign In
+                </button>
+              </CardFooter>
+            </form>
+          </Card>
+        ) : (
+          /* Forgot Password Form */
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Forgot Password</CardTitle>
+              <CardDescription>
+                Enter your email address and we'll send you a password reset link
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleForgotPassword}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email Address</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    We'll send a password reset link to this email address.
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-3">
+                <Button
+                  type="submit"
+                  className="w-full text-white"
+                  style={{ backgroundColor: themeColor, borderColor: themeColor }}
+                  disabled={isSendingResetLink}
+                >
+                  {isSendingResetLink ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Reset Link'
+                  )}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail('');
                   }}
                   className="text-sm text-muted-foreground hover:underline"
                 >
