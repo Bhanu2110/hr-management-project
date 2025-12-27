@@ -163,6 +163,7 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
     const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [isAllEmployeesSelected, setIsAllEmployeesSelected] = useState(false);
     const [documents, setDocuments] = useState<Document[]>([]);
     const [stats, setStats] = useState({
         total: 0,
@@ -290,6 +291,7 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
     };
 
     const resetUploadData = () => {
+        setIsAllEmployeesSelected(false);
         setUploadData({
             title: "",
             description: "",
@@ -577,17 +579,18 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                                             label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
                                         }))
                                     ]}
-                                    value={uploadData.employee_id || ""}
+                                    value={isAllEmployeesSelected ? "all_employees" : (uploadData.employee_id || "")}
                                     onValueChange={(value) => {
                                         if (value === "all_employees") {
-                                            // Set all employee IDs in accessible_employees
+                                            setIsAllEmployeesSelected(true);
                                             setUploadData(prev => ({
                                                 ...prev,
-                                                employee_id: "all_employees",
+                                                employee_id: undefined,
                                                 accessible_employees: employees.map(emp => emp.employee_id),
                                                 visibility: 'private'
                                             }));
                                         } else {
+                                            setIsAllEmployeesSelected(false);
                                             setUploadData(prev => ({
                                                 ...prev,
                                                 employee_id: value || undefined,
@@ -600,6 +603,11 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                                     searchPlaceholder="Search employees..."
                                     emptyText="No employees found."
                                 />
+                                {isAllEmployeesSelected && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Document will be sent to all {employees.length} employees
+                                    </p>
+                                )}
                             </div>
 
                             <div className="flex items-center space-x-2">

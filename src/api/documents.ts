@@ -31,7 +31,7 @@ export async function fetchEmployeeDocuments(employeeId: string): Promise<Docume
         const { data, error } = await supabase
             .from('documents' as any)
             .select('*')
-            .or(`employee_id.eq.${employeeId},and(visibility.eq.public,employee_id.is.null)`)
+            .or(`employee_id.eq.${employeeId},accessible_employees.cs.{${employeeId}},and(visibility.eq.public,employee_id.is.null)`)
             .order('created_at', { ascending: false });
 
         if (error) {
