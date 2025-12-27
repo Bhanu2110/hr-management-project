@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { createNotification } from "@/api/notifications";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -266,40 +265,14 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
 
         try {
             setIsUploading(true);
-            const uploadedDoc = await uploadDocument(uploadData as DocumentUploadRequest);
-
-            // Send notifications to employees
-            const targetEmployeeIds = uploadData.accessible_employees || [];
+            const targetEmployeeCount = uploadData.accessible_employees?.length || 0;
             
-            if (targetEmployeeIds.length > 0) {
-                // Send notification to each employee
-                const notificationPromises = targetEmployeeIds.map(async (employeeId) => {
-                    // Find the employee's UUID from the employees list
-                    const employee = employees.find(emp => emp.employee_id === employeeId);
-                    if (employee) {
-                        try {
-                            await createNotification({
-                                recipient_id: employee.id, // Use the UUID, not employee_id
-                                title: "New Document Available",
-                                message: `A new document "${uploadData.title}" has been shared with you.`,
-                                type: "document",
-                                related_id: uploadedDoc?.id,
-                                related_table: "documents",
-                                action_url: "/documents"
-                            });
-                        } catch (notifError) {
-                            console.error(`Failed to send notification to ${employeeId}:`, notifError);
-                        }
-                    }
-                });
-                
-                await Promise.all(notificationPromises);
-            }
+            await uploadDocument(uploadData as DocumentUploadRequest);
 
             toast({
                 title: "Success",
-                description: targetEmployeeIds.length > 0 
-                    ? `Document uploaded and ${targetEmployeeIds.length} employee(s) notified`
+                description: targetEmployeeCount > 0 
+                    ? `Document uploaded and ${targetEmployeeCount} employee(s) notified`
                     : "Document uploaded successfully",
             });
 
