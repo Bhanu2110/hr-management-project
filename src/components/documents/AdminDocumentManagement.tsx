@@ -570,16 +570,32 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
                             <div className="space-y-2">
                                 <Label htmlFor="employee-select">Assign to Employee (Optional)</Label>
                                 <Combobox
-                                    options={employees.map((employee) => ({
-                                        value: employee.employee_id,
-                                        label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
-                                    }))}
+                                    options={[
+                                        { value: "all_employees", label: "📢 All Employees" },
+                                        ...employees.map((employee) => ({
+                                            value: employee.employee_id,
+                                            label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
+                                        }))
+                                    ]}
                                     value={uploadData.employee_id || ""}
-                                    onValueChange={(value) => setUploadData(prev => ({
-                                        ...prev,
-                                        employee_id: value || undefined,
-                                        visibility: value ? 'private' : prev.visibility
-                                    }))}
+                                    onValueChange={(value) => {
+                                        if (value === "all_employees") {
+                                            // Set all employee IDs in accessible_employees
+                                            setUploadData(prev => ({
+                                                ...prev,
+                                                employee_id: "all_employees",
+                                                accessible_employees: employees.map(emp => emp.employee_id),
+                                                visibility: 'private'
+                                            }));
+                                        } else {
+                                            setUploadData(prev => ({
+                                                ...prev,
+                                                employee_id: value || undefined,
+                                                accessible_employees: value ? [value] : [],
+                                                visibility: value ? 'private' : prev.visibility
+                                            }));
+                                        }
+                                    }}
                                     placeholder="Select employee"
                                     searchPlaceholder="Search employees..."
                                     emptyText="No employees found."
