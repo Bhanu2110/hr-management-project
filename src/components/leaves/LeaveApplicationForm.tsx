@@ -140,6 +140,8 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
                       <SelectItem value="Emergency Leave">Emergency Leave</SelectItem>
                       <SelectItem value="Maternity Leave">Maternity Leave</SelectItem>
                       <SelectItem value="Paternity Leave">Paternity Leave</SelectItem>
+                        <SelectItem value="Casual Leave">Casual Leave</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
