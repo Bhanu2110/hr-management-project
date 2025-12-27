@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
     Table,
     TableBody,
@@ -568,25 +569,21 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
 
                             <div className="space-y-2">
                                 <Label htmlFor="employee-select">Assign to Employee (Optional)</Label>
-                                <Select
-                                    value={uploadData.employee_id || undefined}
+                                <Combobox
+                                    options={employees.map((employee) => ({
+                                        value: employee.employee_id,
+                                        label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
+                                    }))}
+                                    value={uploadData.employee_id || ""}
                                     onValueChange={(value) => setUploadData(prev => ({
                                         ...prev,
                                         employee_id: value || undefined,
                                         visibility: value ? 'private' : prev.visibility
                                     }))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select employee" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {employees.map((employee) => (
-                                            <SelectItem key={employee.id} value={employee.employee_id}>
-                                                {employee.first_name} {employee.last_name} ({employee.employee_id})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    placeholder="Select employee"
+                                    searchPlaceholder="Search employees..."
+                                    emptyText="No employees found."
+                                />
                             </div>
 
                             <div className="flex items-center space-x-2">
@@ -735,25 +732,21 @@ export function AdminDocumentManagement({ employees = [] }: AdminDocumentManagem
 
                         <div className="space-y-2">
                             <Label htmlFor="edit-employee-select">Assign to Employee (Optional)</Label>
-                            <Select
-                                value={uploadData.employee_id || undefined}
+                            <Combobox
+                                options={employees.map((employee) => ({
+                                    value: employee.employee_id,
+                                    label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
+                                }))}
+                                value={uploadData.employee_id || ""}
                                 onValueChange={(value) => setUploadData(prev => ({
                                     ...prev,
                                     employee_id: value || undefined,
                                     visibility: value ? 'private' : prev.visibility
                                 }))}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select employee" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {employees.map((employee) => (
-                                        <SelectItem key={employee.id} value={employee.employee_id}>
-                                            {employee.first_name} {employee.last_name} ({employee.employee_id})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                placeholder="Select employee"
+                                searchPlaceholder="Search employees..."
+                                emptyText="No employees found."
+                            />
                         </div>
 
                         <div className="flex items-center space-x-2">

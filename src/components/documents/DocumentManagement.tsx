@@ -13,6 +13,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -489,22 +490,20 @@ export function DocumentManagement({ employees = [] }: DocumentManagementProps) 
 
                     <div className="space-y-2">
                       <Label htmlFor="employee-select" className="text-sm">Specific Employee (Optional)</Label>
-                      <Select 
-                        value={uploadData.employee_id || ""} 
+                      <Combobox
+                        options={[
+                          { value: "", label: "All Employees" },
+                          ...employees.map((employee) => ({
+                            value: employee.employee_id,
+                            label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
+                          }))
+                        ]}
+                        value={uploadData.employee_id || ""}
                         onValueChange={(value) => setUploadData(prev => ({ ...prev, employee_id: value || undefined }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select employee" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Employees</SelectItem>
-                          {employees.map((employee) => (
-                            <SelectItem key={employee.id} value={employee.employee_id}>
-                              {employee.first_name} {employee.last_name} ({employee.employee_id})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="Select employee"
+                        searchPlaceholder="Search employees..."
+                        emptyText="No employees found."
+                      />
                     </div>
                   </div>
                 </div>
