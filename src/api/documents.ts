@@ -170,21 +170,51 @@ export async function uploadDocument(request: DocumentUploadRequest): Promise<Do
 
         console.log('Document record created:', data);
 
-        // Create notification if assigned to an employee
-        if (metadata.employee_id) {
+        // Create notifications for assigned employees
+        const targetEmployeeIds = metadata.accessible_employees || [];
+        
+        if (targetEmployeeIds.length > 0) {
+            // Send notifications to all employees in accessible_employees
             try {
-                // Get employee user_id from employee_id
+                for (const empId of targetEmployeeIds) {
+                    // Get employee id (UUID) from employee_id string
+                    const { data: empData } = await supabase
+                        .from('employees')
+                        .select('id')
+                        .eq('employee_id', empId)
+                        .single();
+
+                    if (empData && empData.id) {
+                        await supabase
+                            .from('notifications')
+                            .insert([{
+                                recipient_id: empData.id,
+                                title: 'New Document Available',
+                                message: `A new document "${metadata.title}" has been uploaded and is now available.`,
+                                type: 'document',
+                                related_id: (data as any).id,
+                                related_table: 'documents',
+                                is_read: false,
+                            }]);
+                    }
+                }
+            } catch (notifError) {
+                console.error('Error creating notifications:', notifError);
+            }
+        } else if (metadata.employee_id) {
+            // Fallback: Send to single employee if no accessible_employees but employee_id is set
+            try {
                 const { data: empData } = await supabase
                     .from('employees')
-                    .select('user_id')
+                    .select('id')
                     .eq('employee_id', metadata.employee_id)
                     .single();
 
-                if (empData && empData.user_id) {
+                if (empData && empData.id) {
                     await supabase
                         .from('notifications')
                         .insert([{
-                            recipient_id: empData.user_id,
+                            recipient_id: empData.id,
                             title: 'New Document Available',
                             message: `A new document "${metadata.title}" has been uploaded and is now available.`,
                             type: 'document',
