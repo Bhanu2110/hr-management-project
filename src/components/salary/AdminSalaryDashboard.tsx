@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -238,22 +239,17 @@ const AdminSalaryDashboard: React.FC = () => {
                 
                 <div className="md:col-span-3">
                   <Label htmlFor="department">Department</Label>
-                  <Select value={department} onValueChange={setDepartment}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {uniqueDepartments.map((dept) => (
-                        <SelectItem 
-                          key={dept} 
-                          value={dept.toLowerCase()}
-                          className="capitalize"
-                        >
-                          {dept === 'all' ? 'All Departments' : dept}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={uniqueDepartments.map((dept) => ({
+                      value: dept.toLowerCase(),
+                      label: dept === 'all' ? 'All Departments' : dept
+                    }))}
+                    value={department}
+                    onValueChange={setDepartment}
+                    placeholder="Select department"
+                    searchPlaceholder="Search departments..."
+                    emptyText="No departments found."
+                  />
                 </div>
                 
                 <div className="md:col-span-4 flex items-end gap-2">

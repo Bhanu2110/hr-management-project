@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
@@ -394,18 +395,17 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
               {/* Employee Selection */}
               <div className="space-y-2">
                 <Label htmlFor="employee">Select Employee</Label>
-                <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose an employee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.first_name} {employee.last_name} ({employee.employee_id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={employees.map((employee) => ({
+                    value: employee.id,
+                    label: `${employee.first_name} ${employee.last_name} (${employee.employee_id})`
+                  }))}
+                  value={selectedEmployee}
+                  onValueChange={setSelectedEmployee}
+                  placeholder="Choose an employee"
+                  searchPlaceholder="Search employees..."
+                  emptyText="No employees found."
+                />
               </div>
 
               {/* Financial Year */}
