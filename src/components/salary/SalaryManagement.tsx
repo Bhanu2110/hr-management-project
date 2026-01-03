@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -74,8 +76,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [activeTab, setActiveTab] = useState("salary-slips");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterMonth, setFilterMonth] = useState<string>("all");
-  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterMonth, setFilterMonth] = useState<Date>(new Date());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -345,8 +347,14 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
       slip.department.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = filterStatus === "all" || slip.status === filterStatus;
-    const matchesMonth = filterMonth === "all" || slip.month.toString() === filterMonth;
-    const matchesYear = slip.year.toString() === filterYear;
+    
+    // If a specific date is selected, filter by that exact month and year
+    // Otherwise, filter by the month picker's month and year
+    const selectedMonth = filterDate ? filterDate.getMonth() + 1 : filterMonth.getMonth() + 1;
+    const selectedYear = filterDate ? filterDate.getFullYear() : filterMonth.getFullYear();
+    
+    const matchesMonth = slip.month === selectedMonth;
+    const matchesYear = slip.year === selectedYear;
 
     return matchesSearch && matchesStatus && matchesMonth && matchesYear;
   });
@@ -1393,29 +1401,14 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={filterMonth} onValueChange={setFilterMonth}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Month" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Months</SelectItem>
-                      {MONTHS.map((month) => (
-                        <SelectItem key={month.value} value={month.value.toString()}>
-                          {month.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={filterYear} onValueChange={setFilterYear}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2024">2024</SelectItem>
-                      <SelectItem value="2023">2023</SelectItem>
-                      <SelectItem value="2022">2022</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <DatePicker
+                    date={filterDate}
+                    setDate={setFilterDate}
+                    month={filterMonth}
+                    onMonthChange={setFilterMonth}
+                    isMonthFiltered={!filterDate}
+                    className="w-[180px]"
+                  />
                 </>
               )}
             </div>
