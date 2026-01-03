@@ -136,11 +136,17 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     fetchEmployees();
   }, []);
 
-  // Fetch salary slips and salary structures from database
+  // Fetch salary slips from database
   useEffect(() => {
     fetchSalarySlips();
-    fetchSalaryStructures();
   }, []);
+
+  // Fetch salary structures after employees are loaded
+  useEffect(() => {
+    if (dbEmployees.length > 0) {
+      fetchSalaryStructures();
+    }
+  }, [dbEmployees]);
 
   const fetchSalarySlips = async () => {
     try {
@@ -194,13 +200,74 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
       if (error) throw error;
 
-      // Map data to ensure medical_insurance field exists
-      const mappedData: SalaryStructure[] = (data || []).map((item: any) => ({
-        ...item,
-        medical_insurance: item.medical_insurance ?? 0,
-      }));
+      // If salary_structures table has data, use it
+      if (data && data.length > 0) {
+        const mappedData: SalaryStructure[] = data.map((item: any) => ({
+          ...item,
+          medical_insurance: item.medical_insurance ?? 0,
+        }));
+        setSalaryStructures(mappedData);
+      } else {
+        // If no salary structures exist, generate from employees with CTC
+        const generatedStructures: SalaryStructure[] = dbEmployees
+          .filter(emp => emp.current_ctc && emp.current_ctc > 0)
+          .map((emp) => {
+            const annualCTC = Number(emp.current_ctc);
+            const monthlyCTC = annualCTC / 12;
+            
+            // Calculate salary components from CTC (using standard breakdown)
+            const basic_salary = Math.round(monthlyCTC * 0.40); // 40% of CTC
+            const hra = Math.round(basic_salary * 0.40); // 40% of basic
+            const transport_allowance = 1600;
+            const medical_allowance = 1250;
+            const pf_employee = Math.min(Math.round(basic_salary * 0.12), 1800); // 12% of basic, max 1800
+            const pf_employer = pf_employee;
+            const esi_employee = monthlyCTC <= 21000 ? Math.round(monthlyCTC * 0.0075) : 0;
+            const esi_employer = esi_employee > 0 ? Math.round(monthlyCTC * 0.0325) : 0;
+            const professional_tax = 200;
+            const income_tax = Math.round(Math.max(0, (annualCTC - 250000) * 0.1) / 12);
+            
+            const special_allowance = Math.round(monthlyCTC - basic_salary - hra - transport_allowance - medical_allowance - pf_employer - esi_employer);
+            const gross_salary = basic_salary + hra + transport_allowance + medical_allowance + Math.max(special_allowance, 0);
+            const total_deductions = pf_employee + esi_employee + professional_tax + income_tax;
+            const net_salary = gross_salary - total_deductions;
 
-      setSalaryStructures(mappedData);
+            return {
+              id: emp.id,
+              employee_id: emp.employee_id,
+              employee_name: `${emp.first_name} ${emp.last_name}`,
+              employee_email: emp.email,
+              department: emp.department || 'N/A',
+              position: emp.position || 'N/A',
+              basic_salary,
+              hra,
+              transport_allowance,
+              medical_allowance,
+              special_allowance: Math.max(special_allowance, 0),
+              performance_bonus: 0,
+              overtime_amount: 0,
+              other_allowances: 0,
+              pf_employee,
+              pf_employer,
+              esi_employee,
+              esi_employer,
+              professional_tax,
+              income_tax,
+              medical_insurance: 0,
+              loan_deduction: 0,
+              other_deductions: 0,
+              gross_salary,
+              total_deductions,
+              net_salary,
+              effective_date: emp.hire_date || new Date().toISOString(),
+              status: 'active' as const,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+          });
+        
+        setSalaryStructures(generatedStructures);
+      }
     } catch (error) {
       console.error('Error fetching salary structures:', error);
       toast.error('Failed to load salary structures');
