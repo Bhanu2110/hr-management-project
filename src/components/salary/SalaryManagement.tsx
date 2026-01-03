@@ -77,7 +77,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
-  const [filterMonth, setFilterMonth] = useState<Date>(new Date());
+  const [filterMonth, setFilterMonth] = useState<Date | undefined>(undefined);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -349,14 +349,16 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     const matchesStatus = filterStatus === "all" || slip.status === filterStatus;
     
     // If a specific date is selected, filter by that exact month and year
-    // Otherwise, filter by the month picker's month and year
-    const selectedMonth = filterDate ? filterDate.getMonth() + 1 : filterMonth.getMonth() + 1;
-    const selectedYear = filterDate ? filterDate.getFullYear() : filterMonth.getFullYear();
-    
-    const matchesMonth = slip.month === selectedMonth;
-    const matchesYear = slip.year === selectedYear;
+    // If only month picker is used (no date), filter by that month and year
+    // If neither is selected, show all records
+    let matchesDate = true;
+    if (filterDate) {
+      matchesDate = slip.month === (filterDate.getMonth() + 1) && slip.year === filterDate.getFullYear();
+    } else if (filterMonth) {
+      matchesDate = slip.month === (filterMonth.getMonth() + 1) && slip.year === filterMonth.getFullYear();
+    }
 
-    return matchesSearch && matchesStatus && matchesMonth && matchesYear;
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const filteredSalaryStructures = mockSalaryStructures.filter((structure) => {
@@ -1404,9 +1406,9 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                   <DatePicker
                     date={filterDate}
                     setDate={setFilterDate}
-                    month={filterMonth}
+                    month={filterMonth || new Date()}
                     onMonthChange={setFilterMonth}
-                    isMonthFiltered={!filterDate}
+                    isMonthFiltered={!filterDate && !!filterMonth}
                     className="w-[180px]"
                   />
                 </>

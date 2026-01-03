@@ -22,12 +22,12 @@ interface DatePickerProps {
 export function DatePicker({ date, setDate, className, month, onMonthChange, isMonthFiltered }: DatePickerProps) {
   const getDisplayText = () => {
     if (date) {
-      return format(date, "PPP"); // Show full date when a specific date is selected
+      return format(date, "MMMM yyyy"); // Show month and year when a specific date is selected
     }
     if (isMonthFiltered && month) {
       return format(month, "MMMM yyyy"); // Show month name when filtering by month
     }
-    return "Pick a date";
+    return "All Months";
   };
 
   return (
