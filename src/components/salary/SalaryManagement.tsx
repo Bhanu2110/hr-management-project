@@ -87,6 +87,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [viewingSlip, setViewingSlip] = useState<SalarySlip | null>(null);
   const [dbEmployees, setDbEmployees] = useState<any[]>([]);
   const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
+  const [salaryStructures, setSalaryStructures] = useState<SalaryStructure[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<SalaryCreateRequest>>({
     month: new Date().getMonth() + 1,
@@ -135,9 +136,10 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     fetchEmployees();
   }, []);
 
-  // Fetch salary slips from database
+  // Fetch salary slips and salary structures from database
   useEffect(() => {
     fetchSalarySlips();
+    fetchSalaryStructures();
   }, []);
 
   const fetchSalarySlips = async () => {
@@ -180,6 +182,28 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     } catch (error) {
       console.error('Error fetching salary slips:', error);
       toast.error('Failed to load salary slips');
+    }
+  };
+
+  const fetchSalaryStructures = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('salary_structures')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Map data to ensure medical_insurance field exists
+      const mappedData: SalaryStructure[] = (data || []).map((item: any) => ({
+        ...item,
+        medical_insurance: item.medical_insurance ?? 0,
+      }));
+
+      setSalaryStructures(mappedData);
+    } catch (error) {
+      console.error('Error fetching salary structures:', error);
+      toast.error('Failed to load salary structures');
     }
   };
 
@@ -361,7 +385,7 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
-  const filteredSalaryStructures = mockSalaryStructures.filter((structure) => {
+  const filteredSalaryStructures = salaryStructures.filter((structure) => {
     const matchesSearch =
       structure.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       structure.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1568,34 +1592,42 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSalaryStructures.map((structure) => (
-                    <TableRow key={structure.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{structure.employee_name}</p>
-                          <p className="text-sm text-muted-foreground">{structure.employee_id}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{formatCurrency(structure.basic_salary)}</TableCell>
-                      <TableCell>{formatCurrency(structure.gross_salary)}</TableCell>
-                      <TableCell className="font-semibold">{formatCurrency(structure.net_salary)}</TableCell>
-                      <TableCell>
-                        <Badge className={SALARY_STATUS_COLORS[structure.status]}>
-                          {structure.status.charAt(0).toUpperCase() + structure.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {filteredSalaryStructures.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No salary structures found
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredSalaryStructures.map((structure) => (
+                      <TableRow key={structure.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{structure.employee_name}</p>
+                            <p className="text-sm text-muted-foreground">{structure.employee_id}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatCurrency(structure.basic_salary)}</TableCell>
+                        <TableCell>{formatCurrency(structure.gross_salary)}</TableCell>
+                        <TableCell className="font-semibold">{formatCurrency(structure.net_salary)}</TableCell>
+                        <TableCell>
+                          <Badge className={SALARY_STATUS_COLORS[structure.status]}>
+                            {structure.status.charAt(0).toUpperCase() + structure.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
