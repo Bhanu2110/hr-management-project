@@ -1063,7 +1063,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading} className="bg-gradient-primary hover:opacity-90">
+          <Button type="submit" disabled={isLoading} className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
