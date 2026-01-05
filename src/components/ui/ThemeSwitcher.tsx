@@ -8,24 +8,18 @@ export function ThemeSwitcher() {
   const { setThemeColor, themeMode, setThemeMode } = useTheme();
 
   const colors = {
-    Orange: '#E15B55',
+    "Coral Red": '#E15B55',
+    Orange:'#F46A1F',
     Blue: '#3B82F6',
-    Green: '#10B981',
-    Purple: '#8B5CF6',
-    grey: '#808080',
-    Red: '#EF4444',
+    Green: '#04704cff',
     Indigo: '#6366F1',
-    Teal: '#14B8A6',
-    Cyan: '#06B6D4',
+    Cyan: '#086bbdff',
     "Deep Teal": '#008080',
-    // Placeholder green
-    Practipago: '#2196F3',   // Placeholder blue
-    YouEngage: '#FF9800',    // Placeholder orange
-    KeyNest: '#BF3436',
-    "Lime Green": '#8AA624',
-
+    Practipago: '#2196F3',  
+    KeyNest: '#f75f07ff',
+   "Sap Green" : '#2F6B3C',
+    "Ocean Blue":'#0077B6',
   };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
