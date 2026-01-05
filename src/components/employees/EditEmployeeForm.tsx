@@ -32,9 +32,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { employeeService, Employee } from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, FileText, ExternalLink, Plus, Edit, Trash2, Download } from "lucide-react";
+import { Loader2, FileText, ExternalLink, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -93,6 +95,7 @@ interface EditEmployeeFormProps {
 }
 
 export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployeeFormProps) {
+  const [activeTab, setActiveTab] = useState("personal");
   const [aadharFile, setAadharFile] = useState<File | null>(null);
   const [panFile, setPanFile] = useState<File | null>(null);
 
@@ -523,606 +526,657 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Section 1: Personal Details */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b">
-            <div className="h-8 w-1 bg-gradient-primary rounded-full" />
-            <h3 className="text-lg font-semibold">Personal Details</h3>
-          </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="personal" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Personal</span>
+            </TabsTrigger>
+            <TabsTrigger value="employment" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              <span className="hidden sm:inline">Employment</span>
+            </TabsTrigger>
+            <TabsTrigger value="banking" className="flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              <span className="hidden sm:inline">Banking & PF</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              <span className="hidden sm:inline">Documents</span>
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="employee_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employee ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="EMP-001"
-                      {...field}
+          {/* Tab 1: Personal Info */}
+          <TabsContent value="personal">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="employee_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Employee ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="EMP-001" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Doe" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="john.doe@example.com" type="email" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+91 98765 43210" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pan_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PAN Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., ABCDE1234F" {...field} disabled={isLoading} className="uppercase" maxLength={10} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab 2: Employment */}
+          <TabsContent value="employment">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Employment Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Software Engineer, Manager" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a department" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {departments.map((dept) => (
+                              <SelectItem key={dept} value={dept}>
+                                {dept}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Position</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Software Engineer" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="hire_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hire Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {statuses.map((status) => (
+                              <SelectItem key={status.value} value={status.value}>
+                                {status.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Compensation Details */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold">Compensation Details</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCompensationDialogOpen(true);
+                        setEditingCompensationIndex(null);
+                        setCompensationForm({ ctc: '', effective_date: '' });
+                      }}
                       disabled={isLoading}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Compensation
+                    </Button>
+                  </div>
+
+                  {compensationRecords.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">No compensation records added yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">Click "Add Compensation" to add CTC details</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>CTC</TableHead>
+                          <TableHead>Effective Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {compensationRecords.map((record, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">₹{parseFloat(record.ctc).toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{new Date(record.effective_date).toLocaleDateString('en-IN')}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingCompensationIndex(index);
+                                    setCompensationForm(record);
+                                    setCompensationDialogOpen(true);
+                                  }}
+                                  disabled={isLoading}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newRecords = compensationRecords.filter((_, i) => i !== index);
+                                    setCompensationRecords(newRecords);
+                                  }}
+                                  disabled={isLoading}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab 3: Banking & PF */}
+          <TabsContent value="banking">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Banking & PF Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="account_holder_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Holder Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="As per bank records" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bank_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., State Bank of India" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="account_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter account number" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="ifsc_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>IFSC Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., SBIN0001234" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="branch_name"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Branch Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Main Branch, City Name" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* PF, UAN, ESI Details */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-sm font-semibold">PF & ESI Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="pf_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PF No.</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., TN/ABC/12345/678" {...field} disabled={isLoading} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="first_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="last_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Doe" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="john.doe@example.com" type="email" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+91 98765 43210" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Software Engineer, Manager" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="department"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Department</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a department" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept} value={dept}>
-                          {dept}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="position"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Position</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Software Engineer" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="hire_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Hire Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {statuses.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Document Uploads/View */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Aadhar Card</label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                {aadharFile && <FileText className="h-4 w-4 text-green-600" />}
-                {!aadharFile && (employee as any).aadhar_document_url && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const url = (employee as any).aadhar_document_url;
-                        const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                        if (urlParts.length > 1) {
-                          const filePath = urlParts[1];
-                          const { data, error } = await supabase.storage
-                            .from('employee-documents')
-                            .createSignedUrl(filePath, 60);
-                          if (error) throw error;
-                          if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                        } else {
-                          window.open(url, '_blank');
-                        }
-                      } catch (error) {
-                        toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                      }
-                    }}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span className="text-sm">View</span>
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">PAN Card</label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setPanFile(e.target.files?.[0] || null)}
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                {panFile && <FileText className="h-4 w-4 text-green-600" />}
-                {!panFile && (employee as any).pan_document_url && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const url = (employee as any).pan_document_url;
-                        const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                        if (urlParts.length > 1) {
-                          const filePath = urlParts[1];
-                          const { data, error } = await supabase.storage
-                            .from('employee-documents')
-                            .createSignedUrl(filePath, 60);
-                          if (error) throw error;
-                          if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                        } else {
-                          window.open(url, '_blank');
-                        }
-                      } catch (error) {
-                        toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                      }
-                    }}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span className="text-sm">View</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* PAN Number Field */}
-          <div className="pt-2">
-            <FormField
-              control={form.control}
-              name="pan_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PAN Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., ABCDE1234F" {...field} disabled={isLoading} className="uppercase" maxLength={10} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Education Certificates Section */}
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <div className="h-8 w-1 bg-gradient-primary rounded-full" />
-              <h3 className="text-lg font-semibold">Education Certificates</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* 10th Certificate */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">10th Certificate</label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => setTenthCertFile(e.target.files?.[0] || null)}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
-                  {tenthCertFile && <FileText className="h-4 w-4 text-green-600" />}
-                  {!tenthCertFile && (employee as any).tenth_certificate_url && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const url = (employee as any).tenth_certificate_url;
-                          const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                          if (urlParts.length > 1) {
-                            const filePath = urlParts[1];
-                            const { data, error } = await supabase.storage
-                              .from('employee-documents')
-                              .createSignedUrl(filePath, 60);
-                            if (error) throw error;
-                            if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                          } else {
-                            window.open(url, '_blank');
-                          }
-                        } catch (error) {
-                          toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                        }
-                      }}
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="text-sm">View</span>
-                    </button>
-                  )}
+                    <FormField
+                      control={form.control}
+                      name="uan_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PF UAN</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 100012345678" {...field} disabled={isLoading} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="esi_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ESI No.</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 1234567890123456" {...field} disabled={isLoading} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {/* Intermediate Certificate */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Intermediate Certificate</label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => setInterCertFile(e.target.files?.[0] || null)}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
-                  {interCertFile && <FileText className="h-4 w-4 text-green-600" />}
-                  {!interCertFile && (employee as any).inter_certificate_url && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const url = (employee as any).inter_certificate_url;
-                          const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                          if (urlParts.length > 1) {
-                            const filePath = urlParts[1];
-                            const { data, error } = await supabase.storage
-                              .from('employee-documents')
-                              .createSignedUrl(filePath, 60);
-                            if (error) throw error;
-                            if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                          } else {
-                            window.open(url, '_blank');
-                          }
-                        } catch (error) {
-                          toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                        }
-                      }}
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="text-sm">View</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Degree Certificate */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Degree Certificate</label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => setDegreeCertFile(e.target.files?.[0] || null)}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
-                  {degreeCertFile && <FileText className="h-4 w-4 text-green-600" />}
-                  {!degreeCertFile && (employee as any).degree_certificate_url && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const url = (employee as any).degree_certificate_url;
-                          const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                          if (urlParts.length > 1) {
-                            const filePath = urlParts[1];
-                            const { data, error } = await supabase.storage
-                              .from('employee-documents')
-                              .createSignedUrl(filePath, 60);
-                            if (error) throw error;
-                            if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                          } else {
-                            window.open(url, '_blank');
-                          }
-                        } catch (error) {
-                          toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                        }
-                      }}
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="text-sm">View</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Compensation Details */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-1 bg-gradient-primary rounded-full" />
-              <h3 className="text-lg font-semibold">Compensation Details</h3>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setCompensationDialogOpen(true);
-                setEditingCompensationIndex(null);
-                setCompensationForm({ ctc: '', effective_date: '' });
-              }}
-              disabled={isLoading}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Compensation
-            </Button>
-          </div>
-
-          {compensationRecords.length === 0 ? (
-            <div className="text-center py-8 border-2 border-dashed rounded-lg">
-              <p className="text-sm text-muted-foreground">No compensation records added yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Click "Add Compensation" to add CTC details</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>CTC</TableHead>
-                  <TableHead>Effective Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {compensationRecords.map((record, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">₹{parseFloat(record.ctc).toLocaleString('en-IN')}</TableCell>
-                    <TableCell>{new Date(record.effective_date).toLocaleDateString('en-IN')}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingCompensationIndex(index);
-                            setCompensationForm(record);
-                            setCompensationDialogOpen(true);
-                          }}
+          {/* Tab 4: Documents */}
+          <TabsContent value="documents">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Identity & Education Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Identity Documents */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold">Identity Documents</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Aadhar Card</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
                           disabled={isLoading}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const newRecords = compensationRecords.filter((_, i) => i !== index);
-                            setCompensationRecords(newRecords);
-                          }}
-                          disabled={isLoading}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                          className="flex-1"
+                        />
+                        {aadharFile && <FileText className="h-4 w-4 text-green-600" />}
+                        {!aadharFile && (employee as any).aadhar_document_url && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const url = (employee as any).aadhar_document_url;
+                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                                if (urlParts.length > 1) {
+                                  const filePath = urlParts[1];
+                                  const { data, error } = await supabase.storage
+                                    .from('employee-documents')
+                                    .createSignedUrl(filePath, 60);
+                                  if (error) throw error;
+                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
+                              } catch (error) {
+                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-sm">View</span>
+                          </button>
+                        )}
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">PAN Card</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setPanFile(e.target.files?.[0] || null)}
+                          disabled={isLoading}
+                          className="flex-1"
+                        />
+                        {panFile && <FileText className="h-4 w-4 text-green-600" />}
+                        {!panFile && (employee as any).pan_document_url && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const url = (employee as any).pan_document_url;
+                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                                if (urlParts.length > 1) {
+                                  const filePath = urlParts[1];
+                                  const { data, error } = await supabase.storage
+                                    .from('employee-documents')
+                                    .createSignedUrl(filePath, 60);
+                                  if (error) throw error;
+                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
+                              } catch (error) {
+                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-sm">View</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Section 3: Bank Details */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b">
-            <div className="h-8 w-1 bg-gradient-primary rounded-full" />
-            <h3 className="text-lg font-semibold">Bank Details</h3>
-          </div>
+                {/* Education Certificates */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-sm font-semibold">Education Certificates</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* 10th Certificate */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">10th Certificate</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setTenthCertFile(e.target.files?.[0] || null)}
+                          disabled={isLoading}
+                          className="flex-1"
+                        />
+                        {tenthCertFile && <FileText className="h-4 w-4 text-green-600" />}
+                        {!tenthCertFile && (employee as any).tenth_certificate_url && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const url = (employee as any).tenth_certificate_url;
+                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                                if (urlParts.length > 1) {
+                                  const filePath = urlParts[1];
+                                  const { data, error } = await supabase.storage
+                                    .from('employee-documents')
+                                    .createSignedUrl(filePath, 60);
+                                  if (error) throw error;
+                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
+                              } catch (error) {
+                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-sm">View</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="account_holder_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Holder Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="As per bank records" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bank_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bank Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., State Bank of India" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="account_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter account number" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="ifsc_code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>IFSC Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., SBIN0001234" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="branch_name"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Branch Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Main Branch, City Name" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                    {/* Intermediate Certificate */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Intermediate Certificate</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setInterCertFile(e.target.files?.[0] || null)}
+                          disabled={isLoading}
+                          className="flex-1"
+                        />
+                        {interCertFile && <FileText className="h-4 w-4 text-green-600" />}
+                        {!interCertFile && (employee as any).inter_certificate_url && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const url = (employee as any).inter_certificate_url;
+                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                                if (urlParts.length > 1) {
+                                  const filePath = urlParts[1];
+                                  const { data, error } = await supabase.storage
+                                    .from('employee-documents')
+                                    .createSignedUrl(filePath, 60);
+                                  if (error) throw error;
+                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
+                              } catch (error) {
+                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-sm">View</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-          {/* PF, UAN, ESI Details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <FormField
-              control={form.control}
-              name="pf_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PF No.</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., TN/ABC/12345/678" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="uan_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PF UAN</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 100012345678" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="esi_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ESI No.</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 1234567890123456" {...field} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div >
+                    {/* Degree Certificate */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Degree Certificate</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setDegreeCertFile(e.target.files?.[0] || null)}
+                          disabled={isLoading}
+                          className="flex-1"
+                        />
+                        {degreeCertFile && <FileText className="h-4 w-4 text-green-600" />}
+                        {!degreeCertFile && (employee as any).degree_certificate_url && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const url = (employee as any).degree_certificate_url;
+                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+                                if (urlParts.length > 1) {
+                                  const filePath = urlParts[1];
+                                  const { data, error } = await supabase.storage
+                                    .from('employee-documents')
+                                    .createSignedUrl(filePath, 60);
+                                  if (error) throw error;
+                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
+                              } catch (error) {
+                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-sm">View</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">
           <Button
@@ -1144,10 +1198,10 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
             )}
           </Button>
         </div>
-      </form >
+      </form>
 
-      {/* Compensation Dialog - Outside form but inside Form component */}
-      < Dialog open={compensationDialogOpen} onOpenChange={setCompensationDialogOpen} >
+      {/* Compensation Dialog */}
+      <Dialog open={compensationDialogOpen} onOpenChange={setCompensationDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -1205,7 +1259,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
             </div>
           </div>
         </DialogContent>
-      </Dialog >
-    </Form >
+      </Dialog>
+    </Form>
   );
 }
