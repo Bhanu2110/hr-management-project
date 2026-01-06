@@ -39,6 +39,9 @@ const Profile = () => {
     ifsc_code: "",
     branch_name: "",
     account_holder_name: "",
+    pf_number: "",
+    uan_number: "",
+    esi_number: "",
     aadhar_document_url: "",
     pan_document_url: "",
     tenth_certificate_url: "",
@@ -67,6 +70,9 @@ const Profile = () => {
         ifsc_code: emp.ifsc_code || "",
         branch_name: emp.branch_name || "",
         account_holder_name: emp.account_holder_name || "",
+        pf_number: emp.pf_number || "",
+        uan_number: emp.uan_number || "",
+        esi_number: emp.esi_number || "",
         aadhar_document_url: emp.aadhar_document_url || "",
         pan_document_url: emp.pan_document_url || "",
         tenth_certificate_url: emp.tenth_certificate_url || "",
@@ -216,6 +222,9 @@ const Profile = () => {
           ifsc_code: employeeDetails.ifsc_code || null,
           branch_name: employeeDetails.branch_name || null,
           account_holder_name: employeeDetails.account_holder_name || null,
+          pf_number: (employeeDetails as any).pf_number || null,
+          uan_number: (employeeDetails as any).uan_number || null,
+          esi_number: (employeeDetails as any).esi_number || null,
         };
         await employeeService.updateEmployee(employeeDetails.id, updatedData);
         toast({
@@ -459,6 +468,35 @@ const Profile = () => {
               <div className="space-y-2">
                 <Label htmlFor="branch_name">Branch Name</Label>
                 <Input id="branch_name" value={(employeeDetails as any).branch_name || ''} onChange={handleInputChange} disabled={!isEditing} />
+              </div>
+            </CardContent>
+            {isEditing && (
+              <div className="flex justify-end mt-6">
+                <Button onClick={handleSave} className="text-white" style={{ backgroundColor: themeColor, borderColor: themeColor }} disabled={isLoading}>
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save Changes
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          {/* PF & ESI Details */}
+          <Card className="p-6">
+            <CardHeader className="px-0 pt-0">
+              <CardTitle>PF & ESI Details</CardTitle>
+              <p className="text-muted-foreground text-sm">You can update these details</p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 px-0 pb-0">
+              <div className="space-y-2">
+                <Label htmlFor="pf_number">PF No.</Label>
+                <Input id="pf_number" value={(employeeDetails as any).pf_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="e.g., TN/ABC/123456" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="uan_number">PF UAN</Label>
+                <Input id="uan_number" value={(employeeDetails as any).uan_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="12-digit UAN number" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="esi_number">ESI No.</Label>
+                <Input id="esi_number" value={(employeeDetails as any).esi_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="17-digit ESI number" />
               </div>
             </CardContent>
             {isEditing && (
