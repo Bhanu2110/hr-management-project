@@ -104,11 +104,88 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
   const [interCertFile, setInterCertFile] = useState<File | null>(null);
   const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
 
+  // Track existing document URLs (for delete functionality)
+  const [aadharUrl, setAadharUrl] = useState<string | null>((employee as any).aadhar_document_url || null);
+  const [panUrl, setPanUrl] = useState<string | null>((employee as any).pan_document_url || null);
+  const [tenthCertUrl, setTenthCertUrl] = useState<string | null>((employee as any).tenth_certificate_url || null);
+  const [interCertUrl, setInterCertUrl] = useState<string | null>((employee as any).inter_certificate_url || null);
+  const [degreeCertUrl, setDegreeCertUrl] = useState<string | null>((employee as any).degree_certificate_url || null);
+
   // Compensation table state
   const [compensationRecords, setCompensationRecords] = useState<Array<{ ctc: string; effective_date: string }>>([]);
   const [compensationDialogOpen, setCompensationDialogOpen] = useState(false);
   const [compensationForm, setCompensationForm] = useState({ ctc: '', effective_date: '' });
   const [editingCompensationIndex, setEditingCompensationIndex] = useState<number | null>(null);
+
+  // Delete document helper
+  const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree') => {
+    const urlMap = {
+      aadhar: aadharUrl,
+      pan: panUrl,
+      tenth: tenthCertUrl,
+      inter: interCertUrl,
+      degree: degreeCertUrl
+    };
+    const fieldMap = {
+      aadhar: 'aadhar_document_url',
+      pan: 'pan_document_url',
+      tenth: 'tenth_certificate_url',
+      inter: 'inter_certificate_url',
+      degree: 'degree_certificate_url'
+    };
+
+    const url = urlMap[docType];
+    if (!url) return;
+
+    try {
+      // Extract file path from URL and delete from storage
+      const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        await supabase.storage.from('employee-documents').remove([filePath]);
+      }
+
+      // Update database to remove the URL
+      const { error } = await supabase
+        .from('employees')
+        .update({ [fieldMap[docType]]: null })
+        .eq('id', employee.id);
+
+      if (error) throw error;
+
+      // Update local state
+      switch (docType) {
+        case 'aadhar': setAadharUrl(null); break;
+        case 'pan': setPanUrl(null); break;
+        case 'tenth': setTenthCertUrl(null); break;
+        case 'inter': setInterCertUrl(null); break;
+        case 'degree': setDegreeCertUrl(null); break;
+      }
+
+      toast({ title: "Success", description: "Document deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({ title: "Error", description: "Failed to delete document", variant: "destructive" });
+    }
+  };
+
+  const handleViewDocument = async (url: string) => {
+    try {
+      const urlParts = url.split('/storage/v1/object/public/employee-documents/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        const { data, error } = await supabase.storage
+          .from('employee-documents')
+          .createSignedUrl(filePath, 60);
+        if (error) throw error;
+        if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
+    }
+  };
   // Load existing compensation records from database
   useEffect(() => {
     const loadCompensationRecords = async () => {
@@ -950,227 +1027,249 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Identity & Education Documents
+                  <FileText className="h-5 w-5" />
+                  Identity Documents
                 </CardTitle>
+                <p className="text-sm text-muted-foreground">Upload your PAN and Aadhar cards</p>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Identity Documents */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold">Identity Documents</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Aadhar Card</label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
-                          disabled={isLoading}
-                          className="flex-1"
-                        />
-                        {aadharFile && <FileText className="h-4 w-4 text-green-600" />}
-                        {!aadharFile && (employee as any).aadhar_document_url && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                const url = (employee as any).aadhar_document_url;
-                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                                if (urlParts.length > 1) {
-                                  const filePath = urlParts[1];
-                                  const { data, error } = await supabase.storage
-                                    .from('employee-documents')
-                                    .createSignedUrl(filePath, 60);
-                                  if (error) throw error;
-                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                } else {
-                                  window.open(url, '_blank');
-                                }
-                              } catch (error) {
-                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                              }
-                            }}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="text-sm">View</span>
-                          </button>
-                        )}
-                      </div>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Aadhar Card */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Aadhar Card</span>
+                      {aadharUrl && (
+                        <span className="text-xs border border-green-500 text-green-600 px-2 py-0.5 rounded-full">Uploaded</span>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">PAN Card</label>
+                    {aadharUrl ? (
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setPanFile(e.target.files?.[0] || null)}
-                          disabled={isLoading}
+                        <Button
+                          type="button"
+                          variant="outline"
                           className="flex-1"
-                        />
-                        {panFile && <FileText className="h-4 w-4 text-green-600" />}
-                        {!panFile && (employee as any).pan_document_url && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                const url = (employee as any).pan_document_url;
-                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                                if (urlParts.length > 1) {
-                                  const filePath = urlParts[1];
-                                  const { data, error } = await supabase.storage
-                                    .from('employee-documents')
-                                    .createSignedUrl(filePath, 60);
-                                  if (error) throw error;
-                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                } else {
-                                  window.open(url, '_blank');
-                                }
-                              } catch (error) {
-                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                              }
-                            }}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="text-sm">View</span>
-                          </button>
-                        )}
+                          onClick={() => handleViewDocument(aadharUrl)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Document
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => handleDeleteDocument('aadhar')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {aadharFile && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <FileText className="h-4 w-4" />
+                        {aadharFile.name}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PAN Card */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">PAN Card</span>
+                      {panUrl && (
+                        <span className="text-xs border border-green-500 text-green-600 px-2 py-0.5 rounded-full">Uploaded</span>
+                      )}
                     </div>
+                    {panUrl ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleViewDocument(panUrl)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Document
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => handleDeleteDocument('pan')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setPanFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {panFile && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <FileText className="h-4 w-4" />
+                        {panFile.name}
+                      </div>
+                    )}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Education Certificates */}
-                <div className="space-y-4 pt-4 border-t">
-                  <h4 className="text-sm font-semibold">Education Certificates</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* 10th Certificate */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">10th Certificate</label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setTenthCertFile(e.target.files?.[0] || null)}
-                          disabled={isLoading}
-                          className="flex-1"
-                        />
-                        {tenthCertFile && <FileText className="h-4 w-4 text-green-600" />}
-                        {!tenthCertFile && (employee as any).tenth_certificate_url && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                const url = (employee as any).tenth_certificate_url;
-                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                                if (urlParts.length > 1) {
-                                  const filePath = urlParts[1];
-                                  const { data, error } = await supabase.storage
-                                    .from('employee-documents')
-                                    .createSignedUrl(filePath, 60);
-                                  if (error) throw error;
-                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                } else {
-                                  window.open(url, '_blank');
-                                }
-                              } catch (error) {
-                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                              }
-                            }}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="text-sm">View</span>
-                          </button>
-                        )}
-                      </div>
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Educational Certificates
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">Upload your educational certificates</p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* 10th Certificate */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">10th Certificate</span>
+                      {tenthCertUrl && (
+                        <span className="text-xs border border-green-500 text-green-600 px-2 py-0.5 rounded-full">Uploaded</span>
+                      )}
                     </div>
+                    {tenthCertUrl ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleViewDocument(tenthCertUrl)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Document
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => handleDeleteDocument('tenth')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setTenthCertFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {tenthCertFile && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <FileText className="h-4 w-4" />
+                        {tenthCertFile.name}
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Intermediate Certificate */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Intermediate Certificate</label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setInterCertFile(e.target.files?.[0] || null)}
-                          disabled={isLoading}
-                          className="flex-1"
-                        />
-                        {interCertFile && <FileText className="h-4 w-4 text-green-600" />}
-                        {!interCertFile && (employee as any).inter_certificate_url && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                const url = (employee as any).inter_certificate_url;
-                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                                if (urlParts.length > 1) {
-                                  const filePath = urlParts[1];
-                                  const { data, error } = await supabase.storage
-                                    .from('employee-documents')
-                                    .createSignedUrl(filePath, 60);
-                                  if (error) throw error;
-                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                } else {
-                                  window.open(url, '_blank');
-                                }
-                              } catch (error) {
-                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                              }
-                            }}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="text-sm">View</span>
-                          </button>
-                        )}
-                      </div>
+                  {/* Intermediate Certificate */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Intermediate Certificate</span>
+                      {interCertUrl && (
+                        <span className="text-xs border border-green-500 text-green-600 px-2 py-0.5 rounded-full">Uploaded</span>
+                      )}
                     </div>
+                    {interCertUrl ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleViewDocument(interCertUrl)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Document
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => handleDeleteDocument('inter')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setInterCertFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {interCertFile && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <FileText className="h-4 w-4" />
+                        {interCertFile.name}
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Degree Certificate */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Degree Certificate</label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setDegreeCertFile(e.target.files?.[0] || null)}
-                          disabled={isLoading}
-                          className="flex-1"
-                        />
-                        {degreeCertFile && <FileText className="h-4 w-4 text-green-600" />}
-                        {!degreeCertFile && (employee as any).degree_certificate_url && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                const url = (employee as any).degree_certificate_url;
-                                const urlParts = url.split('/storage/v1/object/public/employee-documents/');
-                                if (urlParts.length > 1) {
-                                  const filePath = urlParts[1];
-                                  const { data, error } = await supabase.storage
-                                    .from('employee-documents')
-                                    .createSignedUrl(filePath, 60);
-                                  if (error) throw error;
-                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                } else {
-                                  window.open(url, '_blank');
-                                }
-                              } catch (error) {
-                                toast({ title: "Error", description: "Failed to open document", variant: "destructive" });
-                              }
-                            }}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="text-sm">View</span>
-                          </button>
-                        )}
-                      </div>
+                  {/* Degree Certificate */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Degree Certificate</span>
+                      {degreeCertUrl && (
+                        <span className="text-xs border border-green-500 text-green-600 px-2 py-0.5 rounded-full">Uploaded</span>
+                      )}
                     </div>
+                    {degreeCertUrl ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleViewDocument(degreeCertUrl)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Document
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => handleDeleteDocument('degree')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setDegreeCertFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {degreeCertFile && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <FileText className="h-4 w-4" />
+                        {degreeCertFile.name}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
