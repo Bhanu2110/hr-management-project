@@ -114,6 +114,15 @@ const Profile = () => {
   };
 
   const handleDocumentUpload = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree', file: File) => {
+    if (!isEditing) {
+      toast({
+        title: "Edit required",
+        description: "Click \"Edit Profile\" to upload documents.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!employeeDetails.employee_id || !employeeDetails.id) return;
 
     setUploadingDoc(docType);
@@ -160,6 +169,15 @@ const Profile = () => {
   };
 
   const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree') => {
+    if (!isEditing) {
+      toast({
+        title: "Edit required",
+        description: "Click \"Edit Profile\" to remove documents.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!employeeDetails.id) return;
 
     setUploadingDoc(docType);
