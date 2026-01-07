@@ -259,13 +259,15 @@ const Profile = () => {
     docType,
     file,
     setFile,
-    existingUrl
+    existingUrl,
+    canEdit
   }: {
     title: string;
     docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree';
     file: File | null;
     setFile: (f: File | null) => void;
     existingUrl?: string;
+    canEdit: boolean;
   }) => (
     <div className="border rounded-lg p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -289,22 +291,24 @@ const Profile = () => {
             <ExternalLink className="h-4 w-4 mr-2" />
             View Document
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleDeleteDocument(docType)}
-            disabled={uploadingDoc === docType}
-            className="text-red-600 hover:text-red-700"
-          >
-            {uploadingDoc === docType ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-          </Button>
+          {canEdit && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleDeleteDocument(docType)}
+              disabled={uploadingDoc === docType}
+              className="text-red-600 hover:text-red-700"
+            >
+              {uploadingDoc === docType ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
-      ) : (
+      ) : canEdit ? (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Input
@@ -347,6 +351,8 @@ const Profile = () => {
             </Button>
           )}
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Click "Edit Profile" to upload</p>
       )}
     </div>
   );
@@ -517,6 +523,7 @@ const Profile = () => {
                 file={aadharFile}
                 setFile={setAadharFile}
                 existingUrl={(employeeDetails as any).aadhar_document_url}
+                canEdit={isEditing}
               />
               <DocumentUploadCard
                 title="PAN Card"
@@ -524,6 +531,7 @@ const Profile = () => {
                 file={panFile}
                 setFile={setPanFile}
                 existingUrl={(employeeDetails as any).pan_document_url}
+                canEdit={isEditing}
               />
             </CardContent>
           </Card>
@@ -544,6 +552,7 @@ const Profile = () => {
                 file={tenthCertFile}
                 setFile={setTenthCertFile}
                 existingUrl={(employeeDetails as any).tenth_certificate_url}
+                canEdit={isEditing}
               />
               <DocumentUploadCard
                 title="Intermediate Certificate"
@@ -551,6 +560,7 @@ const Profile = () => {
                 file={interCertFile}
                 setFile={setInterCertFile}
                 existingUrl={(employeeDetails as any).inter_certificate_url}
+                canEdit={isEditing}
               />
               <DocumentUploadCard
                 title="Degree Certificate"
@@ -558,6 +568,7 @@ const Profile = () => {
                 file={degreeCertFile}
                 setFile={setDegreeCertFile}
                 existingUrl={(employeeDetails as any).degree_certificate_url}
+                canEdit={isEditing}
               />
             </CardContent>
           </Card>
