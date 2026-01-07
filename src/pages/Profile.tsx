@@ -430,73 +430,66 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Editable Contact & Bank Details */}
+          {/* Editable Contact, Bank & PF/ESI Details */}
           <Card className="p-6">
             <CardHeader className="px-0 pt-0">
               <CardTitle>Contact & Bank Details</CardTitle>
               <p className="text-muted-foreground text-sm">You can update these details</p>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 px-0 pb-0">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={employeeDetails.email || ''} onChange={handleInputChange} disabled={!isEditing} />
+            <CardContent className="space-y-6 px-0 pb-0">
+              {/* Contact & Bank Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={employeeDetails.email || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" type="tel" value={employeeDetails.phone || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pan_number">PAN Number</Label>
+                  <Input id="pan_number" value={(employeeDetails as any).pan_number || ''} onChange={handleInputChange} disabled={!isEditing} className="uppercase" maxLength={10} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="account_holder_name">Account Holder Name</Label>
+                  <Input id="account_holder_name" value={(employeeDetails as any).account_holder_name || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bank_name">Bank Name</Label>
+                  <Input id="bank_name" value={(employeeDetails as any).bank_name || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="account_number">Account Number</Label>
+                  <Input id="account_number" value={(employeeDetails as any).account_number || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ifsc_code">IFSC Code</Label>
+                  <Input id="ifsc_code" value={(employeeDetails as any).ifsc_code || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="branch_name">Branch Name</Label>
+                  <Input id="branch_name" value={(employeeDetails as any).branch_name || ''} onChange={handleInputChange} disabled={!isEditing} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" type="tel" value={employeeDetails.phone || ''} onChange={handleInputChange} disabled={!isEditing} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pan_number">PAN Number</Label>
-                <Input id="pan_number" value={(employeeDetails as any).pan_number || ''} onChange={handleInputChange} disabled={!isEditing} className="uppercase" maxLength={10} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="account_holder_name">Account Holder Name</Label>
-                <Input id="account_holder_name" value={(employeeDetails as any).account_holder_name || ''} onChange={handleInputChange} disabled={!isEditing} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bank_name">Bank Name</Label>
-                <Input id="bank_name" value={(employeeDetails as any).bank_name || ''} onChange={handleInputChange} disabled={!isEditing} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="account_number">Account Number</Label>
-                <Input id="account_number" value={(employeeDetails as any).account_number || ''} onChange={handleInputChange} disabled={!isEditing} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ifsc_code">IFSC Code</Label>
-                <Input id="ifsc_code" value={(employeeDetails as any).ifsc_code || ''} onChange={handleInputChange} disabled={!isEditing} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="branch_name">Branch Name</Label>
-                <Input id="branch_name" value={(employeeDetails as any).branch_name || ''} onChange={handleInputChange} disabled={!isEditing} />
-              </div>
-            </CardContent>
-            {isEditing && (
-              <div className="flex justify-end mt-6">
-                <Button onClick={handleSave} className="text-white" style={{ backgroundColor: themeColor, borderColor: themeColor }} disabled={isLoading}>
-                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save Changes
-                </Button>
-              </div>
-            )}
-          </Card>
 
-          {/* PF & ESI Details */}
-          <Card className="p-6">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle>PF & ESI Details</CardTitle>
-              <p className="text-muted-foreground text-sm">You can update these details</p>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 px-0 pb-0">
-              <div className="space-y-2">
-                <Label htmlFor="pf_number">PF No.</Label>
-                <Input id="pf_number" value={(employeeDetails as any).pf_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="e.g., TN/ABC/123456" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="uan_number">PF UAN</Label>
-                <Input id="uan_number" value={(employeeDetails as any).uan_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="12-digit UAN number" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="esi_number">ESI No.</Label>
-                <Input id="esi_number" value={(employeeDetails as any).esi_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="17-digit ESI number" />
+              {/* PF & ESI Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">PF & ESI Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pf_number">PF No.</Label>
+                    <Input id="pf_number" value={(employeeDetails as any).pf_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="e.g., TN/ABC/123456" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="uan_number">PF UAN</Label>
+                    <Input id="uan_number" value={(employeeDetails as any).uan_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="12-digit UAN number" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="esi_number">ESI No.</Label>
+                    <Input id="esi_number" value={(employeeDetails as any).esi_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="17-digit ESI number" />
+                  </div>
+                </div>
               </div>
             </CardContent>
             {isEditing && (
