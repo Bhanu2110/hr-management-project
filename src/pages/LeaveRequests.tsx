@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Clock, Calendar, User, LayoutGrid, List } from "lucide-react";
+import { Check, X, Clock, Calendar, User, LayoutGrid, List, ArrowUpDown } from "lucide-react";
 import { LeaveApplicationForm } from "@/components/leaves/LeaveApplicationForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -390,17 +390,49 @@ const LeaveRequests = () => {
             ) : (
               <div className="rounded-md border">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[60px] text-center">S.No</TableHead>
-                      {isAdmin && <TableHead>Employee</TableHead>}
-                      <TableHead>Leave Type</TableHead>
-                      <TableHead>Start Date</TableHead>
-                      <TableHead>End Date</TableHead>
-                      <TableHead className="text-center">Days</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Status</TableHead>
-                      {isAdmin && <TableHead className="text-center">Actions</TableHead>}
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="hover:bg-muted/50">
+                      <TableHead className="w-[60px] text-center font-medium">S.No</TableHead>
+                      {isAdmin && (
+                        <TableHead className="font-medium">
+                          <div className="flex items-center">
+                            Employee
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </div>
+                        </TableHead>
+                      )}
+                      <TableHead className="font-medium">
+                        <div className="flex items-center">
+                          Leave Type
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="font-medium">
+                        <div className="flex items-center">
+                          Start Date
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="font-medium">
+                        <div className="flex items-center">
+                          End Date
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-center font-medium">
+                        <div className="flex items-center justify-center">
+                          Days
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="font-medium">Reason</TableHead>
+                      <TableHead className="font-medium">
+                        <div className="flex items-center">
+                          Status
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      {isAdmin && <TableHead className="text-center font-medium">Actions</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
