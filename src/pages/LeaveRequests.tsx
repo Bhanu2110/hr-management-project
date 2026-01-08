@@ -108,6 +108,13 @@ const LeaveRequests = () => {
     }
   }, [employee, isAdmin, isEmployee]);
 
+  // Format days to show "0.5 day" or "X day(s)" appropriately
+  const formatDays = (days: number) => {
+    if (days === 0.5) return "0.5 day (Half)";
+    if (days === 1) return "1 day";
+    return `${days} days`;
+  };
+
   // Filter leave requests based on date selection
   const filteredLeaveRequests = leaveRequests.filter((request) => {
     const startDate = new Date(request.start_date);
@@ -340,7 +347,7 @@ const LeaveRequests = () => {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Days</p>
-                            <p className="font-medium">{request.days} day(s)</p>
+                            <p className="font-medium">{formatDays(request.days)}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Applied Date</p>
@@ -409,7 +416,7 @@ const LeaveRequests = () => {
                         <TableCell>{request.leave_type}</TableCell>
                         <TableCell>{format(new Date(request.start_date), "MMM dd, yyyy")}</TableCell>
                         <TableCell>{format(new Date(request.end_date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="text-center">{request.days}</TableCell>
+                        <TableCell className="text-center">{formatDays(request.days)}</TableCell>
                         <TableCell className="max-w-xs truncate" title={request.reason}>{request.reason}</TableCell>
                         <TableCell>{getStatusBadge(request.status)}</TableCell>
                         {isAdmin && (

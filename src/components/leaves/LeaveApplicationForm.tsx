@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,13 +6,14 @@ import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,9 +27,16 @@ const leaveFormSchema = z.object({
   end_date: z.date({
     required_error: "End date is required",
   }),
+  is_half_day: z.boolean().default(false),
   reason: z.string().min(1, "Reason is required"),
-}).refine((data) => data.end_date >= data.start_date, {
-  message: "End date must be on or after start date",
+}).refine((data) => {
+  // For half-day leave, start and end date must be the same
+  if (data.is_half_day) {
+    return data.start_date.getTime() === data.end_date.getTime();
+  }
+  return data.end_date >= data.start_date;
+}, {
+  message: "For half-day leave, start and end date must be the same",
   path: ["end_date"],
 });
 
@@ -48,11 +56,18 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
     resolver: zodResolver(leaveFormSchema),
     defaultValues: {
       leave_type: "",
+      is_half_day: false,
       reason: "",
     },
   });
 
-  const calculateDays = (startDate: Date, endDate: Date) => {
+  const isHalfDay = form.watch("is_half_day");
+  const startDate = form.watch("start_date");
+
+  const calculateDays = (startDate: Date, endDate: Date, isHalfDay: boolean) => {
+    if (isHalfDay) {
+      return 0.5; // Half-day = 4 hours = 0.5 days
+    }
     const timeDiff = endDate.getTime() - startDate.getTime();
     return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
   };
@@ -69,13 +84,13 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
 
     setLoading(true);
     try {
-      const days = calculateDays(values.start_date, values.end_date);
+      const days = calculateDays(values.start_date, values.end_date, values.is_half_day);
       
       const { error } = await supabase
         .from('leave_requests')
         .insert([{
           employee_id: employee.id,
-          leave_type: values.leave_type,
+          leave_type: values.is_half_day ? `${values.leave_type} (Half Day)` : values.leave_type,
           start_date: format(values.start_date, 'yyyy-MM-dd'),
           end_date: format(values.end_date, 'yyyy-MM-dd'),
           days,
@@ -149,6 +164,35 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="is_half_day"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/30">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        // Auto-set end date to start date when half-day is selected
+                        if (checked && startDate) {
+                          form.setValue("end_date", startDate);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="cursor-pointer">
+                      Half-Day Leave
+                    </FormLabel>
+                    <FormDescription>
+                      Apply for 4 hours (0.5 day) leave on a single date
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -197,15 +241,17 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
                 name="end_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel>End Date {isHalfDay && "(Same as start)"}</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
+                      <PopoverTrigger asChild disabled={isHalfDay}>
                         <FormControl>
                           <Button
                             variant={"outline"}
+                            disabled={isHalfDay}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
+                              isHalfDay && "opacity-60 cursor-not-allowed"
                             )}
                           >
                             {field.value ? (
