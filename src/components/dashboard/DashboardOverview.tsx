@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { MetricCard } from "./MetricCard";
 import { EmployeeDashboard } from "./EmployeeDashboard";
-import { Users, Clock, Calendar, DollarSign, TrendingUp, UserCheck } from "lucide-react";
+import { Users, Calendar, TrendingUp, UserCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from '@/context/ThemeContext';
 import { useState, useEffect } from 'react';
@@ -190,7 +190,7 @@ export function DashboardOverview() {
 
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Employees"
           value={totalEmployees.toString()}
@@ -198,6 +198,8 @@ export function DashboardOverview() {
           changeType="positive"
           icon={Users}
           iconColor="text-primary"
+          percentage={74}
+          percentageColor="#22c55e"
         />
         <MetricCard
           title="Present Today"
@@ -206,8 +208,9 @@ export function DashboardOverview() {
           changeType={Number(attendanceRate) < 50 ? "negative" : "positive"}
           icon={UserCheck}
           iconColor={Number(attendanceRate) < 50 ? "text-red-500" : "text-green-500"}
+          percentage={Number(attendanceRate) || 74}
+          percentageColor={Number(attendanceRate) < 50 ? "#ef4444" : "#22c55e"}
         />
-
         <MetricCard
           title="On Leave"
           value={onLeave.toString()}
@@ -215,22 +218,8 @@ export function DashboardOverview() {
           changeType="warning"
           icon={Calendar}
           iconColor="text-warning"
-        />
-        <MetricCard
-          title="Late Check-ins"
-          value={lateCheckIns.toString()}
-          change={`${attendanceRate}% attendance`}
-          changeType={Number(attendanceRate) < 50 ? "negative" : "positive"}
-          icon={Clock}
-          iconColor={Number(attendanceRate) < 50 ? "text-red-500" : "text-green-500"}
-        />
-        <MetricCard
-          title="Payroll (Monthly)"
-          value="₹24.5L"
-          change="+8.5% from last month"
-          changeType="positive"
-          icon={DollarSign}
-          iconColor="text-success"
+          percentage={74}
+          percentageColor="#f59e0b"
         />
         <MetricCard
           title="Performance Score"
@@ -239,6 +228,8 @@ export function DashboardOverview() {
           changeType="positive"
           icon={TrendingUp}
           iconColor="text-primary"
+          percentage={84}
+          percentageColor="#22c55e"
         />
       </div>
 
