@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, X } from "lucide-react";
+import { Download, X, ArrowUpDown } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Holiday, HOLIDAY_TYPES } from "@/types/holidays";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,6 +13,9 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { holidayService } from "@/services/holidayService";
 import { useTheme } from "@/context/ThemeContext";
+
+type SortField = 'name' | 'date' | 'day' | 'type' | 'location';
+type SortDirection = 'asc' | 'desc';
 
 const Holidays = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,9 +27,10 @@ const Holidays = () => {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-
-  const locations = ["All", "New York", "London", "Bangalore"]; // These should ideally come from an API or be more dynamic
+  const locations = ["All", "New York", "London", "Bangalore"];
 
   useEffect(() => {
     const getHolidays = async () => {
@@ -61,12 +65,34 @@ const Holidays = () => {
     });
   }, [searchQuery, holidays, date, currentMonth, isMonthFiltered]);
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedHolidays = useMemo(() => {
+    return [...filteredHolidays].sort((a, b) => {
+      let aValue = a[sortField] || '';
+      let bValue = b[sortField] || '';
+      
+      if (sortDirection === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }, [filteredHolidays, sortField, sortDirection]);
+
   const getRowClassName = (holidayType: Holiday["type"]) => {
     switch (holidayType) {
       case "Public":
-        return "bg-blue-50/50 hover:bg-blue-100/50"; // Light blue for public holidays
+        return "bg-blue-50/50 hover:bg-blue-100/50";
       case "Optional":
-        return "bg-green-50/50 hover:bg-green-100/50"; // Light green for optional holidays
+        return "bg-green-50/50 hover:bg-green-100/50";
       default:
         return "";
     }
@@ -82,7 +108,7 @@ const Holidays = () => {
     const tableColumn = ["Holiday Name", "Date", "Day", "Type", "Location"];
     const tableRows: string[][] = [];
 
-    filteredHolidays.forEach((holiday) => {
+    sortedHolidays.forEach((holiday) => {
       const holidayData = [
         holiday.name,
         holiday.date,
@@ -99,9 +125,7 @@ const Holidays = () => {
       headStyles: { fillColor: [20, 100, 160], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [240, 240, 240] },
       didDrawPage: (data: any) => {
-        // Footer
         let str = "Page " + (doc as any).internal.getNumberOfPages();
-        // Total page number plugin only available in jspdf v1.0+ 
         if (typeof (doc as any).putTotalPages === 'function') {
           str = str + " of " + (doc as any).internal.getNumberOfPages();
         }
@@ -140,8 +164,8 @@ const Holidays = () => {
                   month={currentMonth}
                   onMonthChange={(newMonth) => {
                     setCurrentMonth(newMonth);
-                    setDate(undefined); // Clear specific date selection when changing month
-                    setIsMonthFiltered(true); // Enable month filtering
+                    setDate(undefined);
+                    setIsMonthFiltered(true);
                   }}
                   className="w-full sm:w-[180px]"
                 />
@@ -152,7 +176,7 @@ const Holidays = () => {
                     onClick={() => {
                       setDate(undefined);
                       setIsMonthFiltered(false);
-                      setCurrentMonth(new Date()); // Optional: Reset to today
+                      setCurrentMonth(new Date());
                     }}
                     title="Clear Filter"
                   >
@@ -187,16 +211,56 @@ const Holidays = () => {
                   <TableHeader className="bg-muted/50">
                     <TableRow className="hover:bg-muted/50">
                       <TableHead className="w-[60px] text-center font-medium">S.No</TableHead>
-                      <TableHead className="w-[200px] font-medium">Holiday Name</TableHead>
-                      <TableHead className="w-[120px] font-medium">Date</TableHead>
-                      <TableHead className="w-[100px] font-medium">Day</TableHead>
-                      <TableHead className="w-[100px] font-medium">Type</TableHead>
-                      <TableHead className="w-[150px] font-medium">Location</TableHead>
+                      <TableHead 
+                        className="w-[200px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center">
+                          Holiday Name
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[120px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('date')}
+                      >
+                        <div className="flex items-center">
+                          Date
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[100px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('day')}
+                      >
+                        <div className="flex items-center">
+                          Day
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[100px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('type')}
+                      >
+                        <div className="flex items-center">
+                          Type
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[150px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('location')}
+                      >
+                        <div className="flex items-center">
+                          Location
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredHolidays.length > 0 ? (
-                      filteredHolidays.map((holiday, index) => (
+                    {sortedHolidays.length > 0 ? (
+                      sortedHolidays.map((holiday, index) => (
                         <TableRow key={holiday.id} id={`holiday-${holiday.date}`} className={getRowClassName(holiday.type)}>
                           <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                           <TableCell className="font-medium">{holiday.name}</TableCell>
