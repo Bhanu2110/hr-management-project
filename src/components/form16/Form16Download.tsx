@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Download, FileText, AlertCircle, RotateCcw } from 'lucide-react';
+import { Download, FileText, AlertCircle, RotateCcw, ArrowUpDown } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+
+type Form16SortField = 'financial_year' | 'quarter' | 'file_name' | 'file_size' | 'uploaded_at';
+type SortDirection = 'asc' | 'desc';
 
 interface Form16Document {
   id: string;
@@ -31,6 +34,10 @@ export function Form16Download() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [isMonthFiltered, setIsMonthFiltered] = useState(false);
+
+  // Sorting states
+  const [sortField, setSortField] = useState<Form16SortField>('uploaded_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     if (isEmployee && employee?.id) {
@@ -100,6 +107,45 @@ export function Form16Download() {
 
     setFilteredDocuments(filtered);
   };
+
+  const handleSort = (field: Form16SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedDocuments = useMemo(() => {
+    return [...filteredDocuments].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case 'financial_year':
+          comparison = a.financial_year.localeCompare(b.financial_year);
+          break;
+        case 'quarter':
+          const quarterA = a.quarter || '';
+          const quarterB = b.quarter || '';
+          comparison = quarterA.localeCompare(quarterB);
+          break;
+        case 'file_name':
+          comparison = a.file_name.localeCompare(b.file_name);
+          break;
+        case 'file_size':
+          comparison = (a.file_size || 0) - (b.file_size || 0);
+          break;
+        case 'uploaded_at':
+          comparison = new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime();
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [filteredDocuments, sortField, sortDirection]);
 
   const handleDownload = async (document: Form16Document) => {
     try {
@@ -290,20 +336,60 @@ export function Form16Download() {
               </div>
             ) : (
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead className="w-[60px]">S.No</TableHead>
-                    <TableHead>Financial Year</TableHead>
-                    <TableHead>Quarter</TableHead>
-                    <TableHead>File Name</TableHead>
-                    <TableHead>File Size</TableHead>
-                    <TableHead>Upload Date</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/70"
+                      onClick={() => handleSort('financial_year')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Financial Year
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/70"
+                      onClick={() => handleSort('quarter')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Quarter
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/70"
+                      onClick={() => handleSort('file_name')}
+                    >
+                      <div className="flex items-center gap-1">
+                        File Name
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/70"
+                      onClick={() => handleSort('file_size')}
+                    >
+                      <div className="flex items-center gap-1">
+                        File Size
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/70"
+                      onClick={() => handleSort('uploaded_at')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Upload Date
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredDocuments.map((document, index) => (
+                  {sortedDocuments.map((document, index) => (
                     <TableRow key={document.id}>
                       <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
