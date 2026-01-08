@@ -159,6 +159,11 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
     return matchesSearch && matchesDate;
   });
 
+  const getEmployeeName = (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId);
+    return employee ? `${employee.first_name} ${employee.last_name}` : 'Unknown';
+  };
+
   const handleSort = (field: Form16SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -393,10 +398,6 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
     }
   };
 
-  const getEmployeeName = (employeeId: string) => {
-    const employee = employees.find(e => e.id === employeeId);
-    return employee ? `${employee.first_name} ${employee.last_name}` : 'Unknown';
-  };
 
   const getEmployeeDetails = (employeeId: string) => {
     const employee = employees.find(e => e.id === employeeId);
