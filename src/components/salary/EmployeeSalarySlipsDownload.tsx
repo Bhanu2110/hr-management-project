@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, FileText, AlertCircle, Eye, RotateCcw } from 'lucide-react';
+import { Download, FileText, AlertCircle, Eye, RotateCcw, ArrowUpDown } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { SalarySlipView } from './SalarySlipView';
 import { SalarySlip } from '@/types/salary';
 import { downloadSalarySlipPDF } from '@/utils/salarySlipPdfGenerator';
+
+type SalarySortField = 'month' | 'year';
+type SortDirection = 'asc' | 'desc';
 
 export function EmployeeSalarySlipsDownload() {
     const { employee, isEmployee } = useAuth();
@@ -23,6 +26,8 @@ export function EmployeeSalarySlipsDownload() {
 
     // Filter states
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+    const [sortField, setSortField] = useState<SalarySortField>('year');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
     useEffect(() => {
         if (isEmployee && employee?.id) {
@@ -127,6 +132,33 @@ export function EmployeeSalarySlipsDownload() {
 
         setFilteredSlips(filtered);
     };
+
+    const handleSort = (field: SalarySortField) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const sortedSlips = useMemo(() => {
+        return [...filteredSlips].sort((a, b) => {
+            let aValue: number;
+            let bValue: number;
+
+            if (sortField === 'month') {
+                aValue = a.month;
+                bValue = b.month;
+            } else {
+                // Sort by year, then by month as secondary
+                aValue = a.year * 100 + a.month;
+                bValue = b.year * 100 + b.month;
+            }
+
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        });
+    }, [filteredSlips, sortField, sortDirection]);
 
     const handleDirectDownload = async (slip: SalarySlip) => {
         try {
@@ -279,15 +311,31 @@ export function EmployeeSalarySlipsDownload() {
                             </div>
                         ) : (
                             <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Month</TableHead>
-                                        <TableHead>Year</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                <TableHeader className="bg-muted/50">
+                                    <TableRow className="hover:bg-muted/50">
+                                        <TableHead 
+                                            className="font-medium cursor-pointer hover:bg-muted/80"
+                                            onClick={() => handleSort('month')}
+                                        >
+                                            <div className="flex items-center">
+                                                Month
+                                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                                            </div>
+                                        </TableHead>
+                                        <TableHead 
+                                            className="font-medium cursor-pointer hover:bg-muted/80"
+                                            onClick={() => handleSort('year')}
+                                        >
+                                            <div className="flex items-center">
+                                                Year
+                                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="text-right font-medium">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredSlips.map((slip) => (
+                                    {sortedSlips.map((slip) => (
                                         <TableRow key={slip.id}>
                                             <TableCell>
                                                 <Badge variant="secondary" className="font-medium">
