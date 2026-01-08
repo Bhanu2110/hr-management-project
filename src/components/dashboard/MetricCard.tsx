@@ -49,7 +49,7 @@ function CircularProgress({ percentage, color }: { percentage: number; color: st
   );
 }
 
-export function MetricCard({
+export const MetricCard = function MetricCard({
   title,
   value,
   change,
