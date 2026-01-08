@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Plus, Pencil, Trash2, AlertCircle, X } from "lucide-react";
+import { Download, Plus, Pencil, Trash2, AlertCircle, X, ArrowUpDown } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Holiday, HOLIDAY_TYPES } from "@/types/holidays";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,6 +34,8 @@ const AdminHolidays = () => {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<'name' | 'date' | 'day' | 'type' | 'location'>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -85,6 +87,28 @@ const AdminHolidays = () => {
       return matchesSearch && matchesDate;
     });
   }, [searchQuery, holidays, date, currentMonth, isMonthFiltered]);
+
+  const handleSort = (field: 'name' | 'date' | 'day' | 'type' | 'location') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedHolidays = useMemo(() => {
+    return [...filteredHolidays].sort((a, b) => {
+      let aValue = a[sortField] || '';
+      let bValue = b[sortField] || '';
+      
+      if (sortDirection === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }, [filteredHolidays, sortField, sortDirection]);
 
   const getRowClassName = (holidayType: string) => {
     switch (holidayType) {
@@ -365,20 +389,60 @@ const AdminHolidays = () => {
             {!loading && !error && (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[60px] text-center">S.No</TableHead>
-                      <TableHead className="w-[200px]">Holiday Name</TableHead>
-                      <TableHead className="w-[120px]">Date</TableHead>
-                      <TableHead className="w-[100px]">Day</TableHead>
-                      <TableHead className="w-[100px]">Type</TableHead>
-                      <TableHead className="w-[150px]">Location</TableHead>
-                      <TableHead className="w-[100px] text-right">Actions</TableHead>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="hover:bg-muted/50">
+                      <TableHead className="w-[60px] text-center font-medium">S.No</TableHead>
+                      <TableHead 
+                        className="w-[200px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center">
+                          Holiday Name
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[120px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('date')}
+                      >
+                        <div className="flex items-center">
+                          Date
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[100px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('day')}
+                      >
+                        <div className="flex items-center">
+                          Day
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[100px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('type')}
+                      >
+                        <div className="flex items-center">
+                          Type
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="w-[150px] font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('location')}
+                      >
+                        <div className="flex items-center">
+                          Location
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[100px] text-right font-medium">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredHolidays.length > 0 ? (
-                      filteredHolidays.map((holiday, index) => (
+                    {sortedHolidays.length > 0 ? (
+                      sortedHolidays.map((holiday, index) => (
                         <TableRow key={holiday.id} id={`holiday-${holiday.date}`} className={getRowClassName(holiday.type)}>
                           <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                           <TableCell className="font-medium">{holiday.name}</TableCell>
