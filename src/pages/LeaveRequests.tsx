@@ -342,7 +342,9 @@ const LeaveRequests = () => {
                           <div>
                             <p className="text-muted-foreground">Duration</p>
                             <p className="font-medium">
-                              {format(new Date(request.start_date), "MMM dd")} to {format(new Date(request.end_date), "MMM dd, yyyy")}
+                              {request.start_date === request.end_date 
+                                ? format(new Date(request.start_date), "MMM dd, yyyy")
+                                : `${format(new Date(request.start_date), "MMM dd")} to ${format(new Date(request.end_date), "MMM dd, yyyy")}`}
                             </p>
                           </div>
                           <div>
