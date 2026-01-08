@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,8 @@ interface LeaveRequest {
 }
 
 type ViewMode = 'grid' | 'list';
+type LeaveSortField = 'employee' | 'leave_type' | 'start_date' | 'end_date' | 'days' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 const LeaveRequests = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -58,6 +60,8 @@ const LeaveRequests = () => {
   const { employee, isAdmin, isEmployee } = useAuth();
   const { toast } = useToast();
   const { themeColor } = useTheme();
+  const [sortField, setSortField] = useState<LeaveSortField>('start_date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const fetchLeaveRequests = async () => {
     try {
@@ -134,6 +138,59 @@ const LeaveRequests = () => {
 
     return true;
   });
+
+  const handleSort = (field: LeaveSortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedLeaveRequests = useMemo(() => {
+    return [...filteredLeaveRequests].sort((a, b) => {
+      let aValue: string | number = '';
+      let bValue: string | number = '';
+
+      switch (sortField) {
+        case 'employee':
+          aValue = `${a.employee?.first_name} ${a.employee?.last_name}`.toLowerCase();
+          bValue = `${b.employee?.first_name} ${b.employee?.last_name}`.toLowerCase();
+          break;
+        case 'leave_type':
+          aValue = a.leave_type.toLowerCase();
+          bValue = b.leave_type.toLowerCase();
+          break;
+        case 'start_date':
+          aValue = a.start_date;
+          bValue = b.start_date;
+          break;
+        case 'end_date':
+          aValue = a.end_date;
+          bValue = b.end_date;
+          break;
+        case 'days':
+          aValue = a.days;
+          bValue = b.days;
+          break;
+        case 'status':
+          aValue = a.status.toLowerCase();
+          bValue = b.status.toLowerCase();
+          break;
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      if (sortDirection === 'asc') {
+        return String(aValue).localeCompare(String(bValue));
+      } else {
+        return String(bValue).localeCompare(String(aValue));
+      }
+    });
+  }, [filteredLeaveRequests, sortField, sortDirection]);
 
   const handleMonthChange = (date: Date) => {
     setCurrentMonth(date);
@@ -394,39 +451,57 @@ const LeaveRequests = () => {
                     <TableRow className="hover:bg-muted/50">
                       <TableHead className="w-[60px] text-center font-medium">S.No</TableHead>
                       {isAdmin && (
-                        <TableHead className="font-medium">
+                        <TableHead 
+                          className="font-medium cursor-pointer hover:bg-muted/80"
+                          onClick={() => handleSort('employee')}
+                        >
                           <div className="flex items-center">
                             Employee
                             <ArrowUpDown className="ml-2 h-4 w-4" />
                           </div>
                         </TableHead>
                       )}
-                      <TableHead className="font-medium">
+                      <TableHead 
+                        className="font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('leave_type')}
+                      >
                         <div className="flex items-center">
                           Leave Type
                           <ArrowUpDown className="ml-2 h-4 w-4" />
                         </div>
                       </TableHead>
-                      <TableHead className="font-medium">
+                      <TableHead 
+                        className="font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('start_date')}
+                      >
                         <div className="flex items-center">
                           Start Date
                           <ArrowUpDown className="ml-2 h-4 w-4" />
                         </div>
                       </TableHead>
-                      <TableHead className="font-medium">
+                      <TableHead 
+                        className="font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('end_date')}
+                      >
                         <div className="flex items-center">
                           End Date
                           <ArrowUpDown className="ml-2 h-4 w-4" />
                         </div>
                       </TableHead>
-                      <TableHead className="text-center font-medium">
+                      <TableHead 
+                        className="text-center font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('days')}
+                      >
                         <div className="flex items-center justify-center">
                           Days
                           <ArrowUpDown className="ml-2 h-4 w-4" />
                         </div>
                       </TableHead>
                       <TableHead className="font-medium">Reason</TableHead>
-                      <TableHead className="font-medium">
+                      <TableHead 
+                        className="font-medium cursor-pointer hover:bg-muted/80"
+                        onClick={() => handleSort('status')}
+                      >
                         <div className="flex items-center">
                           Status
                           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -436,7 +511,7 @@ const LeaveRequests = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredLeaveRequests.map((request, index) => (
+                    {sortedLeaveRequests.map((request, index) => (
                       <TableRow key={request.id}>
                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                         {isAdmin && (
