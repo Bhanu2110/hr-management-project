@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, TrendingUp, ArrowUpDown } from "lucide-react";
@@ -28,11 +28,16 @@ interface AttendanceStats {
   total: number;
 }
 
+type AttendanceSortField = 'employee' | 'check_in' | 'check_out' | 'total_hours' | 'status';
+type SortDirection = 'asc' | 'desc';
+
 export const AdminAttendance = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<AttendanceStats>({ present: 0, absent: 0, late: 0, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [sortField, setSortField] = useState<AttendanceSortField>('employee');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,6 +160,57 @@ export const AdminAttendance = () => {
 
   const attendanceRate = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(1) : '0';
 
+  const handleSort = (field: AttendanceSortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedRecords = useMemo(() => {
+    return [...attendanceRecords].sort((a, b) => {
+      let aValue: string | number = '';
+      let bValue: string | number = '';
+
+      switch (sortField) {
+        case 'employee':
+          aValue = a.employee_name.toLowerCase();
+          bValue = b.employee_name.toLowerCase();
+          break;
+        case 'check_in':
+          aValue = a.intervals[0]?.check_in || '';
+          bValue = b.intervals[0]?.check_in || '';
+          break;
+        case 'check_out':
+          const aLastInterval = a.intervals[a.intervals.length - 1];
+          const bLastInterval = b.intervals[b.intervals.length - 1];
+          aValue = aLastInterval?.check_out || '';
+          bValue = bLastInterval?.check_out || '';
+          break;
+        case 'total_hours':
+          aValue = a.total_hours || 0;
+          bValue = b.total_hours || 0;
+          break;
+        case 'status':
+          aValue = a.status?.toLowerCase() || '';
+          bValue = b.status?.toLowerCase() || '';
+          break;
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      if (sortDirection === 'asc') {
+        return String(aValue).localeCompare(String(bValue));
+      } else {
+        return String(bValue).localeCompare(String(aValue));
+      }
+    });
+  }, [attendanceRecords, sortField, sortDirection]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -247,33 +303,48 @@ export const AdminAttendance = () => {
               <thead className="bg-muted/50">
                 <tr className="border-b border-border">
                   <th className="text-center py-3 px-4 font-medium text-muted-foreground w-[60px]">S.No</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                  <th 
+                    className="text-left py-3 px-4 font-medium text-muted-foreground cursor-pointer hover:bg-muted/80"
+                    onClick={() => handleSort('employee')}
+                  >
                     <div className="flex items-center">
                       Employee
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Session</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                  <th 
+                    className="text-left py-3 px-4 font-medium text-muted-foreground cursor-pointer hover:bg-muted/80"
+                    onClick={() => handleSort('check_in')}
+                  >
                     <div className="flex items-center">
                       Check In
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                  <th 
+                    className="text-left py-3 px-4 font-medium text-muted-foreground cursor-pointer hover:bg-muted/80"
+                    onClick={() => handleSort('check_out')}
+                  >
                     <div className="flex items-center">
                       Check Out
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Session Hours</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                  <th 
+                    className="text-left py-3 px-4 font-medium text-muted-foreground cursor-pointer hover:bg-muted/80"
+                    onClick={() => handleSort('total_hours')}
+                  >
                     <div className="flex items-center">
                       Total Hours
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                  <th 
+                    className="text-left py-3 px-4 font-medium text-muted-foreground cursor-pointer hover:bg-muted/80"
+                    onClick={() => handleSort('status')}
+                  >
                     <div className="flex items-center">
                       Status
                       <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -282,8 +353,8 @@ export const AdminAttendance = () => {
                 </tr>
               </thead>
               <tbody>
-                {attendanceRecords.length > 0 ? (
-                  attendanceRecords.map((record, recordIndex) => (
+                {sortedRecords.length > 0 ? (
+                  sortedRecords.map((record, recordIndex) => (
                     record.intervals.length > 0 ? (
                       record.intervals.map((interval, intervalIndex) => (
                         <tr key={`${record.id}-${intervalIndex}`} className="border-b border-border hover:bg-muted/30 transition-colors">
