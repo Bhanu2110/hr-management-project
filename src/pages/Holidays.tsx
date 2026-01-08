@@ -184,14 +184,14 @@ const Holidays = () => {
             {!loading && !error && (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[60px] text-center">S.No</TableHead>
-                      <TableHead className="w-[200px]">Holiday Name</TableHead>
-                      <TableHead className="w-[120px]">Date</TableHead>
-                      <TableHead className="w-[100px]">Day</TableHead>
-                      <TableHead className="w-[100px]">Type</TableHead>
-                      <TableHead className="w-[150px]">Location</TableHead>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="hover:bg-muted/50">
+                      <TableHead className="w-[60px] text-center font-medium">S.No</TableHead>
+                      <TableHead className="w-[200px] font-medium">Holiday Name</TableHead>
+                      <TableHead className="w-[120px] font-medium">Date</TableHead>
+                      <TableHead className="w-[100px] font-medium">Day</TableHead>
+                      <TableHead className="w-[100px] font-medium">Type</TableHead>
+                      <TableHead className="w-[150px] font-medium">Location</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
