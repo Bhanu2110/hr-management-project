@@ -64,6 +64,12 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
   const isHalfDay = form.watch("is_half_day");
   const startDate = form.watch("start_date");
 
+  // Auto-sync end_date when half-day is enabled and start_date changes
+  useEffect(() => {
+    if (isHalfDay && startDate) {
+      form.setValue("end_date", startDate, { shouldValidate: true });
+    }
+  }, [isHalfDay, startDate, form]);
   const calculateDays = (startDate: Date, endDate: Date, isHalfDay: boolean) => {
     if (isHalfDay) {
       return 0.5; // Half-day = 4 hours = 0.5 days
