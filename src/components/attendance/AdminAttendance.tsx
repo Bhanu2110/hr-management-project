@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, TrendingUp } from "lucide-react";
+import { Calendar, Clock, Users, TrendingUp, ArrowUpDown } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -244,16 +244,41 @@ export const AdminAttendance = () => {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
+              <thead className="bg-muted/50">
                 <tr className="border-b border-border">
                   <th className="text-center py-3 px-4 font-medium text-muted-foreground w-[60px]">S.No</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Employee</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                    <div className="flex items-center">
+                      Employee
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Session</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Check In</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Check Out</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                    <div className="flex items-center">
+                      Check In
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                    <div className="flex items-center">
+                      Check Out
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Session Hours</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Total Hours</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                    <div className="flex items-center">
+                      Total Hours
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                    <div className="flex items-center">
+                      Status
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
