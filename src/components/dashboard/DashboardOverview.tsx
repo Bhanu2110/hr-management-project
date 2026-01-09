@@ -169,6 +169,8 @@ export function DashboardOverview() {
   }, []);
 
   const attendanceRate = totalEmployees > 0 ? ((presentToday / totalEmployees) * 100).toFixed(1) : '0';
+  const attendancePercentage = totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0;
+  const leavePercentage = totalEmployees > 0 ? Math.round((onLeave / totalEmployees) * 100) : 0;
 
   // Show employee-specific dashboard for employees
   if (isEmployee) {
@@ -198,18 +200,18 @@ export function DashboardOverview() {
           changeType="positive"
           icon={Users}
           iconColor="text-primary"
-          percentage={74}
+          percentage={totalEmployees > 0 ? 100 : 0}
           percentageColor="#22c55e"
         />
         <MetricCard
           title="Present Today"
           value={presentToday.toString()}
           change={`${attendanceRate}% attendance`}
-          changeType={Number(attendanceRate) < 50 ? "negative" : "positive"}
+          changeType={attendancePercentage < 50 ? "negative" : "positive"}
           icon={UserCheck}
-          iconColor={Number(attendanceRate) < 50 ? "text-red-500" : "text-green-500"}
-          percentage={Number(attendanceRate) || 74}
-          percentageColor={Number(attendanceRate) < 50 ? "#ef4444" : "#22c55e"}
+          iconColor={attendancePercentage < 50 ? "text-red-500" : "text-green-500"}
+          percentage={attendancePercentage}
+          percentageColor={attendancePercentage < 50 ? "#ef4444" : "#22c55e"}
         />
         <MetricCard
           title="On Leave"
@@ -218,7 +220,7 @@ export function DashboardOverview() {
           changeType="warning"
           icon={Calendar}
           iconColor="text-warning"
-          percentage={74}
+          percentage={leavePercentage}
           percentageColor="#f59e0b"
         />
         <MetricCard

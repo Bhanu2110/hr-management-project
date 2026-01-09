@@ -43,7 +43,7 @@ function CircularProgress({ percentage, color }: { percentage: number; color: st
         />
       </svg>
       <span className="absolute text-xs font-semibold" style={{ color }}>
-        +{percentage}%
+        {percentage > 0 ? '+' : ''}{percentage}%
       </span>
     </div>
   );
