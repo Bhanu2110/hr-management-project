@@ -39,6 +39,10 @@ interface LeaveRequest {
     last_name: string;
     employee_id: string;
   };
+  approver?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 type ViewMode = 'grid' | 'list';
@@ -70,7 +74,8 @@ const LeaveRequests = () => {
         .from('leave_requests')
         .select(`
           *,
-          employee:employees(first_name, last_name, employee_id)
+          employee:employees(first_name, last_name, employee_id),
+          approver:admins!leave_requests_approved_by_fkey(first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -417,6 +422,16 @@ const LeaveRequests = () => {
                           <p className="text-muted-foreground text-sm">Reason</p>
                           <p className="text-sm">{request.reason}</p>
                         </div>
+                        {(request.status === 'approved' || request.status === 'rejected') && request.approver && (
+                          <div className="mt-2">
+                            <p className="text-muted-foreground text-sm">
+                              {request.status === 'approved' ? 'Approved by' : 'Rejected by'}
+                            </p>
+                            <p className="text-sm font-medium">
+                              {request.approver.first_name} {request.approver.last_name}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {isAdmin && request.status === "pending" && (
@@ -507,6 +522,7 @@ const LeaveRequests = () => {
                           <ArrowUpDown className="ml-2 h-4 w-4" />
                         </div>
                       </TableHead>
+                      <TableHead className="font-medium">Approved/Rejected By</TableHead>
                       {isAdmin && <TableHead className="text-center font-medium">Actions</TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -528,6 +544,15 @@ const LeaveRequests = () => {
                         <TableCell className="text-center">{formatDays(request.days)}</TableCell>
                         <TableCell className="max-w-xs truncate" title={request.reason}>{request.reason}</TableCell>
                         <TableCell>{getStatusBadge(request.status)}</TableCell>
+                        <TableCell>
+                          {request.approver ? (
+                            <span className="text-sm">
+                              {request.approver.first_name} {request.approver.last_name}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
                         {isAdmin && (
                           <TableCell>
                             {request.status === "pending" ? (
