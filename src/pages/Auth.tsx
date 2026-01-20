@@ -330,16 +330,18 @@ const Auth = () => {
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                   />
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p className="font-medium">Password must contain:</p>
-                    <ul className="list-disc pl-4 space-y-0.5">
-                      <li className={newPassword.length >= 8 ? 'text-green-600' : ''}>At least 8 characters</li>
-                      <li className={/[A-Z]/.test(newPassword) ? 'text-green-600' : ''}>Uppercase letter (A–Z)</li>
-                      <li className={/[a-z]/.test(newPassword) ? 'text-green-600' : ''}>Lowercase letter (a–z)</li>
-                      <li className={/[0-9]/.test(newPassword) ? 'text-green-600' : ''}>Number (0–9)</li>
-                      <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) ? 'text-green-600' : ''}>Special character (@, #, $, %, &, !, etc.)</li>
-                    </ul>
-                  </div>
+                  {newPassword && !validatePassword(newPassword).isValid && (
+                    <div className="text-xs space-y-1">
+                      <p className="font-medium text-destructive">Password must contain:</p>
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        {newPassword.length < 8 && <li className="text-destructive">At least 8 characters</li>}
+                        {!/[A-Z]/.test(newPassword) && <li className="text-destructive">Uppercase letter (A–Z)</li>}
+                        {!/[a-z]/.test(newPassword) && <li className="text-destructive">Lowercase letter (a–z)</li>}
+                        {!/[0-9]/.test(newPassword) && <li className="text-destructive">Number (0–9)</li>}
+                        {!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) && <li className="text-destructive">Special character (@, #, $, %, &, !, etc.)</li>}
+                      </ul>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm New Password</Label>
