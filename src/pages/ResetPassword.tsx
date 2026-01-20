@@ -35,11 +35,35 @@ const ResetPassword = () => {
         checkSession();
     }, [navigate]);
 
+    // Password validation function
+    const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
+        const errors: string[] = [];
+        
+        if (password.length < 8) {
+            errors.push('At least 8 characters');
+        }
+        if (!/[A-Z]/.test(password)) {
+            errors.push('Uppercase letter (A–Z)');
+        }
+        if (!/[a-z]/.test(password)) {
+            errors.push('Lowercase letter (a–z)');
+        }
+        if (!/[0-9]/.test(password)) {
+            errors.push('Number (0–9)');
+        }
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            errors.push('Special character (@, #, $, %, &, !, etc.)');
+        }
+        
+        return { isValid: errors.length === 0, errors };
+    };
+
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (newPassword.length < 6) {
-            toast.error('Password must be at least 6 characters');
+        const validation = validatePassword(newPassword);
+        if (!validation.isValid) {
+            toast.error('Password must contain: ' + validation.errors.join(', '));
             return;
         }
 
@@ -150,9 +174,16 @@ const ResetPassword = () => {
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     required
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    Password must be at least 6 characters
-                                </p>
+                                <div className="text-xs text-muted-foreground space-y-1">
+                                    <p className="font-medium">Password must contain:</p>
+                                    <ul className="list-disc pl-4 space-y-0.5">
+                                        <li className={newPassword.length >= 8 ? 'text-green-600' : ''}>At least 8 characters</li>
+                                        <li className={/[A-Z]/.test(newPassword) ? 'text-green-600' : ''}>Uppercase letter (A–Z)</li>
+                                        <li className={/[a-z]/.test(newPassword) ? 'text-green-600' : ''}>Lowercase letter (a–z)</li>
+                                        <li className={/[0-9]/.test(newPassword) ? 'text-green-600' : ''}>Number (0–9)</li>
+                                        <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) ? 'text-green-600' : ''}>Special character (@, #, $, %, &, !, etc.)</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="confirm-password">Confirm New Password</Label>
