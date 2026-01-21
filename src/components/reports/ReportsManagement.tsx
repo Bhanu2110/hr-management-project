@@ -189,48 +189,102 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
   };
 
   const handleCreateReport = async () => {
+    if (!reportData.title) {
+      toast({
+        title: "Error",
+        description: "Please enter a report title.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      if (!employee?.id || !employee?.first_name || !employee?.last_name) {
+      // Get the current user - check admins first, then employees
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         toast({
           title: "Error",
-          description: "User information not available. Cannot generate report.",
+          description: "User not authenticated. Please log in again.",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
+      // Try to get admin info first
+      let generatorName = "Admin User";
+      let generatorId = user.id;
+
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('id, first_name, last_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (adminData) {
+        generatorName = `${adminData.first_name} ${adminData.last_name}`;
+        generatorId = adminData.id;
+      } else if (employee) {
+        generatorName = `${employee.first_name} ${employee.last_name}`;
+        generatorId = employee.id;
+      }
+
+      // Determine if this is a scheduled report
+      const isScheduled = reportData.schedule?.frequency && reportData.schedule.frequency !== 'once';
+      const initialStatus = isScheduled ? 'scheduled' : 'generating';
+
       const { data, error } = await supabase
         .from('reports')
         .insert([{
-          title: reportData.description || 'Report',
-          description: reportData.description,
+          title: reportData.title,
+          description: reportData.description || null,
           type: (reportData.type || 'attendance') as any,
           format: (reportData.format || 'pdf') as any,
           parameters: reportData.parameters as any,
           visibility: (reportData.visibility || 'role_based') as any,
-          accessible_roles: reportData.accessible_roles as any || [],
+          accessible_roles: reportData.accessible_roles as any || ['admin'],
           accessible_departments: reportData.accessible_departments as any || [],
           accessible_employees: reportData.accessible_employees as any || [],
-          frequency: reportData.schedule?.frequency as any,
-          scheduled_date: reportData.schedule?.schedule_time ? new Date().toISOString().split('T')[0] : null,
-          next_run_date: reportData.schedule?.schedule_time ? new Date().toISOString() : null,
-          generated_by: employee.id,
-          generated_by_name: `${employee.first_name} ${employee.last_name}`,
-          status: 'generating' as any, // Initial status
+          frequency: (reportData.schedule?.frequency || 'once') as any,
+          scheduled_date: isScheduled ? new Date().toISOString() : null,
+          next_run_date: isScheduled ? new Date().toISOString() : null,
+          generated_by: generatorId,
+          generated_by_name: generatorName,
+          generated_date: isScheduled ? null : new Date().toISOString(),
+          status: initialStatus as any,
           download_count: 0,
+          file_size: null,
         }])
-        .select<"*", Report>()
+        .select()
         .single();
 
       if (error) {
         throw error;
       }
 
+      // Simulate report generation completion after 2 seconds if not scheduled
+      if (!isScheduled && data) {
+        setTimeout(async () => {
+          const fileSize = Math.floor(Math.random() * 500000) + 50000; // Random size between 50KB and 550KB
+          await supabase
+            .from('reports')
+            .update({ 
+              status: 'completed' as any,
+              file_size: fileSize,
+              generated_date: new Date().toISOString()
+            })
+            .eq('id', data.id);
+          
+          fetchReports();
+        }, 2000);
+      }
+
       toast({
         title: "Success",
-        description: "Report generated successfully.",
+        description: isScheduled 
+          ? "Report scheduled successfully." 
+          : "Report generation started. It will be ready shortly.",
       });
       setIsCreateDialogOpen(false);
       setReportData({
@@ -247,7 +301,7 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
         visibility: "role_based",
         accessible_roles: ["admin"],
       });
-      fetchReports(); // Refresh the list of reports
+      fetchReports();
     } catch (error) {
       console.error("Error creating report:", error);
       toast({
@@ -297,12 +351,68 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
     }
   };
 
-  const handleRunNow = (report: Report) => {
-    console.log("Running report now:", report.id);
+  const handleRunNow = async (report: Report) => {
+    try {
+      await supabase
+        .from('reports')
+        .update({ 
+          status: 'generating' as any,
+          generated_date: new Date().toISOString()
+        })
+        .eq('id', report.id);
+
+      toast({
+        title: "Report Started",
+        description: "Report generation has started.",
+      });
+
+      // Simulate completion after 2 seconds
+      setTimeout(async () => {
+        const fileSize = Math.floor(Math.random() * 500000) + 50000;
+        await supabase
+          .from('reports')
+          .update({ 
+            status: 'completed' as any,
+            file_size: fileSize
+          })
+          .eq('id', report.id);
+        fetchReports();
+      }, 2000);
+
+      fetchReports();
+    } catch (error) {
+      console.error("Error running report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to run report.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handlePauseSchedule = (report: Report) => {
-    console.log("Pausing schedule for report:", report.id);
+  const handlePauseSchedule = async (report: Report) => {
+    try {
+      await supabase
+        .from('reports')
+        .update({ 
+          status: 'draft' as any,
+          next_run_date: null
+        })
+        .eq('id', report.id);
+
+      toast({
+        title: "Schedule Paused",
+        description: "Report schedule has been paused.",
+      });
+      fetchReports();
+    } catch (error) {
+      console.error("Error pausing schedule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to pause schedule.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calculate statistics
@@ -687,103 +797,123 @@ export function ReportsManagement({ employees = [] }: ReportsManagementProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReports.map((report) => {
-                const IconComponent = getIconComponent(report.type);
-                return (
-                  <TableRow key={report.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="p-1 bg-muted rounded">
-                          <IconComponent className="h-4 w-4 text-muted-foreground" />
+              {filteredReports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <FileText className="h-8 w-8 mb-2" />
+                      <p>No reports found</p>
+                      <p className="text-sm">Click "Generate Report" to create your first report</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredReports.map((report) => {
+                  const IconComponent = getIconComponent(report.type);
+                  return (
+                    <TableRow key={report.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="p-1 bg-muted rounded">
+                            <IconComponent className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{report.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {report.description || 'No description'}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">{report.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {report.description}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {REPORT_TYPES[report.type]?.name}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={REPORT_STATUS_COLORS[report.status]}>
-                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {report.generated_date ? (
-                        <div>
-                          <p className="text-sm">{formatDate(report.generated_date)}</p>
-                          <p className="text-xs text-muted-foreground">by {report.generated_by_name}</p>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">Not generated</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {report.file_size ? formatFileSize(report.file_size) : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {report.download_count}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleEdit(report)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {report.status === 'completed' && (
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {REPORT_TYPES[report.type]?.name || report.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={REPORT_STATUS_COLORS[report.status] || 'bg-gray-500'}>
+                          {report.status === 'generating' && <RefreshCw className="h-3 w-3 mr-1 animate-spin" />}
+                          {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {report.generated_date ? (
+                          <div>
+                            <p className="text-sm">{formatDate(report.generated_date)}</p>
+                            <p className="text-xs text-muted-foreground">by {report.generated_by_name || 'Unknown'}</p>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {report.status === 'scheduled' ? 'Scheduled' : 'Pending'}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {report.file_size ? formatFileSize(report.file_size) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {report.download_count || 0}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" title="View">
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => handleDownload(report)}
+                            onClick={() => handleEdit(report)}
+                            title="Edit"
                           >
-                            <Download className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        )}
-                        {report.status === 'scheduled' && (
-                          <>
+                          {report.status === 'completed' && (
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => handleRunNow(report)}
-                              className="text-green-600"
+                              onClick={() => handleDownload(report)}
+                              title="Download"
                             >
-                              <Play className="h-4 w-4" />
+                              <Download className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handlePauseSchedule(report)}
-                              className="text-yellow-600"
-                            >
-                              <Pause className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDelete(report)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                          )}
+                          {report.status === 'scheduled' && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleRunNow(report)}
+                                className="text-green-600"
+                                title="Run Now"
+                              >
+                                <Play className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handlePauseSchedule(report)}
+                                className="text-yellow-600"
+                                title="Pause Schedule"
+                              >
+                                <Pause className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDelete(report)}
+                            className="text-destructive hover:text-destructive"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
