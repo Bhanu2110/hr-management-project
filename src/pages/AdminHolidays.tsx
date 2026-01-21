@@ -52,7 +52,7 @@ const AdminHolidays = () => {
   });
 
 
-  const locations = ["All", "New York", "London", "Bangalore"]; // These should ideally come from an API or be more dynamic
+  const locations = ["All", "New York", "London", "Bangalore","Hyderabad"]; // These should ideally come from an API or be more dynamic
 
   useEffect(() => {
     loadHolidays();
