@@ -30,7 +30,7 @@ const Holidays = () => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  const locations = ["All", "New York", "London", "Bangalore"];
+  const locations = ["All", "New York", "London", "Bangalore","Hyderabad"];
 
   useEffect(() => {
     const getHolidays = async () => {
