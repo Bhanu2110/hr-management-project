@@ -101,15 +101,16 @@ const Holidays = () => {
   const handleDownloadPdf = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("Holiday List", 14, 22);
+    doc.text("Holiday List " + selectedYear, 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
 
-    const tableColumn = ["Holiday Name", "Date", "Day", "Type", "Location"];
+    const tableColumn = ["S.No", "Holiday Name", "Date", "Day", "Type", "Location"];
     const tableRows: string[][] = [];
 
-    sortedHolidays.forEach((holiday) => {
+    sortedHolidays.forEach((holiday, index) => {
       const holidayData = [
+        String(index + 1),
         holiday.name,
         holiday.date,
         holiday.day,
