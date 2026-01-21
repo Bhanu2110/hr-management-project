@@ -10,7 +10,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Holiday, HOLIDAY_TYPES } from "@/types/holidays";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { holidayService } from "@/services/holidayService";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -124,7 +124,9 @@ const Holidays = () => {
       tableRows.push(holidayData);
     });
 
-    (doc as any).autoTable(tableColumn, tableRows, {
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
       startY: 30,
       styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [20, 100, 160], textColor: 255, fontStyle: "bold" },

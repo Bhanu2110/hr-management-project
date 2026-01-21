@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/context/ThemeContext";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const AdminHolidays = () => {
@@ -152,7 +152,9 @@ const AdminHolidays = () => {
       tableRows.push(holidayData);
     });
 
-    (doc as any).autoTable(tableColumn, tableRows, {
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
       startY: 30,
       styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [20, 100, 160], textColor: 255, fontStyle: "bold" },
