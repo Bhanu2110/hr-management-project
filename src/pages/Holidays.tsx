@@ -87,15 +87,8 @@ const Holidays = () => {
     });
   }, [filteredHolidays, sortField, sortDirection]);
 
-  const getRowClassName = (holidayType: Holiday["type"]) => {
-    switch (holidayType) {
-      case "Public":
-        return "bg-blue-50/50 hover:bg-blue-100/50";
-      case "Optional":
-        return "bg-green-50/50 hover:bg-green-100/50";
-      default:
-        return "";
-    }
+  const getRowClassName = () => {
+    return "bg-background hover:bg-muted/50";
   };
 
   const handleDownloadPdf = () => {
@@ -268,7 +261,7 @@ const Holidays = () => {
                   <TableBody>
                     {sortedHolidays.length > 0 ? (
                       sortedHolidays.map((holiday, index) => (
-                        <TableRow key={holiday.id} id={`holiday-${holiday.date}`} className={getRowClassName(holiday.type)}>
+                        <TableRow key={holiday.id} id={`holiday-${holiday.date}`} className={getRowClassName()}>
                           <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                           <TableCell className="font-medium">{holiday.name}</TableCell>
                           <TableCell>{holiday.date}</TableCell>
