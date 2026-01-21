@@ -324,15 +324,20 @@ const Employees = () => {
                         {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                       </TableCell>
                       <TableCell className="font-medium">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: themeColor }}>
-                            {employee.first_name[0]}{employee.last_name[0]}
-                          </div>
-                          <div>
-                            <div>{`${employee.first_name} ${employee.last_name}`}</div>
-                            <div className="text-xs text-muted-foreground">{employee.email}</div>
-                          </div>
-                        </div>
+                        <ViewEmployeeDialog
+                          employee={employee}
+                          trigger={
+                            <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: themeColor }}>
+                                {employee.first_name[0]}{employee.last_name[0]}
+                              </div>
+                              <div>
+                                <div className="hover:underline">{`${employee.first_name} ${employee.last_name}`}</div>
+                                <div className="text-xs text-muted-foreground">{employee.email}</div>
+                              </div>
+                            </div>
+                          }
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-muted-foreground">
