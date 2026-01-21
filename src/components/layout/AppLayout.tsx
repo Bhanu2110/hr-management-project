@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Bell, User, Search, LogOut } from "lucide-react";
+import { Bell, User, Search, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +49,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
               <ThemeSwitcher />
               <RealTimeNotificationBell />
 
