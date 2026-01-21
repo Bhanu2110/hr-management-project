@@ -99,6 +99,10 @@ const Holidays = () => {
   };
 
   const handleDownloadPdf = () => {
+    if (sortedHolidays.length === 0) {
+      return;
+    }
+
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Holiday List " + selectedYear, 14, 22);

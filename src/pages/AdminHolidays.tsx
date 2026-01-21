@@ -122,6 +122,15 @@ const AdminHolidays = () => {
   };
 
   const handleDownloadPdf = () => {
+    if (sortedHolidays.length === 0) {
+      toast({
+        title: "No holidays to download",
+        description: "There are no holidays in the current list to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Holiday List " + selectedYear, 14, 22);
@@ -149,9 +158,7 @@ const AdminHolidays = () => {
       headStyles: { fillColor: [20, 100, 160], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [240, 240, 240] },
       didDrawPage: (data: any) => {
-        // Footer
         let str = "Page " + (doc as any).internal.getNumberOfPages();
-        // Total page number plugin only available in jspdf v1.0+ 
         if (typeof (doc as any).putTotalPages === 'function') {
           str = str + " of " + (doc as any).internal.getNumberOfPages();
         }
@@ -161,6 +168,11 @@ const AdminHolidays = () => {
     });
 
     doc.save(`Holidays_${selectedYear}.pdf`);
+    
+    toast({
+      title: "PDF Downloaded",
+      description: `Holiday list for ${selectedYear} has been downloaded successfully.`,
+    });
   };
 
   const resetForm = () => {
