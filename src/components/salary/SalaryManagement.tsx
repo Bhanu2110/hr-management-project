@@ -1611,15 +1611,6 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                         <ArrowUpDown className="h-4 w-4" />
                       </div>
                     </TableHead>
-                    <TableHead 
-                      className="cursor-pointer hover:bg-muted/80" 
-                      onClick={() => handleSort('paid_date')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Payment Date
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1672,9 +1663,6 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {slip.paid_date ? new Date(slip.paid_date).toLocaleDateString() : 'N/A'}
-                      </TableCell>
-                      <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
@@ -1682,40 +1670,6 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                             onClick={() => handleViewSalarySlip(slip)}
                           >
                             <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingSlip(slip);
-                              setFormData({
-                                month: slip.month,
-                                year: slip.year,
-                                working_days: slip.working_days,
-                                present_days: slip.present_days,
-                                basic_salary: slip.basic_salary,
-                                hra: slip.hra,
-                                transport_allowance: slip.transport_allowance,
-                                medical_allowance: slip.medical_allowance,
-                                special_allowance: slip.special_allowance,
-                                performance_bonus: slip.performance_bonus,
-                                overtime_hours: slip.overtime_hours,
-                                overtime_rate: slip.overtime_rate,
-                                other_allowances: slip.other_allowances,
-                                pf_employee: slip.pf_employee,
-                                esi_employee: slip.esi_employee,
-                                professional_tax: slip.professional_tax,
-                                income_tax: slip.income_tax,
-                                medical_insurance: slip.medical_insurance,
-                                loan_deduction: slip.loan_deduction,
-                                advance_deduction: slip.advance_deduction,
-                                late_deduction: slip.late_deduction,
-                                other_deductions: slip.other_deductions,
-                              });
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
