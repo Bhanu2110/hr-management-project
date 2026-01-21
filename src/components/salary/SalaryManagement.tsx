@@ -52,7 +52,8 @@ import {
   Calculator,
   FileSpreadsheet,
   Trash2,
-  FileText
+  FileText,
+  ArrowUpDown
 } from "lucide-react";
 import { SalarySlip, SalaryStructure, SalaryCreateRequest, MONTHS, SALARY_STATUS_COLORS } from "@/types/salary";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +90,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
   const [salaryStructures, setSalaryStructures] = useState<SalaryStructure[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sortField, setSortField] = useState<string>('employee_name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [formData, setFormData] = useState<Partial<SalaryCreateRequest>>({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -431,6 +434,15 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     },
   ];
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
   const filteredSalarySlips = salarySlips.filter((slip) => {
     const matchesSearch =
       slip.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -450,6 +462,45 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     }
 
     return matchesSearch && matchesStatus && matchesDate;
+  });
+
+  const sortedSalarySlips = [...filteredSalarySlips].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'employee_name':
+        aValue = a.employee_name.toLowerCase();
+        bValue = b.employee_name.toLowerCase();
+        break;
+      case 'department':
+        aValue = a.department.toLowerCase();
+        bValue = b.department.toLowerCase();
+        break;
+      case 'basic_salary':
+        aValue = a.basic_salary;
+        bValue = b.basic_salary;
+        break;
+      case 'net_salary':
+        aValue = a.net_salary;
+        bValue = b.net_salary;
+        break;
+      case 'status':
+        aValue = a.status.toLowerCase();
+        bValue = b.status.toLowerCase();
+        break;
+      case 'paid_date':
+        aValue = a.paid_date ? new Date(a.paid_date).getTime() : 0;
+        bValue = b.paid_date ? new Date(b.paid_date).getTime() : 0;
+        break;
+      default:
+        aValue = a.employee_name.toLowerCase();
+        bValue = b.employee_name.toLowerCase();
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   const filteredSalaryStructures = salaryStructures.filter((structure) => {
@@ -1510,22 +1561,70 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="bg-muted/50">
                     <TableHead className="w-[60px]">S.No</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Basic Salary</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/80" 
+                      onClick={() => handleSort('employee_name')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Employee
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/80" 
+                      onClick={() => handleSort('department')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Department
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/80" 
+                      onClick={() => handleSort('basic_salary')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Basic Salary
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
                     <TableHead>Allowances</TableHead>
                     <TableHead>Bonuses</TableHead>
                     <TableHead>Deductions</TableHead>
-                    <TableHead>Net Salary</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Payment Date</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/80" 
+                      onClick={() => handleSort('net_salary')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Net Salary
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/80" 
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Status
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/80" 
+                      onClick={() => handleSort('paid_date')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Payment Date
+                        <ArrowUpDown className="h-4 w-4" />
+                      </div>
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSalarySlips.map((slip, index) => (
+                  {sortedSalarySlips.map((slip, index) => (
                     <TableRow key={slip.id}>
                       <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
