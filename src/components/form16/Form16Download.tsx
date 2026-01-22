@@ -258,16 +258,16 @@ export function Form16Download() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Form 16 Documents</h1>
-                <p className="text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">Form 16 Documents</h1>
+                <p className="text-sm text-muted-foreground">
                   Welcome, {employee?.first_name} {employee?.last_name} (ID: {employee?.employee_id})
                 </p>
               </div>
@@ -325,7 +325,7 @@ export function Form16Download() {
             {filteredDocuments.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-foreground mb-2">
                   {documents.length === 0 ? 'No Form 16 documents available' : 'No documents match the selected date'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
