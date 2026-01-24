@@ -295,13 +295,7 @@ export function EmployeeSalarySlipsDownload() {
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Your Salary Slips
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                         {/* Month/Year Filter */}
                         <div className="flex items-center gap-4 mb-6">
                             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
