@@ -9,8 +9,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from '@/context/ThemeContext';
-import { format, isSameMonth, isSameDay, startOfMonth, endOfMonth } from "date-fns";
-import { DatePicker } from "@/components/ui/date-picker";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -53,9 +59,8 @@ const LeaveRequests = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -124,24 +129,44 @@ const LeaveRequests = () => {
     return `${days} days`;
   };
 
-  // Filter leave requests based on date selection
+  // Generate month options
+  const months = [
+    { value: "all", label: "All Months" },
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
+
+  // Generate year options (last 5 years to next year)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 7 }, (_, i) => (currentYear - 5 + i).toString());
+
+  // Filter leave requests based on month and year selection
   const filteredLeaveRequests = leaveRequests.filter((request) => {
+    if (selectedMonth === "all") {
+      return true;
+    }
+
     const startDate = new Date(request.start_date);
     const endDate = new Date(request.end_date);
 
-    if (selectedDate) {
-      // Check if selected date falls within the leave request's date range
-      return selectedDate >= startDate && selectedDate <= endDate;
-    }
+    // Create the selected month's start and end dates
+    const year = parseInt(selectedYear);
+    const month = parseInt(selectedMonth) - 1; // JavaScript months are 0-indexed
+    const filterMonthStart = startOfMonth(new Date(year, month));
+    const filterMonthEnd = endOfMonth(new Date(year, month));
 
-    if (isMonthFiltered && currentMonth) {
-      // Check if any part of the leave request overlaps with the selected month
-      const monthStart = startOfMonth(currentMonth);
-      const monthEnd = endOfMonth(currentMonth);
-      return startDate <= monthEnd && endDate >= monthStart;
-    }
-
-    return true;
+    // Check if any part of the leave request overlaps with the selected month
+    return startDate <= filterMonthEnd && endDate >= filterMonthStart;
   });
 
   const handleSort = (field: LeaveSortField) => {
@@ -196,17 +221,6 @@ const LeaveRequests = () => {
       }
     });
   }, [filteredLeaveRequests, sortField, sortDirection]);
-
-  const handleMonthChange = (date: Date) => {
-    setCurrentMonth(date);
-    setIsMonthFiltered(true);
-    setSelectedDate(undefined);
-  };
-
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    setIsMonthFiltered(false);
-  };
 
   const handleApproveReject = async (requestId: string, status: 'approved' | 'rejected') => {
     try {
@@ -330,14 +344,30 @@ const LeaveRequests = () => {
                 {isEmployee ? "My Leave Requests" : "Recent Leave Requests"}
               </CardTitle>
               <div className="flex flex-wrap gap-2 items-center">
-                <DatePicker
-                  date={selectedDate}
-                  setDate={handleDateSelect}
-                  month={currentMonth}
-                  onMonthChange={handleMonthChange}
-                  isMonthFiltered={isMonthFiltered}
-                  className="w-[200px]"
-                />
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size="sm"
@@ -372,7 +402,7 @@ const LeaveRequests = () => {
                   <Calendar className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground">
                     {isEmployee ? "You haven't applied for any leaves yet" : "No leave requests found"}
-                    {(selectedDate || isMonthFiltered) && " for the selected period"}
+                    {selectedMonth !== "all" && " for the selected period"}
                   </p>
                 </div>
               </div>
