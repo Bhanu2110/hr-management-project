@@ -425,11 +425,15 @@ export function EmployeeSalarySlipsDownload() {
             {/* Preview Dialog */}
             <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
                 <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
+                    <DialogHeader className="flex flex-row items-center justify-between">
                         <DialogTitle>Salary Slip Preview</DialogTitle>
+                        <Button onClick={handleDownloadSlip} className="gap-2 mr-6">
+                            <Download className="h-4 w-4" />
+                            Download PDF
+                        </Button>
                     </DialogHeader>
                     <div id="salary-slip-preview">
-                        {viewingSlip && <SalarySlipView salarySlip={viewingSlip} onDownload={handleDownloadSlip} />}
+                        {viewingSlip && <SalarySlipView salarySlip={viewingSlip} />}
                     </div>
                 </DialogContent>
             </Dialog>

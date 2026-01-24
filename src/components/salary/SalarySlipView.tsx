@@ -229,15 +229,6 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
         </div>
       </div>
 
-      {/* Action Buttons at Bottom (Hidden in Print/PDF) */}
-      {onDownload && (
-        <div className="flex justify-center mt-6 print:hidden" data-html2canvas-ignore="true">
-          <Button onClick={onDownload} className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
