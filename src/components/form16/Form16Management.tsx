@@ -12,7 +12,6 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -73,9 +72,8 @@ interface Form16ManagementProps {
 export function Form16Management({ employees = [] }: Form16ManagementProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -130,6 +128,27 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
     }
   };
 
+  // Generate month options
+  const months = [
+    { value: "all", label: "All Months" },
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
+
+  // Generate year options (last 5 years to next year)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 7 }, (_, i) => (currentYear - 5 + i).toString());
+
   const filteredData = form16Documents.filter((item) => {
     const employee = employees.find(e => e.id === item.employee_id);
     const employeeName = employee ? `${employee.first_name} ${employee.last_name}` : '';
@@ -141,19 +160,13 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
 
     // Date filtering based on upload date
     let matchesDate = true;
-    if (selectedDate) {
-      // Specific date selected - match exact date
+    if (selectedMonth !== "all") {
       const docDate = new Date(item.uploaded_at);
+      const year = parseInt(selectedYear);
+      const month = parseInt(selectedMonth) - 1; // JavaScript months are 0-indexed
       matchesDate = 
-        docDate.getFullYear() === selectedDate.getFullYear() &&
-        docDate.getMonth() === selectedDate.getMonth() &&
-        docDate.getDate() === selectedDate.getDate();
-    } else if (isMonthFiltered) {
-      // Month filter active - match month and year
-      const docDate = new Date(item.uploaded_at);
-      matchesDate = 
-        docDate.getFullYear() === currentMonth.getFullYear() &&
-        docDate.getMonth() === currentMonth.getMonth();
+        docDate.getFullYear() === year &&
+        docDate.getMonth() === month;
     }
 
     return matchesSearch && matchesDate;
@@ -590,35 +603,38 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-[240px]">
-                <DatePicker
-                  date={selectedDate}
-                  setDate={(newDate) => {
-                    setSelectedDate(newDate);
-                    if (newDate) {
-                      setCurrentMonth(newDate);
-                      setIsMonthFiltered(false);
-                    }
-                  }}
-                  month={currentMonth}
-                  onMonthChange={(newMonth) => {
-                    setCurrentMonth(newMonth);
-                    setSelectedDate(undefined);
-                    setIsMonthFiltered(true);
-                  }}
-                  isMonthFiltered={isMonthFiltered}
-                  className="w-full"
-                />
-              </div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  setSelectedDate(undefined);
-                  setIsMonthFiltered(false);
-                  setCurrentMonth(new Date());
+                  setSelectedMonth("all");
+                  setSelectedYear(new Date().getFullYear().toString());
                 }}
-                title="Reset Date Filter"
+                title="Reset Filter"
               >
                 <RotateCcw className="h-4 w-4" />
               </Button>
