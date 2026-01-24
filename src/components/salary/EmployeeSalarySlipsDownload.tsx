@@ -288,16 +288,8 @@ export function EmployeeSalarySlipsDownload() {
                                 </p>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Card>
-                    <CardContent className="pt-6">
-                        {/* Month/Year Filter */}
-                        <div className="flex items-center gap-4 mb-6">
+                        {/* Month/Year Filter - moved to header */}
+                        <div className="flex items-center gap-4">
                             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                                 <SelectTrigger className="w-[150px]">
                                     <SelectValue placeholder="Select Month" />
@@ -334,6 +326,14 @@ export function EmployeeSalarySlipsDownload() {
                                 <RotateCcw className="h-4 w-4" />
                             </Button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Card>
+                    <CardContent className="pt-6">
 
                         {/* Salary Slips Table */}
                         {filteredSlips.length === 0 ? (
