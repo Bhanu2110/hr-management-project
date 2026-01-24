@@ -289,16 +289,8 @@ export function Form16Download() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
-          <CardContent className="pt-6">
-            {/* Filters */}
-            <div className="flex items-center gap-4 mb-6">
+            {/* Filters - moved to header */}
+            <div className="flex items-center gap-4">
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Select Month" />
@@ -335,6 +327,14 @@ export function Form16Download() {
                 <RotateCcw className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card>
+          <CardContent className="pt-6">
 
             {filteredDocuments.length === 0 ? (
               <div className="text-center py-12">
