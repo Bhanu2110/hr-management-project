@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DatePicker } from '@/components/ui/date-picker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Download, FileText, AlertCircle, Eye, RotateCcw, ArrowUpDown } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -25,7 +31,8 @@ export function EmployeeSalarySlipsDownload() {
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
     // Filter states
-    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+    const [selectedMonth, setSelectedMonth] = useState<string>("all");
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
     const [sortField, setSortField] = useState<SalarySortField>('year');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -38,7 +45,7 @@ export function EmployeeSalarySlipsDownload() {
     // Apply filters whenever slips or filter values change
     useEffect(() => {
         applyFilters();
-    }, [salarySlips, selectedDate]);
+    }, [salarySlips, selectedMonth, selectedYear]);
 
     const fetchSalarySlips = async () => {
         try {
@@ -118,15 +125,33 @@ export function EmployeeSalarySlipsDownload() {
         }
     };
 
+    // Generate month options
+    const months = [
+        { value: "all", label: "All Months" },
+        { value: "1", label: "January" },
+        { value: "2", label: "February" },
+        { value: "3", label: "March" },
+        { value: "4", label: "April" },
+        { value: "5", label: "May" },
+        { value: "6", label: "June" },
+        { value: "7", label: "July" },
+        { value: "8", label: "August" },
+        { value: "9", label: "September" },
+        { value: "10", label: "October" },
+        { value: "11", label: "November" },
+        { value: "12", label: "December" },
+    ];
+
+    // Generate year options (last 5 years to next year)
+    const currentYearNum = new Date().getFullYear();
+    const years = Array.from({ length: 7 }, (_, i) => (currentYearNum - 5 + i).toString());
+
     const applyFilters = () => {
         let filtered = [...salarySlips];
 
-        if (selectedDate) {
-            const filterYear = selectedDate.getFullYear();
-            const filterMonth = selectedDate.getMonth() + 1; // Convert to 1-indexed
-
+        if (selectedMonth !== "all") {
             filtered = filtered.filter(slip =>
-                slip.year === filterYear && slip.month === filterMonth
+                slip.year === parseInt(selectedYear) && slip.month === parseInt(selectedMonth)
             );
         }
 
@@ -277,19 +302,39 @@ export function EmployeeSalarySlipsDownload() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {/* Date Filter */}
+                        {/* Month/Year Filter */}
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-[240px]">
-                                <DatePicker
-                                    date={selectedDate}
-                                    setDate={setSelectedDate}
-                                    className="w-full"
-                                />
-                            </div>
+                            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                                <SelectTrigger className="w-[150px]">
+                                    <SelectValue placeholder="Select Month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {months.map((month) => (
+                                        <SelectItem key={month.value} value={month.value}>
+                                            {month.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                <SelectTrigger className="w-[100px]">
+                                    <SelectValue placeholder="Year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {years.map((year) => (
+                                        <SelectItem key={year} value={year}>
+                                            {year}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={() => setSelectedDate(undefined)}
+                                onClick={() => {
+                                    setSelectedMonth("all");
+                                    setSelectedYear(new Date().getFullYear().toString());
+                                }}
                                 title="Reset Filter"
                             >
                                 <RotateCcw className="h-4 w-4" />
