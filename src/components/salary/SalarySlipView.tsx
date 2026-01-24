@@ -34,27 +34,21 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
   return (
     <div className="max-w-[210mm] mx-auto bg-white text-black p-8 font-sans text-sm">
       <div id="salary-slip-content">
-        {/* Header Section with Logo */}
-        <div className="flex items-center mb-6">
-          {/* Logo with Company Name beside it */}
-          <div className="flex items-center mr-8 flex-shrink-0">
-            <div className="w-16 h-16 mr-3">
-              <img src={stsLogo} alt="STS Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-normal" style={{ color: '#d94a38' }}>Sync<span className="font-bold">all</span></span>
-              <span className="text-xs text-gray-500">Technology Solutions</span>
-            </div>
+        {/* Header Section with Logo - matching PDF format */}
+        <div className="flex items-start mb-6">
+          {/* Logo on the left */}
+          <div className="w-24 h-24 mr-4 flex-shrink-0">
+            <img src={stsLogo} alt="STS Logo" className="w-full h-full object-contain" />
           </div>
-          {/* Company Details - Left aligned */}
-          <div className="flex-1">
+          {/* Company Details to the right of logo */}
+          <div className="pt-2">
             <div className="font-bold text-lg mb-1">
               SYNCALL TECHNOLOGY SOLUTIONS PRIVATE LIMITED
             </div>
             <div className="text-sm font-medium mb-1">
               U72200TG2014PTC093379
             </div>
-            <div className="text-sm">
+            <div className="text-sm leading-relaxed">
               H No 4-86, Plot No 8, Road No 2, Ganesh Nagar<br />
               Narapally, K.V Rangareddy, Hyderabad, Telangana-500088
             </div>
