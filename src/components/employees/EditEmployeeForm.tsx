@@ -10,6 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { RequiredLabel } from "@/components/ui/required-label";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -639,7 +640,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="employee_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Employee ID</FormLabel>
+                        <RequiredLabel>Employee ID</RequiredLabel>
                         <FormControl>
                           <Input placeholder="EMP-001" {...field} disabled={isLoading} />
                         </FormControl>
@@ -652,7 +653,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="first_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <RequiredLabel>First Name</RequiredLabel>
                         <FormControl>
                           <Input placeholder="John" {...field} disabled={isLoading} />
                         </FormControl>
@@ -665,7 +666,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="last_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <RequiredLabel>Last Name</RequiredLabel>
                         <FormControl>
                           <Input placeholder="Doe" {...field} disabled={isLoading} />
                         </FormControl>
@@ -678,7 +679,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <RequiredLabel>Email</RequiredLabel>
                         <FormControl>
                           <Input placeholder="john.doe@example.com" type="email" {...field} disabled={isLoading} />
                         </FormControl>
@@ -746,7 +747,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Department</FormLabel>
+                        <RequiredLabel>Department</RequiredLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                           <FormControl>
                             <SelectTrigger>
@@ -770,7 +771,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="position"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Position</FormLabel>
+                        <RequiredLabel>Position</RequiredLabel>
                         <FormControl>
                           <Input placeholder="e.g., Software Engineer" {...field} disabled={isLoading} />
                         </FormControl>
@@ -783,7 +784,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="hire_date"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Hire Date</FormLabel>
+                        <RequiredLabel>Hire Date</RequiredLabel>
                         <FormControl>
                           <Input type="date" {...field} disabled={isLoading} />
                         </FormControl>
@@ -796,7 +797,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <RequiredLabel>Status</RequiredLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                           <FormControl>
                             <SelectTrigger>
