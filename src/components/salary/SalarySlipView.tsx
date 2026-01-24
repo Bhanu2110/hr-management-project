@@ -35,27 +35,30 @@ export function SalarySlipView({ salarySlip, onDownload }: SalarySlipViewProps) 
     <div className="max-w-[210mm] mx-auto bg-white text-black p-8 font-sans text-sm">
       <div id="salary-slip-content">
         {/* Header Section with Logo */}
-        <div className="flex items-start mb-4">
-          {/* Logo */}
-          <div className="w-20 h-20 mr-4 flex-shrink-0">
-            <img src={stsLogo} alt="STS Logo" className="w-full h-full object-contain" />
+        <div className="flex items-center mb-6">
+          {/* Logo with Company Name beside it */}
+          <div className="flex items-center mr-8 flex-shrink-0">
+            <div className="w-16 h-16 mr-3">
+              <img src={stsLogo} alt="STS Logo" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-normal" style={{ color: '#d94a38' }}>Sync<span className="font-bold">all</span></span>
+              <span className="text-xs text-gray-500">Technology Solutions</span>
+            </div>
           </div>
-          {/* Company Details */}
-          <div className="text-center flex-1">
-            <div className="font-bold py-1 text-lg">
+          {/* Company Details - Left aligned */}
+          <div className="flex-1">
+            <div className="font-bold text-lg mb-1">
               SYNCALL TECHNOLOGY SOLUTIONS PRIVATE LIMITED
             </div>
-            <div className="py-1 text-xs font-medium">
+            <div className="text-sm font-medium mb-1">
               U72200TG2014PTC093379
             </div>
-            <div className="py-1 text-xs">
-              H No 4-86, Plot No 8,Road No 2, Ganesh Nagar<br />
-              Narapally, K.V Rangareddy<br />
-              Hyderabad,Telangana-500088
+            <div className="text-sm">
+              H No 4-86, Plot No 8, Road No 2, Ganesh Nagar<br />
+              Narapally, K.V Rangareddy, Hyderabad, Telangana-500088
             </div>
           </div>
-          {/* Spacer for balance */}
-          <div className="w-20 flex-shrink-0"></div>
         </div>
 
         {/* Table 1: Payslip Month & Employee Details */}
