@@ -28,6 +28,7 @@ const leaveFormSchema = z.object({
     required_error: "End date is required",
   }),
   is_half_day: z.boolean().default(false),
+  half_day_type: z.enum(["first_half", "second_half"]).optional(),
   reason: z.string().min(1, "Reason is required"),
 }).refine((data) => {
   // For half-day leave, start and end date must be the same
@@ -38,6 +39,15 @@ const leaveFormSchema = z.object({
 }, {
   message: "For half-day leave, start and end date must be the same",
   path: ["end_date"],
+}).refine((data) => {
+  // If half-day is selected, half_day_type must be provided
+  if (data.is_half_day) {
+    return !!data.half_day_type;
+  }
+  return true;
+}, {
+  message: "Please select 1st Half or 2nd Half",
+  path: ["half_day_type"],
 });
 
 type LeaveFormValues = z.infer<typeof leaveFormSchema>;
@@ -57,6 +67,7 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
     defaultValues: {
       leave_type: "",
       is_half_day: false,
+      half_day_type: undefined,
       reason: "",
     },
   });
@@ -96,7 +107,9 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
         .from('leave_requests')
         .insert([{
           employee_id: employee.id,
-          leave_type: values.is_half_day ? `${values.leave_type} (Half Day)` : values.leave_type,
+          leave_type: values.is_half_day 
+            ? `${values.leave_type} (${values.half_day_type === 'first_half' ? '1st Half' : '2nd Half'})` 
+            : values.leave_type,
           start_date: format(values.start_date, 'yyyy-MM-dd'),
           end_date: format(values.end_date, 'yyyy-MM-dd'),
           days,
@@ -184,6 +197,10 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
                         if (checked && startDate) {
                           form.setValue("end_date", startDate);
                         }
+                        // Clear half_day_type when unchecked
+                        if (!checked) {
+                          form.setValue("half_day_type", undefined);
+                        }
                       }}
                     />
                   </FormControl>
@@ -198,6 +215,65 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
                 </FormItem>
               )}
             />
+
+            {isHalfDay && (
+              <FormField
+                control={form.control}
+                name="half_day_type"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Select Half-Day Type</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-4">
+                        <label 
+                          className={cn(
+                            "flex items-center gap-3 rounded-md border p-4 cursor-pointer flex-1 transition-colors",
+                            field.value === "first_half" 
+                              ? "border-primary bg-primary/10" 
+                              : "border-border hover:bg-muted/50"
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="half_day_type"
+                            value="first_half"
+                            checked={field.value === "first_half"}
+                            onChange={() => field.onChange("first_half")}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          <div>
+                            <div className="font-medium">1st Half</div>
+                            <div className="text-sm text-muted-foreground">Morning session</div>
+                          </div>
+                        </label>
+                        <label 
+                          className={cn(
+                            "flex items-center gap-3 rounded-md border p-4 cursor-pointer flex-1 transition-colors",
+                            field.value === "second_half" 
+                              ? "border-primary bg-primary/10" 
+                              : "border-border hover:bg-muted/50"
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="half_day_type"
+                            value="second_half"
+                            checked={field.value === "second_half"}
+                            onChange={() => field.onChange("second_half")}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          <div>
+                            <div className="font-medium">2nd Half</div>
+                            <div className="text-sm text-muted-foreground">Afternoon session</div>
+                          </div>
+                        </label>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
