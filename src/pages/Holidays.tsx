@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, X, ArrowUpDown } from "lucide-react";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Download, RotateCcw, ArrowUpDown } from "lucide-react";
 import { Holiday, HOLIDAY_TYPES } from "@/types/holidays";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import jsPDF from "jspdf";
@@ -17,12 +16,29 @@ import { useTheme } from "@/context/ThemeContext";
 type SortField = 'name' | 'date' | 'day' | 'type' | 'location';
 type SortDirection = 'asc' | 'desc';
 
+const MONTHS = [
+  { value: "all", label: "All Months" },
+  { value: "1", label: "January" },
+  { value: "2", label: "February" },
+  { value: "3", label: "March" },
+  { value: "4", label: "April" },
+  { value: "5", label: "May" },
+  { value: "6", label: "June" },
+  { value: "7", label: "July" },
+  { value: "8", label: "August" },
+  { value: "9", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => (currentYear - 2 + i).toString());
+
 const Holidays = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [isMonthFiltered, setIsMonthFiltered] = useState(false);
-  const selectedYear = date ? String(date.getFullYear()) : String(currentMonth.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,22 +64,22 @@ const Holidays = () => {
       }
     };
     getHolidays();
-  }, [date, currentMonth, selectedLocation]);
+  }, [selectedYear, selectedLocation]);
 
   const filteredHolidays = useMemo(() => {
     return holidays.filter((holiday) => {
       const matchesSearch = holiday.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         holiday.day.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesDate = date
-        ? holiday.date === format(date, 'yyyy-MM-dd')
-        : isMonthFiltered
-          ? holiday.date.startsWith(format(currentMonth, 'yyyy-MM'))
-          : true;
+      let matchesMonth = true;
+      if (selectedMonth !== "all") {
+        const holidayDate = new Date(holiday.date);
+        matchesMonth = holidayDate.getMonth() + 1 === parseInt(selectedMonth);
+      }
 
-      return matchesSearch && matchesDate;
+      return matchesSearch && matchesMonth;
     });
-  }, [searchQuery, holidays, date, currentMonth, isMonthFiltered]);
+  }, [searchQuery, holidays, selectedMonth]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -152,38 +168,41 @@ const Holidays = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:w-[250px]"
               />
-              <div className="flex items-center gap-2">
-                <DatePicker
-                  date={date}
-                  setDate={(newDate) => {
-                    setDate(newDate);
-                    if (newDate) {
-                      setCurrentMonth(newDate);
-                    }
-                  }}
-                  month={currentMonth}
-                  onMonthChange={(newMonth) => {
-                    setCurrentMonth(newMonth);
-                    setDate(undefined);
-                    setIsMonthFiltered(true);
-                  }}
-                  className="w-full sm:w-[180px]"
-                />
-                {(date || isMonthFiltered) && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setDate(undefined);
-                      setIsMonthFiltered(false);
-                      setCurrentMonth(new Date());
-                    }}
-                    title="Clear Filter"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-full sm:w-[120px]">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedMonth("all");
+                  setSelectedYear(currentYear.toString());
+                }}
+                title="Reset Filters"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
               <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Select Location" />
