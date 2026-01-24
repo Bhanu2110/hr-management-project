@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
+
 import {
   Table,
   TableBody,
@@ -77,8 +77,8 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
   const [activeTab, setActiveTab] = useState("salary-slips");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
-  const [filterMonth, setFilterMonth] = useState<Date | undefined>(undefined);
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isStructureDialogOpen, setIsStructureDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -443,6 +443,27 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
     }
   };
 
+  // Generate month options
+  const months = [
+    { value: "all", label: "All Months" },
+    { value: "1", label: "January" },
+    { value: "2", label: "February" },
+    { value: "3", label: "March" },
+    { value: "4", label: "April" },
+    { value: "5", label: "May" },
+    { value: "6", label: "June" },
+    { value: "7", label: "July" },
+    { value: "8", label: "August" },
+    { value: "9", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
+
+  // Generate year options (last 5 years to next year)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 7 }, (_, i) => (currentYear - 5 + i).toString());
+
   const filteredSalarySlips = salarySlips.filter((slip) => {
     const matchesSearch =
       slip.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -451,14 +472,10 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
 
     const matchesStatus = filterStatus === "all" || slip.status === filterStatus;
     
-    // If a specific date is selected, filter by that exact month and year
-    // If only month picker is used (no date), filter by that month and year
-    // If neither is selected, show all records
+    // Filter by selected month and year
     let matchesDate = true;
-    if (filterDate) {
-      matchesDate = slip.month === (filterDate.getMonth() + 1) && slip.year === filterDate.getFullYear();
-    } else if (filterMonth) {
-      matchesDate = slip.month === (filterMonth.getMonth() + 1) && slip.year === filterMonth.getFullYear();
+    if (filterMonth !== "all") {
+      matchesDate = slip.month === parseInt(filterMonth) && slip.year === parseInt(filterYear);
     }
 
     return matchesSearch && matchesStatus && matchesDate;
@@ -1539,14 +1556,30 @@ export function SalaryManagement({ employees = [] }: SalaryManagementProps) {
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
-                  <DatePicker
-                    date={filterDate}
-                    setDate={setFilterDate}
-                    month={filterMonth || new Date()}
-                    onMonthChange={setFilterMonth}
-                    isMonthFiltered={!filterDate && !!filterMonth}
-                    className="w-[180px]"
-                  />
+                  <Select value={filterMonth} onValueChange={setFilterMonth}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Select Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterYear} onValueChange={setFilterYear}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </>
               )}
             </div>
