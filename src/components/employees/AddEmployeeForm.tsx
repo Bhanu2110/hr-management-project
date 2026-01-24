@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { RequiredLabel } from "@/components/ui/required-label";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -569,7 +570,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="employee_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Employee ID</FormLabel>
+                        <RequiredLabel>Employee ID</RequiredLabel>
                         <FormControl>
                           <Input
                             placeholder="EMP-001"
@@ -586,7 +587,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="first_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <RequiredLabel>First Name</RequiredLabel>
                         <FormControl>
                           <Input placeholder="John" {...field} disabled={isLoading} />
                         </FormControl>
@@ -599,7 +600,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="last_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <RequiredLabel>Last Name</RequiredLabel>
                         <FormControl>
                           <Input placeholder="Doe" {...field} disabled={isLoading} />
                         </FormControl>
@@ -612,7 +613,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <RequiredLabel>Email</RequiredLabel>
                         <FormControl>
                           <Input placeholder="john.doe@example.com" type="email" {...field} disabled={isLoading} />
                         </FormControl>
@@ -625,7 +626,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <RequiredLabel>Password</RequiredLabel>
                         <FormControl>
                           <Input placeholder="Set employee password" type="password" {...field} disabled={isLoading} />
                         </FormControl>
@@ -693,7 +694,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Department</FormLabel>
+                        <RequiredLabel>Department</RequiredLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                           <FormControl>
                             <SelectTrigger>
@@ -717,7 +718,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="position"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Position</FormLabel>
+                        <RequiredLabel>Position</RequiredLabel>
                         <FormControl>
                           <Input placeholder="e.g., Software Engineer" {...field} disabled={isLoading} />
                         </FormControl>
@@ -730,7 +731,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="hire_date"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Hire Date</FormLabel>
+                        <RequiredLabel>Hire Date</RequiredLabel>
                         <FormControl>
                           <Input type="date" {...field} disabled={isLoading} />
                         </FormControl>
