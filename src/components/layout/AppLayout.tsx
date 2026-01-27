@@ -72,7 +72,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       <p className="text-sm font-medium leading-none">
                         {employee?.first_name} {employee?.last_name}
                       </p>
-                      <p className="text-xs leading-none text-muted-foreground">
+                      <p className="text-xs leading-none text-muted-foreground break-all">
                         {employee?.email}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
