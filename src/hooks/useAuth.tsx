@@ -132,12 +132,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Try to sign in directly with the provided email and password
-    const { error: directSignInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: directSignInError } = await supabase.auth.signInWithPassword({
       email: userIdOrEmail,
       password: password,
     });
 
-    if (!directSignInError) {
+    if (!directSignInError && signInData?.user) {
+      // Fetch user profile immediately after successful login to prevent "Access Denied" flash
+      const userProfile = await fetchUserProfile(signInData.user.id);
+      setEmployee(userProfile as UserProfile);
       setLoading(false);
       toast({
         title: "Login Successful",
@@ -201,13 +204,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       for (const variation of passwordVariations) {
         try {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
+          const { data: variationSignInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: employee.email,
             password: variation,
           });
           
-          if (!signInError) {
+          if (!signInError && variationSignInData?.user) {
             loginSuccessful = true;
+            // Fetch user profile immediately to prevent "Access Denied" flash
+            const userProfile = await fetchUserProfile(variationSignInData.user.id);
+            setEmployee(userProfile as UserProfile);
             setLoading(false);
             
             if (variation !== panNumber && panNumber) {
@@ -242,12 +248,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
             
             if (!updateError) {
-              const { error: retrySignInError } = await supabase.auth.signInWithPassword({
+              const { data: retrySignInData, error: retrySignInError } = await supabase.auth.signInWithPassword({
                 email: employee.email,
                 password: panNumber,
               });
               
-              if (!retrySignInError) {
+              if (!retrySignInError && retrySignInData?.user) {
+                // Fetch user profile immediately to prevent "Access Denied" flash
+                const userProfile = await fetchUserProfile(retrySignInData.user.id);
+                setEmployee(userProfile as UserProfile);
                 setLoading(false);
                 toast({
                   title: "Login Successful",
