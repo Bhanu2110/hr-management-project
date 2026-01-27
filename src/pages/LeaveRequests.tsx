@@ -152,15 +152,18 @@ const LeaveRequests = () => {
 
   // Filter leave requests based on month and year selection
   const filteredLeaveRequests = leaveRequests.filter((request) => {
-    if (selectedMonth === "all") {
-      return true;
-    }
-
     const startDate = new Date(request.start_date);
     const endDate = new Date(request.end_date);
+    const year = parseInt(selectedYear);
+
+    // When "All Months" is selected, filter only by year
+    if (selectedMonth === "all") {
+      const yearStart = new Date(year, 0, 1); // January 1st of selected year
+      const yearEnd = new Date(year, 11, 31); // December 31st of selected year
+      return startDate <= yearEnd && endDate >= yearStart;
+    }
 
     // Create the selected month's start and end dates
-    const year = parseInt(selectedYear);
     const month = parseInt(selectedMonth) - 1; // JavaScript months are 0-indexed
     const filterMonthStart = startOfMonth(new Date(year, month));
     const filterMonthEnd = endOfMonth(new Date(year, month));
