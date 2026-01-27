@@ -109,11 +109,18 @@ export function Form16Download() {
 
   const applyFilters = () => {
     let filtered = [...documents];
+    const year = parseInt(selectedYear);
 
-    if (selectedMonth !== "all") {
+    if (selectedMonth === "all") {
+      // Filter only by year when "All Months" is selected
       filtered = filtered.filter(doc => {
         const docDate = new Date(doc.uploaded_at);
-        const year = parseInt(selectedYear);
+        return docDate.getFullYear() === year;
+      });
+    } else {
+      // Filter by both month and year
+      filtered = filtered.filter(doc => {
+        const docDate = new Date(doc.uploaded_at);
         const month = parseInt(selectedMonth) - 1; // JavaScript months are 0-indexed
         return (
           docDate.getFullYear() === year &&
