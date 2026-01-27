@@ -457,7 +457,12 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
             Upload and manage Form 16 tax certificates for employees
           </p>
         </div>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <Dialog open={isUploadDialogOpen} onOpenChange={(isOpen) => {
+          setIsUploadDialogOpen(isOpen);
+          if (!isOpen) {
+            resetForm();
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Upload className="h-4 w-4" />
@@ -542,7 +547,10 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsUploadDialogOpen(false);
+                resetForm();
+              }}>
                 Cancel
               </Button>
               <Button onClick={handleUploadForm16} disabled={!selectedEmployee || !selectedFile || isUploading}>
