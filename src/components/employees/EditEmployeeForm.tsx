@@ -37,7 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { employeeService, Employee } from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, FileText, ExternalLink, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap } from "lucide-react";
+import { Loader2, FileText, ExternalLink, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap, Award } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -105,12 +105,16 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
   const [interCertFile, setInterCertFile] = useState<File | null>(null);
   const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
 
+  // Professional certificate states
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+
   // Track existing document URLs (for delete functionality)
   const [aadharUrl, setAadharUrl] = useState<string | null>((employee as any).aadhar_document_url || null);
   const [panUrl, setPanUrl] = useState<string | null>((employee as any).pan_document_url || null);
   const [tenthCertUrl, setTenthCertUrl] = useState<string | null>((employee as any).tenth_certificate_url || null);
   const [interCertUrl, setInterCertUrl] = useState<string | null>((employee as any).inter_certificate_url || null);
   const [degreeCertUrl, setDegreeCertUrl] = useState<string | null>((employee as any).degree_certificate_url || null);
+  const [resumeUrl, setResumeUrl] = useState<string | null>((employee as any).resume_url || null);
 
   // Compensation table state
   const [compensationRecords, setCompensationRecords] = useState<Array<{ ctc: string; effective_date: string }>>([]);
@@ -119,20 +123,22 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
   const [editingCompensationIndex, setEditingCompensationIndex] = useState<number | null>(null);
 
   // Delete document helper
-  const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree') => {
+  const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree' | 'resume') => {
     const urlMap = {
       aadhar: aadharUrl,
       pan: panUrl,
       tenth: tenthCertUrl,
       inter: interCertUrl,
-      degree: degreeCertUrl
+      degree: degreeCertUrl,
+      resume: resumeUrl
     };
     const fieldMap = {
       aadhar: 'aadhar_document_url',
       pan: 'pan_document_url',
       tenth: 'tenth_certificate_url',
       inter: 'inter_certificate_url',
-      degree: 'degree_certificate_url'
+      degree: 'degree_certificate_url',
+      resume: 'resume_url'
     };
 
     const url = urlMap[docType];
@@ -161,6 +167,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
         case 'tenth': setTenthCertUrl(null); break;
         case 'inter': setInterCertUrl(null); break;
         case 'degree': setDegreeCertUrl(null); break;
+        case 'resume': setResumeUrl(null); break;
       }
 
       toast({ title: "Success", description: "Document deleted successfully" });
@@ -286,6 +293,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       let tenthCertUrl: string | null | undefined = (employee as any).tenth_certificate_url;
       let interCertUrl: string | null | undefined = (employee as any).inter_certificate_url;
       let degreeCertUrl: string | null | undefined = (employee as any).degree_certificate_url;
+      let resumeUrlValue: string | null | undefined = (employee as any).resume_url;
 
       if (aadharFile) {
         aadharUrl = await uploadFile(aadharFile, 'aadhar', formValues.employee_id);
@@ -302,6 +310,9 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
       if (degreeCertFile) {
         degreeCertUrl = await uploadFile(degreeCertFile, 'certificates/degree', formValues.employee_id);
       }
+      if (resumeFile) {
+        resumeUrlValue = await uploadFile(resumeFile, 'professional/resume', formValues.employee_id);
+      }
 
       // Get the most recent compensation record (last one in the array)
       const latestCompensation = compensationRecords.length > 0
@@ -316,6 +327,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
         tenth_certificate_url: tenthCertUrl,
         inter_certificate_url: interCertUrl,
         degree_certificate_url: degreeCertUrl,
+        resume_url: resumeUrlValue,
         pan_number: formValues.pan_number || null,
         // Use compensation records instead of form fields
         current_ctc: latestCompensation ? parseFloat(latestCompensation.ctc) : null,
@@ -1271,6 +1283,65 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                         {degreeCertFile.name}
                       </div>
                     )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Professional Certificates */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Award className="h-5 w-5 text-primary" />
+                  Professional Certificates
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Resume / CV */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Resume / CV</span>
+                      {resumeUrl && (
+                        <span className="text-xs border border-green-500 text-green-600 px-2 py-0.5 rounded-full">Uploaded</span>
+                      )}
+                    </div>
+                    {resumeUrl ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleViewDocument(resumeUrl)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Document
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => handleDeleteDocument('resume')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {resumeFile && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <FileText className="h-4 w-4" />
+                        {resumeFile.name}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Upload PDF or Word document</p>
                   </div>
                 </div>
               </CardContent>
