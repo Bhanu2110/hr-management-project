@@ -370,7 +370,7 @@ export function EmployeeSalarySlipsDownload() {
                                                 <ArrowUpDown className="ml-2 h-4 w-4" />
                                             </div>
                                         </TableHead>
-                                        <TableHead className="text-right font-medium">Actions</TableHead>
+                                        <TableHead className="text-center font-medium">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -386,8 +386,8 @@ export function EmployeeSalarySlipsDownload() {
                                                     {slip.year}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex gap-2 justify-end">
+                                            <TableCell>
+                                                <div className="flex gap-2 justify-center">
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
