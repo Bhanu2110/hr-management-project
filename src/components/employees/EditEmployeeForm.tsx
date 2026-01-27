@@ -262,7 +262,9 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
   const uploadFile = async (file: File, folder: string, employeeId: string): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${employeeId}_${folder}_${Date.now()}.${fileExt}`;
+      // Use folder path for filename but replace slashes with underscores to avoid nested paths in filename
+      const sanitizedFolder = folder.replace(/\//g, '_');
+      const fileName = `${employeeId}_${sanitizedFolder}_${Date.now()}.${fileExt}`;
       const filePath = `${folder}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
