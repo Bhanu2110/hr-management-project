@@ -1013,7 +1013,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <GraduationCap className="h-5 w-5 text-primary" />
-                  Education Certificates
+                  Education Documents
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1066,7 +1066,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Award className="h-5 w-5 text-primary" />
-                  Professional Certificates
+                  Professional Documents
                 </CardTitle>
               </CardHeader>
               <CardContent>
