@@ -38,7 +38,7 @@ export function Form16Download() {
 
   // Filter states
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedYear, setSelectedYear] = useState<string>("all");
 
   // Sorting states
   const [sortField, setSortField] = useState<Form16SortField>('uploaded_at');
@@ -105,19 +105,26 @@ export function Form16Download() {
 
   // Generate year options (last 5 years to next year)
   const currentYearNum = new Date().getFullYear();
-  const years = Array.from({ length: 7 }, (_, i) => (currentYearNum - 5 + i).toString());
+  const yearOptions = Array.from({ length: 7 }, (_, i) => (currentYearNum - 5 + i).toString());
 
   const applyFilters = () => {
     let filtered = [...documents];
-    const year = parseInt(selectedYear);
 
-    if (selectedMonth === "all") {
+    // If both are "all", show all documents
+    if (selectedMonth === "all" && selectedYear === "all") {
+      setFilteredDocuments(filtered);
+      return;
+    }
+
+    const year = selectedYear !== "all" ? parseInt(selectedYear) : null;
+
+    if (selectedMonth === "all" && year !== null) {
       // Filter only by year when "All Months" is selected
       filtered = filtered.filter(doc => {
         const docDate = new Date(doc.uploaded_at);
         return docDate.getFullYear() === year;
       });
-    } else {
+    } else if (selectedMonth !== "all" && year !== null) {
       // Filter by both month and year
       filtered = filtered.filter(doc => {
         const docDate = new Date(doc.uploaded_at);
@@ -126,6 +133,13 @@ export function Form16Download() {
           docDate.getFullYear() === year &&
           docDate.getMonth() === month
         );
+      });
+    } else if (selectedMonth !== "all" && year === null) {
+      // Filter only by month across all years
+      filtered = filtered.filter(doc => {
+        const docDate = new Date(doc.uploaded_at);
+        const month = parseInt(selectedMonth) - 1;
+        return docDate.getMonth() === month;
       });
     }
 
@@ -315,7 +329,8 @@ export function Form16Download() {
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  {years.map((year) => (
+                  <SelectItem value="all">All Years</SelectItem>
+                  {yearOptions.map((year) => (
                     <SelectItem key={year} value={year}>
                       {year}
                     </SelectItem>
@@ -327,7 +342,7 @@ export function Form16Download() {
                 size="icon"
                 onClick={() => {
                   setSelectedMonth("all");
-                  setSelectedYear(new Date().getFullYear().toString());
+                  setSelectedYear("all");
                 }}
                 title="Reset Filter"
               >
