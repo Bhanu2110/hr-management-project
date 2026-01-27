@@ -340,11 +340,19 @@ const Profile = () => {
       ) : canEdit ? (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
+            <Label htmlFor={`file-upload-${docType}`} className="flex-1 cursor-pointer">
+              <div className="border rounded-md p-2 flex items-center justify-between h-10">
+                <span className="text-sm text-muted-foreground truncate">
+                  {file ? file.name : "Choose File..."}
+                </span>
+              </div>
+            </Label>
             <Input
+              id={`file-upload-${docType}`}
               type="file"
               accept={acceptTypes}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="flex-1"
+              className="hidden"
             />
             {file && (
               <Button
