@@ -60,7 +60,7 @@ const LeaveRequests = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedYear, setSelectedYear] = useState<string>("all");
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -154,6 +154,18 @@ const LeaveRequests = () => {
   const filteredLeaveRequests = leaveRequests.filter((request) => {
     const startDate = new Date(request.start_date);
     const endDate = new Date(request.end_date);
+
+    // If both are "all", show all requests
+    if (selectedMonth === "all" && selectedYear === "all") {
+      return true;
+    }
+
+    // When only year is "all", filter by month across all years
+    if (selectedYear === "all" && selectedMonth !== "all") {
+      const month = parseInt(selectedMonth) - 1;
+      return startDate.getMonth() === month || endDate.getMonth() === month;
+    }
+
     const year = parseInt(selectedYear);
 
     // When "All Months" is selected, filter only by year
@@ -360,10 +372,11 @@ const LeaveRequests = () => {
                   </SelectContent>
                 </Select>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-[100px]">
+                  <SelectTrigger className="w-[120px]">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
                     {years.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
