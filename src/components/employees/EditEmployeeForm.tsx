@@ -1144,7 +1144,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
-                  Educational Certificates
+                  Educational Documents
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">Upload your educational certificates</p>
               </CardHeader>
@@ -1293,7 +1293,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Award className="h-5 w-5 text-primary" />
-                  Professional Certificates
+                  Professional Documents
                 </CardTitle>
               </CardHeader>
               <CardContent>
