@@ -25,6 +25,7 @@ const Profile = () => {
   const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [originalEmployeeDetails, setOriginalEmployeeDetails] = useState<any>(null);
 
   const [employeeDetails, setEmployeeDetails] = useState<any>({
     first_name: "",
@@ -55,7 +56,7 @@ const Profile = () => {
     if (employee) {
       // Cast employee to access all database fields
       const emp = employee as any;
-      setEmployeeDetails({
+      const initialDetails = {
         id: emp.id,
         employee_id: emp.employee_id,
         user_id: emp.user_id,
@@ -81,7 +82,9 @@ const Profile = () => {
         inter_certificate_url: emp.inter_certificate_url || "",
         degree_certificate_url: emp.degree_certificate_url || "",
         resume_url: emp.resume_url || "",
-      });
+      };
+      setEmployeeDetails(initialDetails);
+      setOriginalEmployeeDetails(initialDetails);
     }
   }, [employee]);
 
@@ -235,6 +238,13 @@ const Profile = () => {
     }
   };
 
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    if (originalEmployeeDetails) {
+      setEmployeeDetails(originalEmployeeDetails);
+    }
+  };
+
   const handleSave = async () => {
     setIsLoading(true);
     try {
@@ -342,7 +352,7 @@ const Profile = () => {
           <div className="flex items-center gap-2">
             <Label htmlFor={`file-upload-${docType}`} className="flex-1 cursor-pointer">
               <div className="border rounded-md p-2 flex items-center justify-between h-10">
-                <span className="text-sm text-muted-foreground truncate">
+                <span className="text-sm text-gray-400 truncate">
                   {file ? file.name : "Choose File..."}
                 </span>
               </div>
@@ -398,7 +408,13 @@ const Profile = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Profile</h1>
-        <Button onClick={() => setIsEditing(!isEditing)} className="flex items-center space-x-2 text-white" style={{ backgroundColor: themeColor, borderColor: themeColor }}>
+        <Button onClick={() => {
+          if (isEditing) {
+            handleCancelEdit();
+          } else {
+            setIsEditing(true);
+          }
+        }} className="flex items-center space-x-2 text-white" style={{ backgroundColor: themeColor, borderColor: themeColor }}>
           <Edit className="h-4 w-4" />
           <span>{isEditing ? "Cancel Edit" : "Edit Profile"}</span>
         </Button>
@@ -522,15 +538,15 @@ const Profile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="pf_number">PF No.</Label>
-                    <Input id="pf_number" value={(employeeDetails as any).pf_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="e.g., TN/ABC/123456" />
+                    <Input id="pf_number" value={(employeeDetails as any).pf_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="e.g., TN/ABC/123456" className="placeholder:text-gray-400" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="uan_number">PF UAN</Label>
-                    <Input id="uan_number" value={(employeeDetails as any).uan_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="12-digit UAN number" />
+                    <Input id="uan_number" value={(employeeDetails as any).uan_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="12-digit UAN number" className="placeholder:text-gray-400" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="esi_number">ESI No.</Label>
-                    <Input id="esi_number" value={(employeeDetails as any).esi_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="17-digit ESI number" />
+                    <Input id="esi_number" value={(employeeDetails as any).esi_number || ''} onChange={handleInputChange} disabled={!isEditing} placeholder="17-digit ESI number" className="placeholder:text-gray-400" />
                   </div>
                 </div>
               </div>
