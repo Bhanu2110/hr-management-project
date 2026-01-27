@@ -66,6 +66,8 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
     resolver: zodResolver(leaveFormSchema),
     defaultValues: {
       leave_type: "",
+      start_date: undefined,
+      end_date: undefined,
       is_half_day: false,
       half_day_type: undefined,
       reason: "",
@@ -126,8 +128,7 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
         description: "Leave request submitted successfully",
       });
 
-      form.reset();
-      setOpen(false);
+      handleClose();
       onLeaveSubmitted?.();
     } catch (error) {
       console.error('Error submitting leave request:', error);
@@ -141,8 +142,18 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
     }
   };
 
+  const handleClose = () => {
+    form.reset();
+    setOpen(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          handleClose();
+        }
+      }}>
       <DialogTrigger asChild>
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
           <Plus className="h-4 w-4 mr-2" />
@@ -382,7 +393,7 @@ export function LeaveApplicationForm({ onLeaveSubmitted }: LeaveApplicationFormP
             />
 
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
