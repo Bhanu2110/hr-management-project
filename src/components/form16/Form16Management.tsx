@@ -73,7 +73,7 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedYear, setSelectedYear] = useState<string>("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -147,7 +147,7 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
 
   // Generate year options (last 5 years to next year)
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 7 }, (_, i) => (currentYear - 5 + i).toString());
+  const yearOptions = Array.from({ length: 7 }, (_, i) => (currentYear - 5 + i).toString());
 
   const filteredData = form16Documents.filter((item) => {
     const employee = employees.find(e => e.id === item.employee_id);
@@ -160,13 +160,28 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
 
     // Date filtering based on upload date
     let matchesDate = true;
-    if (selectedMonth !== "all") {
+    
+    // If both are "all", show all documents
+    if (selectedMonth === "all" && selectedYear === "all") {
+      matchesDate = true;
+    } else if (selectedMonth === "all" && selectedYear !== "all") {
+      // Filter only by year
+      const docDate = new Date(item.uploaded_at);
+      const year = parseInt(selectedYear);
+      matchesDate = docDate.getFullYear() === year;
+    } else if (selectedMonth !== "all" && selectedYear !== "all") {
+      // Filter by both month and year
       const docDate = new Date(item.uploaded_at);
       const year = parseInt(selectedYear);
       const month = parseInt(selectedMonth) - 1; // JavaScript months are 0-indexed
       matchesDate = 
         docDate.getFullYear() === year &&
         docDate.getMonth() === month;
+    } else if (selectedMonth !== "all" && selectedYear === "all") {
+      // Filter only by month across all years
+      const docDate = new Date(item.uploaded_at);
+      const month = parseInt(selectedMonth) - 1;
+      matchesDate = docDate.getMonth() === month;
     }
 
     return matchesSearch && matchesDate;
@@ -620,7 +635,8 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  {years.map((year) => (
+                  <SelectItem value="all">All Years</SelectItem>
+                  {yearOptions.map((year) => (
                     <SelectItem key={year} value={year}>
                       {year}
                     </SelectItem>
@@ -632,7 +648,7 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
                 size="icon"
                 onClick={() => {
                   setSelectedMonth("all");
-                  setSelectedYear(new Date().getFullYear().toString());
+                  setSelectedYear("all");
                 }}
                 title="Reset Filter"
               >
