@@ -39,7 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { employeeService } from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Upload, FileText, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap } from "lucide-react";
+import { Loader2, Upload, FileText, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap, Award } from "lucide-react";
 import { useState } from 'react';
 
 const departments = [
@@ -106,6 +106,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
   const [tenthCertFile, setTenthCertFile] = useState<File | null>(null);
   const [interCertFile, setInterCertFile] = useState<File | null>(null);
   const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
+
+  // Professional certificate states
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
 
   // Compensation table state
@@ -266,6 +269,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       let tenthCertUrl: string | null = null;
       let interCertUrl: string | null = null;
       let degreeCertUrl: string | null = null;
+      let resumeUrl: string | null = null;
 
       if (aadharFile) {
         aadharUrl = await uploadFile(aadharFile, 'aadhar', formValues.employee_id);
@@ -281,6 +285,9 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       }
       if (degreeCertFile) {
         degreeCertUrl = await uploadFile(degreeCertFile, 'certificates/degree', formValues.employee_id);
+      }
+      if (resumeFile) {
+        resumeUrl = await uploadFile(resumeFile, 'professional/resume', formValues.employee_id);
       }
 
       // Get the most recent compensation record (last one in the array)
@@ -308,6 +315,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         tenth_certificate_url: tenthCertUrl,
         inter_certificate_url: interCertUrl,
         degree_certificate_url: degreeCertUrl,
+        resume_url: resumeUrl,
         pan_number: formValues.pan_number || null,
         // Compensation - use the latest from compensation records
         current_ctc: latestCompensation ? parseFloat(latestCompensation.ctc) : null,
@@ -1048,6 +1056,34 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                       />
                       {degreeCertFile && <FileText className="h-4 w-4 text-green-600" />}
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Professional Certificates */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Award className="h-5 w-5 text-primary" />
+                  Professional Certificates
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Resume / CV</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                        className="flex-1"
+                      />
+                      {resumeFile && <FileText className="h-4 w-4 text-green-600" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Upload PDF or Word document</p>
                   </div>
                 </div>
               </CardContent>
