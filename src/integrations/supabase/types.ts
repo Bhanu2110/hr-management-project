@@ -281,6 +281,7 @@ export type Database = {
           pf_number: string | null
           phone: string | null
           position: string | null
+          resume_url: string | null
           role: string
           salary_slip_url: string | null
           status: string | null
@@ -316,6 +317,7 @@ export type Database = {
           pf_number?: string | null
           phone?: string | null
           position?: string | null
+          resume_url?: string | null
           role?: string
           salary_slip_url?: string | null
           status?: string | null
@@ -351,6 +353,7 @@ export type Database = {
           pf_number?: string | null
           phone?: string | null
           position?: string | null
+          resume_url?: string | null
           role?: string
           salary_slip_url?: string | null
           status?: string | null
