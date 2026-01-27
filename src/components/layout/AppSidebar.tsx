@@ -36,7 +36,7 @@ const navigationItems = [
   { title: "Employees", url: "/employees", icon: Users, roles: ['admin'] },
   { title: "Attendance", url: "/attendance", icon: Clock, roles: ['admin', 'employee'] },
   { title: "Salary Slips", url: "/salary-slips", adminUrl: "/salary", icon: DollarSign, roles: ['admin', 'employee'] },
-  { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
+  { title: "Leave Requests", url: "/employee/leave-requests", adminUrl: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
   { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] },
   {
