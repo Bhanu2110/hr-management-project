@@ -215,6 +215,11 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
             url: employee.degree_certificate_url,
             type: "degree",
         },
+        {
+            label: "Resume / CV",
+            url: employee.resume_url,
+            type: "resume",
+        },
     ].filter((doc) => doc.url);
 
     return (

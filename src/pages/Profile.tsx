@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, Building2, Calendar, Edit, Loader2, Upload, FileText, ExternalLink, Trash2, X } from 'lucide-react';
+import { Mail, Phone, Building2, Calendar, Edit, Loader2, Upload, FileText, ExternalLink, Trash2, X, Award } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { employeeService, Employee } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
@@ -23,9 +23,10 @@ const Profile = () => {
   const [tenthCertFile, setTenthCertFile] = useState<File | null>(null);
   const [interCertFile, setInterCertFile] = useState<File | null>(null);
   const [degreeCertFile, setDegreeCertFile] = useState<File | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
-  const [employeeDetails, setEmployeeDetails] = useState<Partial<Employee>>({
+  const [employeeDetails, setEmployeeDetails] = useState<any>({
     first_name: "",
     last_name: "",
     email: "",
@@ -47,6 +48,7 @@ const Profile = () => {
     tenth_certificate_url: "",
     inter_certificate_url: "",
     degree_certificate_url: "",
+    resume_url: "",
   });
 
   useEffect(() => {
@@ -78,6 +80,7 @@ const Profile = () => {
         tenth_certificate_url: emp.tenth_certificate_url || "",
         inter_certificate_url: emp.inter_certificate_url || "",
         degree_certificate_url: emp.degree_certificate_url || "",
+        resume_url: emp.resume_url || "",
       });
     }
   }, [employee]);
@@ -113,7 +116,7 @@ const Profile = () => {
     }
   };
 
-  const handleDocumentUpload = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree', file: File) => {
+  const handleDocumentUpload = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree' | 'resume', file: File) => {
     if (!isEditing) {
       toast({
         title: "Edit required",
@@ -136,6 +139,9 @@ const Profile = () => {
       } else if (docType === 'pan') {
         folder = 'pan';
         fieldName = 'pan_document_url';
+      } else if (docType === 'resume') {
+        folder = 'professional/resume';
+        fieldName = 'resume_url';
       } else {
         folder = `certificates/${docType}`;
         fieldName = `${docType}_certificate_url`;
@@ -147,7 +153,7 @@ const Profile = () => {
         setEmployeeDetails(prev => ({ ...prev, [fieldName]: url }));
         toast({
           title: "Success",
-          description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'} uploaded successfully.`,
+          description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} ${docType === 'aadhar' || docType === 'pan' ? 'card' : docType === 'resume' ? '' : 'certificate'} uploaded successfully.`,
         });
       } else {
         throw new Error('Upload failed');
@@ -155,7 +161,7 @@ const Profile = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to upload ${docType} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'}.`,
+        description: `Failed to upload ${docType} ${docType === 'aadhar' || docType === 'pan' ? 'card' : docType === 'resume' ? '' : 'certificate'}.`,
         variant: "destructive",
       });
     } finally {
@@ -165,10 +171,11 @@ const Profile = () => {
       if (docType === 'tenth') setTenthCertFile(null);
       if (docType === 'inter') setInterCertFile(null);
       if (docType === 'degree') setDegreeCertFile(null);
+      if (docType === 'resume') setResumeFile(null);
     }
   };
 
-  const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree') => {
+  const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree' | 'resume') => {
     if (!isEditing) {
       toast({
         title: "Edit required",
@@ -187,6 +194,8 @@ const Profile = () => {
         fieldName = 'aadhar_document_url';
       } else if (docType === 'pan') {
         fieldName = 'pan_document_url';
+      } else if (docType === 'resume') {
+        fieldName = 'resume_url';
       } else {
         fieldName = `${docType}_certificate_url`;
       }
@@ -195,12 +204,12 @@ const Profile = () => {
       setEmployeeDetails(prev => ({ ...prev, [fieldName]: "" }));
       toast({
         title: "Success",
-        description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'} removed.`,
+        description: `${docType.charAt(0).toUpperCase() + docType.slice(1)} ${docType === 'aadhar' || docType === 'pan' ? 'card' : docType === 'resume' ? '' : 'certificate'} removed.`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to remove ${docType} ${docType === 'aadhar' || docType === 'pan' ? 'card' : 'certificate'}.`,
+        description: `Failed to remove ${docType} ${docType === 'aadhar' || docType === 'pan' ? 'card' : docType === 'resume' ? '' : 'certificate'}.`,
         variant: "destructive",
       });
     } finally {
@@ -278,10 +287,12 @@ const Profile = () => {
     file,
     setFile,
     existingUrl,
-    canEdit
+    canEdit,
+    acceptTypes = ".pdf,.jpg,.jpeg,.png"
   }: {
     title: string;
-    docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree';
+    docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree' | 'resume';
+    acceptTypes?: string;
     file: File | null;
     setFile: (f: File | null) => void;
     existingUrl?: string;
@@ -331,7 +342,7 @@ const Profile = () => {
           <div className="flex items-center gap-2">
             <Input
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept={acceptTypes}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="flex-1"
             />
@@ -540,7 +551,7 @@ const Profile = () => {
                 docType="aadhar"
                 file={aadharFile}
                 setFile={setAadharFile}
-                existingUrl={(employeeDetails as any).aadhar_document_url}
+                existingUrl={employeeDetails.aadhar_document_url}
                 canEdit={isEditing}
               />
               <DocumentUploadCard
@@ -548,7 +559,7 @@ const Profile = () => {
                 docType="pan"
                 file={panFile}
                 setFile={setPanFile}
-                existingUrl={(employeeDetails as any).pan_document_url}
+                existingUrl={employeeDetails.pan_document_url}
                 canEdit={isEditing}
               />
             </CardContent>
@@ -569,7 +580,7 @@ const Profile = () => {
                 docType="tenth"
                 file={tenthCertFile}
                 setFile={setTenthCertFile}
-                existingUrl={(employeeDetails as any).tenth_certificate_url}
+                existingUrl={employeeDetails.tenth_certificate_url}
                 canEdit={isEditing}
               />
               <DocumentUploadCard
@@ -577,7 +588,7 @@ const Profile = () => {
                 docType="inter"
                 file={interCertFile}
                 setFile={setInterCertFile}
-                existingUrl={(employeeDetails as any).inter_certificate_url}
+                existingUrl={employeeDetails.inter_certificate_url}
                 canEdit={isEditing}
               />
               <DocumentUploadCard
@@ -585,8 +596,30 @@ const Profile = () => {
                 docType="degree"
                 file={degreeCertFile}
                 setFile={setDegreeCertFile}
-                existingUrl={(employeeDetails as any).degree_certificate_url}
+                existingUrl={employeeDetails.degree_certificate_url}
                 canEdit={isEditing}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Professional Documents Section */}
+          <Card className="p-6">
+            <CardHeader className="px-0 pt-0">
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Professional Documents
+              </CardTitle>
+              <p className="text-muted-foreground text-sm">Upload your resume/CV</p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 px-0 pb-0">
+              <DocumentUploadCard
+                title="Resume / CV"
+                docType="resume"
+                file={resumeFile}
+                setFile={setResumeFile}
+                existingUrl={employeeDetails.resume_url}
+                canEdit={isEditing}
+                acceptTypes=".pdf,.doc,.docx"
               />
             </CardContent>
           </Card>

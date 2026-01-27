@@ -32,6 +32,7 @@ export interface Employee {
   tenth_certificate_url?: string | null;
   inter_certificate_url?: string | null;
   degree_certificate_url?: string | null;
+  resume_url?: string | null;
   // CTC
   current_ctc?: number | null;
   ctc_effective_date?: string | null;
