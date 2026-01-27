@@ -302,7 +302,7 @@ const EmployeeDashboard = () => {
             onClick={() => navigate("/attendance")}
           >
             <Clock className="mr-2 h-4 w-4" />
-            Check In
+            {attendanceStatus === "checked-in" ? "Check Out" : "Check In"}
           </Button>
         </div>
 
