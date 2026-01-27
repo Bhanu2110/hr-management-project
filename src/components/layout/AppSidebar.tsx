@@ -35,7 +35,7 @@ const navigationItems = [
   { title: "Dashboard", url: "/employee/dashboard", adminUrl: "/admin/dashboard", icon: Home, roles: ['admin', 'employee'] },
   { title: "Employees", url: "/employees", icon: Users, roles: ['admin'] },
   { title: "Attendance", url: "/attendance", icon: Clock, roles: ['admin', 'employee'] },
-  { title: "Salary slips", url: "/salary-slips", adminUrl: "/salary", icon: DollarSign, roles: ['admin', 'employee'] },
+  { title: "Salary Slips", url: "/salary-slips", adminUrl: "/salary", icon: DollarSign, roles: ['admin', 'employee'] },
   { title: "Leave Requests", url: "/leave-requests", icon: Calendar, roles: ['admin', 'employee'] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ['admin'] },
   { title: "Form 16", url: "/form-16", icon: FileText, roles: ['admin', 'employee'] },
@@ -106,9 +106,6 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup className="px-2 py-4">
-          <SidebarGroupLabel className={collapsed ? "sr-only" : "text-muted-foreground text-xs font-medium mb-2"}>
-            Main Navigation
-          </SidebarGroupLabel>
 
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
