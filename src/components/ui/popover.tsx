@@ -7,11 +7,21 @@ const Popover = PopoverPrimitive.Root;
 
 const PopoverTrigger = PopoverPrimitive.Trigger;
 
+type PopoverContentProps = React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
+  /**
+   * Render content inside a portal (default true). When used inside a Radix Dialog,
+   * setting this to false avoids scroll-lock blocking mouse-wheel scrolling.
+   */
+  portalled?: boolean;
+  /** Optional portal container (only used when portalled=true). */
+  container?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Portal>["container"];
+};
+
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
->(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
-  <PopoverPrimitive.Portal>
+  PopoverContentProps
+>(({ className, align = "center", sideOffset = 4, portalled = true, container, ...props }, ref) => {
+  const content = (
     <PopoverPrimitive.Content
       ref={ref}
       align={align}
@@ -22,8 +32,11 @@ const PopoverContent = React.forwardRef<
       )}
       {...props}
     />
-  </PopoverPrimitive.Portal>
-));
+  );
+
+  if (!portalled) return content;
+  return <PopoverPrimitive.Portal container={container}>{content}</PopoverPrimitive.Portal>;
+});
 PopoverContent.displayName = PopoverPrimitive.Content.displayName;
 
 export { Popover, PopoverTrigger, PopoverContent };
