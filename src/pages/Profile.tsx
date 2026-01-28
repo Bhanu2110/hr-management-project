@@ -309,10 +309,10 @@ const Profile = () => {
     canEdit: boolean;
   }) => (
     <div className="border rounded-lg p-4 space-y-3 overflow-hidden">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <Label className="font-medium">{title}</Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className="font-medium whitespace-nowrap">{title}</Label>
         {existingUrl && (
-          <Badge variant="outline" className="text-green-600 border-green-600 shrink-0">
+          <Badge variant="outline" className="text-green-600 border-green-600 shrink-0 whitespace-nowrap">
             Uploaded
           </Badge>
         )}
