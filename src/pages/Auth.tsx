@@ -178,6 +178,33 @@ const Auth = () => {
     setIsSendingResetLink(true);
 
     try {
+      // First check if email exists in employees table
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('email', forgotPasswordEmail.trim().toLowerCase())
+        .maybeSingle();
+
+      // If not found in employees, check admins table
+      let emailExists = !!employeeData;
+      
+      if (!emailExists) {
+        const { data: adminData, error: adminError } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('email', forgotPasswordEmail.trim().toLowerCase())
+          .maybeSingle();
+        
+        emailExists = !!adminData;
+      }
+
+      // If email doesn't exist in either table, show error
+      if (!emailExists) {
+        toast.error('Email address not found. Please check and try again.');
+        setIsSendingResetLink(false);
+        return;
+      }
+
       // Send password reset email using Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
