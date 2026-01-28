@@ -108,7 +108,7 @@ export function SimpleNotificationBell() {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -122,7 +122,7 @@ export function SimpleNotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" preventFocusSteal>
+      <PopoverContent className="w-80 p-0" align="end">
         <div className="w-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
