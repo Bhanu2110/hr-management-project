@@ -31,7 +31,7 @@ export function DatePicker({ date, setDate, className, month, onMonthChange, isM
   };
 
   return (
-    <Popover>
+    <Popover modal={false}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -45,7 +45,7 @@ export function DatePicker({ date, setDate, className, month, onMonthChange, isM
           {getDisplayText()}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0" align="start" preventFocusSteal>
         <Calendar
           mode="single"
           selected={date}
