@@ -121,7 +121,7 @@ export function NotificationBell() {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -135,7 +135,7 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" preventFocusSteal>
+      <PopoverContent className="w-80 p-0" align="end">
         {/* NotificationList component - commented out since we're using RealTimeNotificationBell instead */}
         <div className="p-4 text-center text-muted-foreground">
           This component is deprecated. Please use RealTimeNotificationBell instead.
