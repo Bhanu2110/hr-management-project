@@ -80,10 +80,10 @@ export function DashboardOverview() {
         setLateCheckIns(lateCount);
       }
 
-      // Fetch On Leave data
+      // Fetch On Leave data - count unique employees
       const { data: leaveData, error: leaveError } = await supabase
         .from('leave_requests')
-        .select('*')
+        .select('employee_id')
         .eq('status', 'approved')
         .filter('start_date', 'lte', today)
         .filter('end_date', 'gte', today);
@@ -91,7 +91,9 @@ export function DashboardOverview() {
       if (leaveError) {
         console.error("Error fetching leave data:", leaveError);
       } else {
-        setOnLeave(leaveData.length);
+        // Count unique employees on leave (not total leave requests)
+        const uniqueEmployeesOnLeave = new Set(leaveData.map(leave => leave.employee_id));
+        setOnLeave(uniqueEmployeesOnLeave.size);
       }
 
       // Fetch recent check-ins (only the latest one)
