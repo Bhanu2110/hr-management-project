@@ -22,16 +22,16 @@ interface DatePickerProps {
 export function DatePicker({ date, setDate, className, month, onMonthChange, isMonthFiltered }: DatePickerProps) {
   const getDisplayText = () => {
     if (date) {
-      return format(date, "MMMM yyyy"); // Show month and year when a specific date is selected
+      return format(date, "PPP"); // Show full date when a specific date is selected
     }
     if (isMonthFiltered && month) {
       return format(month, "MMMM yyyy"); // Show month name when filtering by month
     }
-    return "All Months";
+    return "Pick a date";
   };
 
   return (
-    <Popover modal={false}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -45,7 +45,7 @@ export function DatePicker({ date, setDate, className, month, onMonthChange, isM
           {getDisplayText()}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start" preventFocusSteal>
+      <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
           selected={date}
