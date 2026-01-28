@@ -608,7 +608,7 @@ const Profile = () => {
                 canEdit={isEditing}
               />
               <DocumentUploadCard
-                title="Intermediate Certificate"
+                title="Inter Certificate"
                 docType="inter"
                 file={interCertFile}
                 setFile={setInterCertFile}
