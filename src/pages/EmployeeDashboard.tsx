@@ -131,20 +131,35 @@ const EmployeeDashboard = () => {
       if (leaveData && leaveData.length > 0) {
         const leave = leaveData[0] as any;
         const updatedAt = new Date(leave.updated_at || leave.created_at);
-        const title = leave.status === "approved" ? "Leave request approved" : "Leave request rejected";
+        
+        // Determine title based on status
+        let title = "Leave request pending";
+        if (leave.status === "approved") {
+          title = "Leave request approved";
+        } else if (leave.status === "rejected") {
+          title = "Leave request rejected";
+        }
 
         // Optional period formatting if dates exist
         const range = leave.start_date && leave.end_date
           ? `${format(new Date(leave.start_date), "MMM d")}-${format(new Date(leave.end_date), "d")}`
           : `${leave.days ? `${leave.days} day(s)` : ""}`;
 
+        // Determine icon based on status
+        let icon: "check" | "clock" | "reject" = "clock";
+        if (leave.status === "approved") {
+          icon = "check";
+        } else if (leave.status === "rejected") {
+          icon = "reject";
+        }
+
         activities.push({
           id: `leave_${leave.id}_${leave.status}`,
           title,
           description: leave.leave_type
-            ? `Your ${leave.leave_type} ${range ? `for ${range} ` : ""}has been ${leave.status}`
-            : `Your leave request has been ${leave.status}`,
-          icon: leave.status === "approved" ? "check" : "reject",
+            ? `Your ${leave.leave_type} ${range ? `for ${range} ` : ""}is ${leave.status}`
+            : `Your leave request is ${leave.status}`,
+          icon,
           timestamp: updatedAt.toISOString(),
         });
       }
