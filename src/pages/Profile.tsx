@@ -308,11 +308,11 @@ const Profile = () => {
     existingUrl?: string;
     canEdit: boolean;
   }) => (
-    <div className="border rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="border rounded-lg p-4 space-y-3 overflow-hidden">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <Label className="font-medium">{title}</Label>
         {existingUrl && (
-          <Badge variant="outline" className="text-green-600 border-green-600">
+          <Badge variant="outline" className="text-green-600 border-green-600 shrink-0">
             Uploaded
           </Badge>
         )}
@@ -325,10 +325,10 @@ const Profile = () => {
             variant="outline"
             size="sm"
             onClick={() => viewDocument(existingUrl)}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View Document
+            <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
+            <span className="truncate">View Document</span>
           </Button>
           {canEdit && (
             <Button
@@ -337,7 +337,7 @@ const Profile = () => {
               size="sm"
               onClick={() => handleDeleteDocument(docType)}
               disabled={uploadingDoc === docType}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 hover:text-red-700 shrink-0"
             >
               {uploadingDoc === docType ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
