@@ -32,7 +32,7 @@ export function EmployeeSalarySlipsDownload() {
 
     // Filter states
     const [selectedMonth, setSelectedMonth] = useState<string>("all");
-    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+    const [selectedYear, setSelectedYear] = useState<string>("all");
     const [sortField, setSortField] = useState<SalarySortField>('year');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -149,10 +149,25 @@ export function EmployeeSalarySlipsDownload() {
     const applyFilters = () => {
         let filtered = [...salarySlips];
 
-        if (selectedMonth !== "all") {
+        // If both are "all", show all slips
+        if (selectedMonth === "all" && selectedYear === "all") {
+            setFilteredSlips(filtered);
+            return;
+        }
+
+        const year = selectedYear !== "all" ? parseInt(selectedYear) : null;
+
+        if (selectedMonth === "all" && year !== null) {
+            // Filter only by year when "All Months" is selected
+            filtered = filtered.filter(slip => slip.year === year);
+        } else if (selectedMonth !== "all" && year !== null) {
+            // Filter by both month and year
             filtered = filtered.filter(slip =>
-                slip.year === parseInt(selectedYear) && slip.month === parseInt(selectedMonth)
+                slip.year === year && slip.month === parseInt(selectedMonth)
             );
+        } else if (selectedMonth !== "all" && year === null) {
+            // Filter only by month across all years
+            filtered = filtered.filter(slip => slip.month === parseInt(selectedMonth));
         }
 
         setFilteredSlips(filtered);
@@ -307,6 +322,7 @@ export function EmployeeSalarySlipsDownload() {
                                     <SelectValue placeholder="Year" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="all">All Years</SelectItem>
                                     {years.map((year) => (
                                         <SelectItem key={year} value={year}>
                                             {year}
@@ -319,7 +335,7 @@ export function EmployeeSalarySlipsDownload() {
                                 size="icon"
                                 onClick={() => {
                                     setSelectedMonth("all");
-                                    setSelectedYear(new Date().getFullYear().toString());
+                                    setSelectedYear("all");
                                 }}
                                 title="Reset Filter"
                             >
