@@ -434,9 +434,9 @@ const Profile = () => {
           </Badge>
 
           <div className="space-y-3 w-full text-left">
-            <div className="flex items-center text-muted-foreground">
-              <Mail className="h-4 w-4 mr-2" />
-              <span>{employeeDetails.email}</span>
+            <div className="flex items-start text-muted-foreground">
+              <Mail className="h-4 w-4 mr-2 mt-0.5 shrink-0" />
+              <span className="break-all">{employeeDetails.email}</span>
             </div>
             <div className="flex items-center text-muted-foreground">
               <Phone className="h-4 w-4 mr-2" />
