@@ -655,11 +655,12 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                             type="tel"
                             inputMode="numeric"
                             placeholder="9876543210"
+                            maxLength={10}
                             {...field}
                             disabled={isLoading}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/[^0-9]/g, '');
-                              field.onChange(value);
+                              const digitsOnly = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                              field.onChange(digitsOnly);
                             }}
                           />
                         </FormControl>
