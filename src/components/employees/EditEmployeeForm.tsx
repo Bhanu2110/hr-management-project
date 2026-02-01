@@ -708,7 +708,17 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="+91 98765 43210" {...field} disabled={isLoading} />
+                          <Input
+                            type="tel"
+                            inputMode="numeric"
+                            placeholder="9876543210"
+                            {...field}
+                            disabled={isLoading}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              field.onChange(value);
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
