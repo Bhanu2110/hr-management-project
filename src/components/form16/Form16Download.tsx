@@ -36,8 +36,7 @@ export function Form16Download() {
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  // Filter states
-  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  // Filter states - only year filter for financial year
   const [selectedYear, setSelectedYear] = useState<string>("all");
 
   // Sorting states
@@ -52,7 +51,7 @@ export function Form16Download() {
 
   useEffect(() => {
     applyFilters();
-  }, [documents, selectedMonth, selectedYear]);
+  }, [documents, selectedYear]);
 
   const fetchForm16Documents = async () => {
     try {
@@ -86,62 +85,43 @@ export function Form16Download() {
     }
   };
 
-  // Generate month options
-  const months = [
-    { value: "all", label: "All Months" },
-    { value: "01", label: "January" },
-    { value: "02", label: "February" },
-    { value: "03", label: "March" },
-    { value: "04", label: "April" },
-    { value: "05", label: "May" },
-    { value: "06", label: "June" },
-    { value: "07", label: "July" },
-    { value: "08", label: "August" },
-    { value: "09", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" },
-  ];
-
-  // Generate year options (last 5 years to next year)
+  // Generate year options (last 10 years to current year for financial year filtering)
   const currentYearNum = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 7 }, (_, i) => (currentYearNum - 5 + i).toString());
+  const yearOptions = Array.from({ length: 11 }, (_, i) => (currentYearNum - 9 + i).toString());
+
+  // Helper to extract years from financial year string (e.g., "2024-25" -> [2024, 2025])
+  const parseFinancialYear = (fy: string): [number, number] | null => {
+    // Format: "2024-25" or "2024-2025"
+    const match = fy.match(/^(\d{4})-(\d{2,4})$/);
+    if (!match) return null;
+    const startYear = parseInt(match[1]);
+    const endYearStr = match[2];
+    const endYear = endYearStr.length === 2 
+      ? parseInt(match[1].substring(0, 2) + endYearStr) 
+      : parseInt(endYearStr);
+    return [startYear, endYear];
+  };
 
   const applyFilters = () => {
     let filtered = [...documents];
 
     // If both are "all", show all documents
-    if (selectedMonth === "all" && selectedYear === "all") {
+    if (selectedYear === "all") {
       setFilteredDocuments(filtered);
       return;
     }
 
-    const year = selectedYear !== "all" ? parseInt(selectedYear) : null;
+    const year = parseInt(selectedYear);
 
-    if (selectedMonth === "all" && year !== null) {
-      // Filter only by year when "All Months" is selected
-      filtered = filtered.filter(doc => {
-        const docDate = new Date(doc.uploaded_at);
-        return docDate.getFullYear() === year;
-      });
-    } else if (selectedMonth !== "all" && year !== null) {
-      // Filter by both month and year
-      filtered = filtered.filter(doc => {
-        const docDate = new Date(doc.uploaded_at);
-        const month = parseInt(selectedMonth) - 1; // JavaScript months are 0-indexed
-        return (
-          docDate.getFullYear() === year &&
-          docDate.getMonth() === month
-        );
-      });
-    } else if (selectedMonth !== "all" && year === null) {
-      // Filter only by month across all years
-      filtered = filtered.filter(doc => {
-        const docDate = new Date(doc.uploaded_at);
-        const month = parseInt(selectedMonth) - 1;
-        return docDate.getMonth() === month;
-      });
-    }
+    // Filter by financial year - check if the selected year falls within the financial year range
+    filtered = filtered.filter(doc => {
+      const fyYears = parseFinancialYear(doc.financial_year);
+      if (!fyYears) return false;
+      const [startYear, endYear] = fyYears;
+      // A financial year like "2024-25" covers April 2024 to March 2025
+      // So year 2024 or 2025 should match this financial year
+      return year === startYear || year === endYear;
+    });
 
     setFilteredDocuments(filtered);
   };
@@ -310,23 +290,11 @@ export function Form16Download() {
                 </p>
               </div>
             </div>
-            {/* Filters - moved to header */}
+            {/* Filters - Financial Year filter */}
             <div className="flex items-center gap-4">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Select Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue placeholder="Year" />
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Financial Year" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Years</SelectItem>
@@ -341,7 +309,6 @@ export function Form16Download() {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  setSelectedMonth("all");
                   setSelectedYear("all");
                 }}
                 title="Reset Filter"
