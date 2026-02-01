@@ -126,7 +126,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
       email: "",
       password: "",
       phone: "",
-      role: "employee",
+      role: "",
       department: "",
       position: "",
       hire_date: new Date().toISOString().split('T')[0],
