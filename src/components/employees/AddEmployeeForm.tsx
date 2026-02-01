@@ -67,7 +67,7 @@ const employeeFormSchema = z.object({
   last_name: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  phone: z.string().optional(),
+  phone: z.string().min(1, 'Phone number is required'),
   role: z.string().optional(),
   department: z.string().min(1, 'Department is required'),
   position: z.string().min(2, 'Position must be at least 2 characters'),
@@ -649,7 +649,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <RequiredLabel>Phone Number</RequiredLabel>
                         <FormControl>
                           <Input
                             type="tel"
