@@ -64,7 +64,7 @@ const editEmployeeFormSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(1, 'Phone number is required'),
+  phone: z.string().length(10, 'Phone number must be exactly 10 digits'),
   role: z.string().optional(),
   department: z.string().min(1, 'Department is required'),
   position: z.string().min(2, 'Position must be at least 2 characters'),
