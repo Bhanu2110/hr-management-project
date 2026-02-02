@@ -179,6 +179,46 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
   const onSubmit = async (formValues: EmployeeFormValues) => {
     try {
+      // Check for duplicate employee_id BEFORE creating auth user
+      const { data: existingEmployee, error: checkError } = await supabase
+        .from('employees')
+        .select('employee_id')
+        .eq('employee_id', formValues.employee_id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking for duplicate employee_id:', checkError);
+      }
+
+      if (existingEmployee) {
+        toast({
+          title: "Duplicate Employee ID",
+          description: `An employee with ID "${formValues.employee_id}" already exists. Please use a different Employee ID.`,
+          variant: "destructive",
+        });
+        return; // Stop execution before creating auth user
+      }
+
+      // Also check for duplicate email
+      const { data: existingEmail, error: emailCheckError } = await supabase
+        .from('employees')
+        .select('email')
+        .eq('email', formValues.email)
+        .maybeSingle();
+
+      if (emailCheckError) {
+        console.error('Error checking for duplicate email:', emailCheckError);
+      }
+
+      if (existingEmail) {
+        toast({
+          title: "Duplicate Email",
+          description: `An employee with email "${formValues.email}" already exists. Please use a different email address.`,
+          variant: "destructive",
+        });
+        return; // Stop execution before creating auth user
+      }
+
       // Try Edge Function first, fallback to direct creation if it fails
       let userId: string | undefined;
 
