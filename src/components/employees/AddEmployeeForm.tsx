@@ -230,18 +230,31 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
             first_name: formValues.first_name,
             last_name: formValues.last_name,
             role: formValues.role || 'employee',
+            employee_id: formValues.employee_id, // Pass employee_id for duplicate check
           },
         });
 
         if (fnError) {
           console.error('Edge Function Error:', fnError);
 
-          // Check if it's a duplicate email error from Edge Function
+          // Check if it's a duplicate error from Edge Function
           const errorMessage = fnError.message || JSON.stringify(fnError);
           console.log('Error message:', errorMessage);
 
+          // Check for duplicate employee_id error
+          if (errorMessage.toLowerCase().includes('employee id') && errorMessage.toLowerCase().includes('already exists')) {
+            toast({
+              title: "Duplicate Employee ID",
+              description: `An employee with ID "${formValues.employee_id}" already exists. Please use a different Employee ID.`,
+              variant: "destructive",
+            });
+            return; // Stop execution
+          }
+
+          // Check for duplicate email error
           if ((errorMessage.toLowerCase().includes('user') && errorMessage.toLowerCase().includes('already')) ||
-            (errorMessage.toLowerCase().includes('duplicate') && errorMessage.toLowerCase().includes('email'))) {
+            (errorMessage.toLowerCase().includes('duplicate') && errorMessage.toLowerCase().includes('email')) ||
+            (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('already exists'))) {
             toast({
               title: "Email Already Exists",
               description: `The email "${formValues.email}" is already registered. Please use a different email address.`,

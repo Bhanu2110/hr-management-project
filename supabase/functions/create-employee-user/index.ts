@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, password, first_name, last_name, role } = await req.json();
+    const { email, password, first_name, last_name, role, employee_id } = await req.json();
 
     if (!email || !password) {
       return new Response(
@@ -38,6 +38,58 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
+    // Check for duplicate employee_id BEFORE creating auth user
+    if (employee_id) {
+      const { data: existingEmployee, error: checkError } = await adminClient
+        .from('employees')
+        .select('employee_id')
+        .eq('employee_id', employee_id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking for duplicate employee_id:', checkError);
+      }
+
+      if (existingEmployee) {
+        return new Response(
+          JSON.stringify({ error: `Employee ID "${employee_id}" already exists` }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+    }
+
+    // Check for duplicate email in employees table BEFORE creating auth user
+    const { data: existingEmail, error: emailCheckError } = await adminClient
+      .from('employees')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (emailCheckError) {
+      console.error('Error checking for duplicate email:', emailCheckError);
+    }
+
+    if (existingEmail) {
+      return new Response(
+        JSON.stringify({ error: `Email "${email}" already exists in employees` }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // Check if auth user already exists
+    const { data: existingAuthUsers, error: listError } = await adminClient.auth.admin.listUsers();
+    
+    if (!listError && existingAuthUsers?.users) {
+      const existingAuthUser = existingAuthUsers.users.find(u => u.email === email);
+      if (existingAuthUser) {
+        return new Response(
+          JSON.stringify({ error: `User with email "${email}" already exists in authentication` }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+    }
+
+    // Now create the auth user
     const { data, error } = await adminClient.auth.admin.createUser({
       email,
       password,
