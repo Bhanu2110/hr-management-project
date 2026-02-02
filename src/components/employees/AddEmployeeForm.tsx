@@ -39,7 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { employeeService } from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Upload, FileText, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap, Award } from "lucide-react";
+import { Loader2, Upload, FileText, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap, Award, File, X } from "lucide-react";
 import { useState } from 'react';
 
 const departments = [
@@ -109,6 +109,11 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
 
   // Professional certificate states
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+
+  // Other documents state
+  const [otherDocuments, setOtherDocuments] = useState<Array<{ file: File; title: string }>>([]);
+  const [otherDocTitle, setOtherDocTitle] = useState('');
+  const [otherDocFile, setOtherDocFile] = useState<File | null>(null);
 
 
   // Compensation table state
@@ -347,6 +352,43 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
         throw new Error(error.message);
       }
 
+
+      // Upload other documents to documents table
+      if (otherDocuments.length > 0 && employeeRecord) {
+        console.log('Uploading', otherDocuments.length, 'other documents for employee:', employeeRecord.employee_id);
+        
+        for (const otherDoc of otherDocuments) {
+          try {
+            // Upload file to storage
+            const fileUrl = await uploadFile(otherDoc.file, 'other', formValues.employee_id);
+            
+            if (fileUrl) {
+              // Create document record
+              await supabase
+                .from('documents' as any)
+                .insert([{
+                  title: otherDoc.title,
+                  file_name: otherDoc.file.name,
+                  file_size: otherDoc.file.size,
+                  file_type: otherDoc.file.type,
+                  file_url: fileUrl,
+                  category: 'other',
+                  visibility: 'private',
+                  employee_id: formValues.employee_id,
+                  employee_name: `${formValues.first_name} ${formValues.last_name}`,
+                  accessible_employees: [formValues.employee_id],
+                  approval_status: 'approved',
+                  is_active: true,
+                  uploaded_date: new Date().toISOString(),
+                }]);
+              
+              console.log('Successfully uploaded other document:', otherDoc.title);
+            }
+          } catch (docError) {
+            console.error('Error uploading other document:', docError);
+          }
+        }
+      }
 
       // Save all compensation records to employee_compensation table
       if (compensationRecords.length > 0 && employeeRecord) {
@@ -1099,6 +1141,87 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                     <p className="text-xs text-muted-foreground">Upload PDF or Word document</p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Other Documents */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <File className="h-5 w-5 text-primary" />
+                  Other Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Document Title</label>
+                    <Input
+                      placeholder="e.g., Experience Letter"
+                      value={otherDocTitle}
+                      onChange={(e) => setOtherDocTitle(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Document File</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        onChange={(e) => setOtherDocFile(e.target.files?.[0] || null)}
+                        disabled={isLoading}
+                        className="flex-1"
+                      />
+                      {otherDocFile && <FileText className="h-4 w-4 text-green-600" />}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (otherDocTitle && otherDocFile) {
+                        setOtherDocuments([...otherDocuments, { file: otherDocFile, title: otherDocTitle }]);
+                        setOtherDocTitle('');
+                        setOtherDocFile(null);
+                        // Reset file input
+                        const fileInput = document.querySelector('input[type="file"][accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"]') as HTMLInputElement;
+                        if (fileInput) fileInput.value = '';
+                      }
+                    }}
+                    disabled={isLoading || !otherDocTitle || !otherDocFile}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Document
+                  </Button>
+                </div>
+
+                {otherDocuments.length > 0 && (
+                  <div className="border rounded-lg p-4 space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Documents to upload:</p>
+                    {otherDocuments.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium">{doc.title}</span>
+                          <span className="text-xs text-muted-foreground">({doc.file.name})</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setOtherDocuments(otherDocuments.filter((_, i) => i !== index))}
+                          disabled={isLoading}
+                        >
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
