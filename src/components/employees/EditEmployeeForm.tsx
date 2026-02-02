@@ -247,6 +247,7 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
             .from('documents')
             .select('*')
             .eq('employee_id', employee.employee_id)
+            .eq('category', 'other')
             .order('created_at', { ascending: false });
 
           if (!error && data) {
