@@ -32,7 +32,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { supabase } from "@/integrations/supabase/client";
 
 type SortDirection = 'asc' | 'desc';
-type SortField = keyof Pick<Employee, 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
+type SortField = keyof Pick<Employee, 'employee_id' | 'first_name' | 'last_name' | 'department' | 'position' | 'hire_date'>;
 
 const ITEMS_PER_PAGE = 10;
 
@@ -263,7 +263,15 @@ const Employees = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[60px]">S.No</TableHead>
-                  <TableHead>Employee ID</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('employee_id')}
+                  >
+                    <div className="flex items-center">
+                      Employee ID
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </div>
+                  </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('first_name')}
