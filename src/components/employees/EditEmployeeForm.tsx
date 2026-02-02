@@ -37,9 +37,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { employeeService, Employee } from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, FileText, ExternalLink, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap, Award } from "lucide-react";
+import { Loader2, FileText, ExternalLink, Plus, Edit, Trash2, User, Briefcase, Building, GraduationCap, Award, Upload, X, File } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Document } from "@/types/documents";
 
 const departments = [
   'Engineering',
@@ -122,6 +123,10 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
   const [compensationForm, setCompensationForm] = useState({ ctc: '', effective_date: '' });
   const [editingCompensationIndex, setEditingCompensationIndex] = useState<number | null>(null);
 
+  // Other documents state
+  const [existingOtherDocs, setExistingOtherDocs] = useState<Document[]>([]);
+  const [newOtherDocuments, setNewOtherDocuments] = useState<Array<{ title: string; file: File | null }>>([]);
+  const [loadingOtherDocs, setLoadingOtherDocs] = useState(false);
   // Delete document helper
   const handleDeleteDocument = async (docType: 'aadhar' | 'pan' | 'tenth' | 'inter' | 'degree' | 'resume') => {
     const urlMap = {
@@ -231,6 +236,81 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
 
     loadCompensationRecords();
   }, [employee]);
+
+  // Load existing other documents
+  useEffect(() => {
+    const loadOtherDocuments = async () => {
+      if (employee.employee_id) {
+        setLoadingOtherDocs(true);
+        try {
+          const { data, error } = await supabase
+            .from('documents')
+            .select('*')
+            .eq('employee_id', employee.employee_id)
+            .order('created_at', { ascending: false });
+
+          if (!error && data) {
+            setExistingOtherDocs(data as unknown as Document[]);
+          }
+        } catch (err) {
+          console.error('Error loading other documents:', err);
+        } finally {
+          setLoadingOtherDocs(false);
+        }
+      }
+    };
+
+    loadOtherDocuments();
+  }, [employee.employee_id]);
+
+  // Add new other document entry
+  const handleAddOtherDocument = () => {
+    setNewOtherDocuments([...newOtherDocuments, { title: '', file: null }]);
+  };
+
+  // Remove pending other document
+  const handleRemoveNewDocument = (index: number) => {
+    setNewOtherDocuments(newOtherDocuments.filter((_, i) => i !== index));
+  };
+
+  // Update pending other document
+  const handleUpdateNewDocument = (index: number, field: 'title' | 'file', value: string | File | null) => {
+    const updated = [...newOtherDocuments];
+    if (field === 'title') {
+      updated[index].title = value as string;
+    } else {
+      updated[index].file = value as File | null;
+    }
+    setNewOtherDocuments(updated);
+  };
+
+  // Delete existing other document
+  const handleDeleteOtherDocument = async (docId: string, fileUrl: string) => {
+    try {
+      // Delete from storage
+      if (fileUrl.includes('/storage/v1/object/public/documents1/')) {
+        const filePath = fileUrl.split('/storage/v1/object/public/documents1/')[1];
+        if (filePath) {
+          await supabase.storage.from('documents1').remove([filePath]);
+        }
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', docId);
+
+      if (error) throw error;
+
+      // Update local state
+      setExistingOtherDocs(existingOtherDocs.filter(doc => doc.id !== docId));
+      toast({ title: "Success", description: "Document deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting other document:', error);
+      toast({ title: "Error", description: "Failed to delete document", variant: "destructive" });
+    }
+  };
 
   const form = useForm<EditEmployeeFormValues>({
     resolver: zodResolver(editEmployeeFormSchema),
@@ -595,6 +675,67 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
           } catch (slipError) {
             console.error('Error syncing salary slips:', slipError);
             // Don't block the UI, just log
+          }
+        }
+      }
+
+      // Upload new other documents
+      if (newOtherDocuments.length > 0) {
+        for (const doc of newOtherDocuments) {
+          if (doc.file && doc.title.trim()) {
+            try {
+              const fileUrl = await uploadFile(doc.file, 'other', formValues.employee_id);
+              if (fileUrl) {
+                const { data: { user } } = await supabase.auth.getUser();
+                let uploadedByName = 'Admin';
+                let uploadedById = null;
+
+                if (user) {
+                  const { data: adminData } = await supabase
+                    .from('admins')
+                    .select('id, first_name, last_name')
+                    .eq('user_id', user.id)
+                    .single();
+
+                  if (adminData) {
+                    uploadedById = adminData.id;
+                    uploadedByName = `${adminData.first_name} ${adminData.last_name}`;
+                  }
+                }
+
+                await supabase
+                  .from('documents')
+                  .insert([{
+                    title: doc.title.trim(),
+                    description: '',
+                    file_name: doc.file.name,
+                    file_size: doc.file.size,
+                    file_type: doc.file.type,
+                    file_url: fileUrl,
+                    category: 'other',
+                    subcategory: null,
+                    tags: [],
+                    visibility: 'private',
+                    accessible_roles: [],
+                    accessible_departments: [],
+                    accessible_employees: [],
+                    employee_id: formValues.employee_id,
+                    employee_name: `${formValues.first_name} ${formValues.last_name}`,
+                    is_confidential: false,
+                    approval_status: 'approved',
+                    approved_by: uploadedByName,
+                    approved_date: new Date().toISOString(),
+                    uploaded_by: uploadedById,
+                    uploaded_by_name: uploadedByName,
+                    uploaded_date: new Date().toISOString(),
+                    version: 1,
+                    is_active: true,
+                    access_count: 0,
+                  }]);
+              }
+            } catch (docError) {
+              console.error('Error uploading other document:', docError);
+            }
           }
         }
       }
@@ -1357,6 +1498,124 @@ export function EditEmployeeForm({ employee, onSuccess, onCancel }: EditEmployee
                     <p className="text-xs text-muted-foreground">Upload PDF or Word document</p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Other Documents */}
+            <Card className="mt-4">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <File className="h-5 w-5" />
+                    Other Documents
+                  </CardTitle>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddOtherDocument}
+                    disabled={isLoading}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Document
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">Upload additional documents for this employee</p>
+              </CardHeader>
+              <CardContent>
+                {/* Existing Other Documents */}
+                {loadingOtherDocs ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : existingOtherDocs.length > 0 ? (
+                  <div className="space-y-3 mb-4">
+                    <p className="text-sm font-medium text-muted-foreground">Existing Documents</p>
+                    {existingOtherDocs.map((doc) => (
+                      <div key={doc.id} className="border rounded-lg p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-medium text-sm">{doc.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {doc.file_name} • {new Date(doc.uploaded_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDocument(doc.file_url)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                            onClick={() => handleDeleteOtherDocument(doc.id, doc.file_url)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {/* New Documents to Add */}
+                {newOtherDocuments.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-muted-foreground">New Documents</p>
+                    {newOtherDocuments.map((doc, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">Document {index + 1}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveNewDocument(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Document Title *"
+                            value={doc.title}
+                            onChange={(e) => handleUpdateNewDocument(index, 'title', e.target.value)}
+                            disabled={isLoading}
+                          />
+                          <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                            onChange={(e) => handleUpdateNewDocument(index, 'file', e.target.files?.[0] || null)}
+                            disabled={isLoading}
+                          />
+                          {doc.file && (
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <FileText className="h-4 w-4" />
+                              {doc.file.name}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {existingOtherDocs.length === 0 && newOtherDocuments.length === 0 && (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <File className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>No other documents uploaded</p>
+                    <p className="text-xs">Click "Add Document" to upload additional files</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
