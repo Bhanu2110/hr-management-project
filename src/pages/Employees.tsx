@@ -263,6 +263,7 @@ const Employees = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[60px]">S.No</TableHead>
+                  <TableHead>Employee ID</TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('first_name')}
@@ -307,13 +308,13 @@ const Employees = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       Loading employees...
                     </TableCell>
                   </TableRow>
                 ) : paginatedEmployees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       No employees found.
                     </TableCell>
                   </TableRow>
@@ -322,6 +323,9 @@ const Employees = () => {
                     <TableRow key={employee.id}>
                       <TableCell className="text-center text-muted-foreground">
                         {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                      </TableCell>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {employee.employee_id}
                       </TableCell>
                       <TableCell className="font-medium">
                         <ViewEmployeeDialog
