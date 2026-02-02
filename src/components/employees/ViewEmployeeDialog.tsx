@@ -87,8 +87,19 @@ export const ViewEmployeeDialog = ({ employee, trigger }: ViewEmployeeDialogProp
     const loadDocuments = async () => {
         try {
             setLoadingDocuments(true);
-            const docs = await fetchEmployeeDocuments(employee.id);
-            setDocuments(docs);
+            // Fetch only 'other' category documents using employee_id (string like "EMP001")
+            const { data, error } = await supabase
+                .from('documents')
+                .select('*')
+                .eq('employee_id', employee.employee_id)
+                .eq('category', 'other')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Failed to load documents:", error);
+                throw error;
+            }
+            setDocuments(data as unknown as Document[]);
         } catch (error) {
             console.error("Failed to load documents:", error);
             toast({
