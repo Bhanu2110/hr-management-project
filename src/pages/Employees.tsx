@@ -39,6 +39,7 @@ const ITEMS_PER_PAGE = 10;
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeesOnLeaveToday, setEmployeesOnLeaveToday] = useState<Set<string>>(new Set());
+  const [documentCounts, setDocumentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -59,14 +60,19 @@ const Employees = () => {
         // Fetch employees and approved leave requests for today in parallel
         const today = format(new Date(), 'yyyy-MM-dd');
         
-        const [employeesData, leaveData] = await Promise.all([
+        const [employeesData, leaveData, docsData] = await Promise.all([
           employeeService.getAllEmployees(),
           supabase
             .from('leave_requests')
             .select('employee_id')
             .eq('status', 'approved')
             .lte('start_date', today)
-            .gte('end_date', today)
+            .gte('end_date', today),
+          // Fetch Other Documents count for each employee
+          supabase
+            .from('documents')
+            .select('employee_id')
+            .eq('category', 'other')
         ]);
         
         setEmployees(employeesData);
@@ -75,6 +81,17 @@ const Employees = () => {
         if (leaveData.data) {
           const onLeaveIds = new Set(leaveData.data.map(lr => lr.employee_id));
           setEmployeesOnLeaveToday(onLeaveIds);
+        }
+        
+        // Count documents per employee
+        if (docsData.data) {
+          const counts: Record<string, number> = {};
+          docsData.data.forEach((doc) => {
+            if (doc.employee_id) {
+              counts[doc.employee_id] = (counts[doc.employee_id] || 0) + 1;
+            }
+          });
+          setDocumentCounts(counts);
         }
       } catch (error) {
         console.error('Failed to fetch employees:', error);
@@ -301,19 +318,20 @@ const Employees = () => {
                     </div>
                   </TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Documents</TableHead>
                   <TableHead className="w-[50px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       Loading employees...
                     </TableCell>
                   </TableRow>
                 ) : paginatedEmployees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       No employees found.
                     </TableCell>
                   </TableRow>
@@ -350,6 +368,11 @@ const Employees = () => {
                       <TableCell>
                         <Badge variant={getStatusVariant(getDisplayStatus(employee))} className="capitalize">
                           {getDisplayStatus(employee).replace('_', ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {documentCounts[employee.employee_id] || 0}
                         </Badge>
                       </TableCell>
                       <TableCell>
