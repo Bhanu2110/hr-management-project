@@ -562,53 +562,59 @@ export function Form16Management({ employees = [] }: Form16ManagementProps) {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total Documents</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.employees}</p>
-                <p className="text-sm text-muted-foreground">Employees</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-yellow-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.years.length}</p>
-                <p className="text-sm text-muted-foreground">Financial Years</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-purple-600" />
-              <div>
-                <p className="text-2xl font-bold">{filteredData.length}</p>
-                <p className="text-sm text-muted-foreground">Filtered Results</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats Cards - computed from filtered results */}
+      {(() => {
+        const filteredEmployees = new Set(filteredData.map(d => d.employee_id)).size;
+        const filteredYears = new Set(filteredData.map(d => d.financial_year)).size;
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-2xl font-bold">{filteredData.length}</p>
+                    <p className="text-sm text-muted-foreground">Total Documents</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-2xl font-bold">{filteredEmployees}</p>
+                    <p className="text-sm text-muted-foreground">Employees</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-yellow-600" />
+                  <div>
+                    <p className="text-2xl font-bold">{filteredYears}</p>
+                    <p className="text-sm text-muted-foreground">Financial Years</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <p className="text-2xl font-bold">{filteredData.length}</p>
+                    <p className="text-sm text-muted-foreground">Filtered Results</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Filters */}
       <Card>
